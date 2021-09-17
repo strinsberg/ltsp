@@ -1,0 +1,4 @@
+*.jar
+*.c
+ltsp
+ltsp-debug

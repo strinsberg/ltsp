@@ -1,0 +1,11 @@
+(lt64-asm-prog
+  (static
+    (:str hello "Hello, LTSP World!"))
+    
+  (main
+    :push hello :prnmem-lb
+    :!prn-nl
+    :push alloc/allocate :call
+    :halt)
+  
+  (include "allocate.lta"))

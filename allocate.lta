@@ -1,0 +1,8 @@
+(lt64-asm-mod
+  (proc alloc/allocate
+    :push 1
+    :push 2
+    :add
+    :wprn
+    :!prn-nl
+    :ret))
