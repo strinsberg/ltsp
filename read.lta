@@ -1,0 +1,8 @@
+(lt64-asm-mod
+  (proc read/read-form
+    ;; For now just read text into the buffer
+    ;; Eventually will take the input and create a form and leave
+    ;; its address on the stack
+    :readln
+    :ret))
+

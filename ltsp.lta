@@ -1,11 +1,18 @@
 (lt64-asm-prog
   (static
-    (:str hello "Hello, LTSP World!"))
+    (:str prompt ">> "))
     
   (main
-    :push hello :prnmem-lb
-    :!prn-nl
-    :push alloc/allocate :call
+    :label main-loop
+    :push prompt :prnmem-lb
+    :push read/read-form :call
+    :push eval/eval-form :call
+    :push print/print-form :call
+    :push main-loop :jump
+
     :halt)
   
-  (include "allocate.lta"))
+  (include "read.lta")
+  (include "eval.lta")
+  (include "print.lta")
+  )

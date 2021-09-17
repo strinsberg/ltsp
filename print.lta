@@ -1,0 +1,8 @@
+(lt64-asm-mod
+  (proc print/print-form
+    ;; For now just print the buffer
+    ;; Eventually will take the address of a form off the stack
+    ;; and print it out
+    :prnln
+    :ret))
+

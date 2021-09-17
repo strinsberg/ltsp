@@ -1,0 +1,7 @@
+(lt64-asm-mod
+  (proc eval/eval-form
+    ;; does nothing for now
+    ;; Eventually will take the form address on top of the stack, evaluate it
+    ;; and put the result forms address on the stack
+    :ret))
+
