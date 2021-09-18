@@ -15,7 +15,8 @@
 
     ;; Test suite titles
     (:str alloc-title "\n=== Allocate Tests ===\n")
-    (:str symbol-title "\n=== Symbol Tests ===\n"))
+    (:str symbol-title "\n=== Symbol Tests ===\n")
+    (:str symlist-title "\n=== Symlist Tests ===\n"))
 
   (main
     ;; Setup
@@ -24,6 +25,7 @@
     ;; Run tests
     :push alloc-suite :call
     :push symbol-suite :call
+    :push symlist-suite :call
 
     ;; Cleanup
     :push finish :prnmem-lb
@@ -67,6 +69,17 @@
     :push test-sym/make-sets-next :call :push is :call
     :push test-sym/make-sets-name :call :push is :call
     :ret)
+
+  (include "symlist.lta")
+  (include "test/test-symlist.lta")
+
+  (proc symlist-suite
+    :push symlist-title :prnmem-lb
+    :push test-symlist/head-address :call :push is :call
+    :push test-symlist/set-get-head :call :push is :call
+
+    :ret)
+
 
   ;;; Test Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (proc is

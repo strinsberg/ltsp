@@ -1,0 +1,14 @@
+(lt64-asm-mod
+  ;; Be sure the address of symlist is fmp + 3
+  (proc test-symlist/head-address
+    :push 0x1122 :first :!symlist/set-head
+    :fmp :push 3 :add :load-lb
+    :ret)
+
+  ;; Set and get the symbol list head value
+  (proc test-symlist/set-get-head
+    :push 0x1122 :first :!symlist/set-head
+    :!symlist/head
+    :ret)
+
+)
