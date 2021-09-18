@@ -18,7 +18,7 @@
     :push 1 :push 0 :pack :second :!sym/set-info
     :push 0 :second :!sym/set-value
     :push 0 :second :!sym/set-next
-    :push 0 :!sym/name-ptr :store-lb
+    :push 0 :second :!sym/name-ptr :store-lb
     :ret)
 
 )

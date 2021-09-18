@@ -5,8 +5,8 @@
     :push 0x2233 :fmp :!sym/set-value
     :fmp :!sym/name-ptr
     :push 0x3344 :second :store-lb
-    :push 0x4455 :second :store-lb
-    :push 0x5566 :swap :store-lb
+    :push 0x4455 :second :push 1 :add :store-lb
+    :push 0x5566 :swap :push 2 :add :store-lb
     :push 0x6677 :fmp :!sym/set-next
     :ret)
 
@@ -22,5 +22,51 @@
     :push test-sym/setup-sym-mem :call
     :push 0x2233
     :fmp :!sym/value
+    :ret)
+
+  ;; Expect that getting the set symbol next gives the value from the setup
+  (proc test-sym/set-get-next
+    :push test-sym/setup-sym-mem :call
+    :push 0x6677
+    :fmp :!sym/next
+    :ret)
+
+  ;; Expect that the name-ptr address is 2 past the address the getter uses
+  (proc test-sym/name-ptr-address
+    :push test-sym/setup-sym-mem :call
+    :fmp :push 2 :add
+    :fmp :!sym/name-ptr
+    :ret)
+
+  ;; Expect that the name-ptr second word is the one set in setup
+  (proc test-sym/set-get-name
+    :push test-sym/setup-sym-mem :call
+    :push 0x4455
+    :fmp :!sym/name-ptr :push 1 :add :load-lb
+    :ret)
+
+  ;; Make tests ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc test-sym/make-sets-info
+    :push test-sym/setup-sym-mem :call
+    :push 0x0100
+    :fmp :push sym/make :call :!sym/info
+    :ret)
+
+  (proc test-sym/make-sets-value
+    :push test-sym/setup-sym-mem :call
+    :push 0x0000
+    :fmp :push sym/make :call :!sym/value
+    :ret)
+
+  (proc test-sym/make-sets-next
+    :push test-sym/setup-sym-mem :call
+    :push 0x0000
+    :fmp :push sym/make :call :!sym/next
+    :ret)
+
+  (proc test-sym/make-sets-name
+    :push test-sym/setup-sym-mem :call
+    :push 0x0000
+    :fmp :push sym/make :call :!sym/name-ptr :load-lb
     :ret)
 )

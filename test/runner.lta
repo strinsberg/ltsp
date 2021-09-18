@@ -60,7 +60,12 @@
     :push symbol-title :prnmem-lb
     :push test-sym/set-get-info :call :push is :call
     :push test-sym/set-get-value :call :push is :call
-    
+    :push test-sym/name-ptr-address :call :push is :call
+    :push test-sym/set-get-name :call :push is :call
+    :push test-sym/make-sets-info :call :push is :call
+    :push test-sym/make-sets-value :call :push is :call
+    :push test-sym/make-sets-next :call :push is :call
+    :push test-sym/make-sets-name :call :push is :call
     :ret)
 
   ;;; Test Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
