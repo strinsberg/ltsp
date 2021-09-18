@@ -1,0 +1,70 @@
+(lt64-asm-prog
+  (static
+    ;; Testing Data
+    (:word num-failed 1 0)
+
+    ;; Testing strings
+    (:str expect "Expected: ")
+    (:str actual "Actual:   ")
+    (:str passed "PASSED\n")
+    (:str failed "FAIL\n")
+    (:str start "\n*** LTSP Tests ***\n\n")
+    (:str finish "\n*** Done ***\n")
+    (:str all-passed "All Tests Passed\n")
+    (:str some-failed "Failed: ")
+
+    ;; Test suite titles
+    (:str alloc-title "=== Allocate Tests ===\n"))
+
+  (main
+    ;; Setup
+    :push start :prnmem-lb
+
+    ;; Run tests
+    :push alloc-suite :call
+
+    ;; Cleanup
+    :push finish :prnmem-lb
+    :push num-failed :load-lb :push 0 :gt
+    :push print-failed-totals :branch
+    :push all-passed :prnmem-lb
+    :halt
+    
+    :label print-failed-totals
+    :push some-failed :prnmem-lb
+    :push num-failed :load-lb :wprn :!prn-nl
+    :halt)
+
+  ;;; Test Suites ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (include "test/test-allocate.lta")
+
+  (proc alloc-suite
+    :push alloc-title :prnmem-lb
+    :push test-alloc/setup-fm :call :push is :call
+    :ret)
+
+  ;;; Test Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc is
+    ;; Check if the top two stack elements are eq
+    :second :second :eq
+    :push is/passed :branch
+
+    ;; Test failed
+    :!prn-nl
+    ;; Increment failed counter
+    :push num-failed :load-lb
+    :!inc :push num-failed :store-lb
+    ;; Print FAILED and results
+    :push failed :prnmem-lb
+    :push expect :prnmem-lb
+    :swap :wprn :!prn-nl
+    :push actual :prnmem-lb
+    :wprn :!prn-nl :!prn-nl
+    :ret
+
+    ;; Test passed, so print PASSED
+    :label is/passed
+    :push passed :prnmem-lb
+    :pop :pop
+    :ret)
+)

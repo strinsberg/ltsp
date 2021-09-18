@@ -1,8 +1,74 @@
 (lt64-asm-mod
-  (proc alloc/allocate
-    :push 1
-    :push 2
-    :add
-    :wprn
-    :!prn-nl
-    :ret))
+  ;; Heap managment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc alloc/setup-fm
+    ;; Setup the free memory portion of memory as a memory heap for
+    ;; the dotted pairs
+    ;; Uses first 4 cells for bookkeeping
+    ;; fmp + 0 = next open memory
+    ;; Others are empty for now
+    :fmp :push 4 :add
+    :push 0 :store                     ;; Store fmp + 4 as the next open mem
+    :ret)
+
+  (proc alloc/clear-mem
+    ;; Take a number of words and an address of the memory
+    :rpush                             ;; Put memory address on return stack
+    :push 0                            ;; Push 0 to start a loop counter
+
+    :label alloc/clear-mem-loop
+    :push 0
+    :second :rgrab :add :store-lb      ;; Store 0 at loop counter + mem address
+    :!inc                              ;; Incrememnt loop counter
+    :second :second :gt                ;; Is total size larger than counter
+    :push alloc/clear-mem-loop :branch ;; If yes loop
+
+    :rpop :pop                         ;; remove the mem address
+    :pop :pop                          ;; remove loop counter and size
+    :ret)
+
+  (macro :!next-open
+    :push 0 :load)
+
+  (macro :!save-next-open
+    :push 0 :store)
+
+  (macro :!alloc-size
+    ;; Takes a size value of the stack and leaves the memory of the
+    ;; newly allocated memory on top. Updates the heap pointer to the
+    ;; memory after the new allocation.
+    :push 0 :load
+    :swap :second :add
+    :push 0 :store)
+
+  ;; Memory ceation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc alloc/new-pair
+    ;; Allocate memory for a new dotted pair and leave the addess on stack
+    :push 3 :!alloc-size          ;; Alloc 6 words
+    :push 1 :push 0 :pack
+    :first :push 8 :store-lb                    ;; set info word to 0x0001
+
+    :push 5 :second                     ;; setup to zero next 5 words
+    :push alloc/clear-mem :call
+    :ret)
+
+  (proc alloc/new-symbol
+    ;; Allocate memory for a new symbol and leave its address on stack
+    :push 6 :!alloc-size          ;; Alloc 6 words
+    :push 1 :push 1 :pack
+    :first :push 19 :store-lb                    ;; set info word to 0x0101
+
+    :push 5 :second                     ;; setup to zero next 5 words
+    :push alloc/clear-mem :call
+    :ret)
+
+  (proc alloc/new-number
+    ;; Allocate memory for a new number and leave the addess on stack
+    :push 3 :!alloc-size          ;; Alloc 6 words
+    :push 1 :push 0 :pack
+    :first :push 33 :store-lb                    ;; set info word to 0x0001
+
+    :push 5 :second                     ;; setup to zero next 5 words
+    :push alloc/clear-mem :call
+    :ret)
+  
+)

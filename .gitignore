@@ -2,3 +2,4 @@
 *.c
 ltsp
 ltsp-debug
+ltsp-test

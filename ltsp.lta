@@ -3,6 +3,10 @@
     (:str prompt ">> "))
     
   (main
+    ;; Setup the free memory for our dotted pair memory heap
+    :push alloc/setup-fm :call
+
+    ;; Start REPL
     :label main-loop
     :push prompt :prnmem-lb
     :push read/read-form :call
@@ -10,9 +14,12 @@
     :push print/print-form :call
     :push main-loop :jump
 
+    ;; Quit. Needs some check in the repl to jump to here.
+    ;; Right now infinite loop requires control c
     :halt)
   
   (include "read.lta")
   (include "eval.lta")
   (include "print.lta")
+  (include "allocate.lta")
   )

@@ -1,0 +1,11 @@
+(lt64-asm-mod
+  (include "allocate.lta")
+
+  (proc test-alloc/setup-fm
+    ;; Expect that fmp + 0 (points to next open memory)
+    ;; is equal to fmp + 4
+    :fmp :push 4 :add
+    :push alloc/setup-fm :call
+    :push 0 :load
+    :ret)
+)
