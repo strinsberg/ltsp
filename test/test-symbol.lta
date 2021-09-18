@@ -1,0 +1,26 @@
+(lt64-asm-mod
+  ;; Setup a symbol at fmp with some easy to spot values
+  (proc test-sym/setup-sym-mem
+    :push 0x1122 :fmp :!sym/set-info
+    :push 0x2233 :fmp :!sym/set-value
+    :fmp :!sym/name-ptr
+    :push 0x3344 :second :store-lb
+    :push 0x4455 :second :store-lb
+    :push 0x5566 :swap :store-lb
+    :push 0x6677 :fmp :!sym/set-next
+    :ret)
+
+  ;; Expect that getting the set symbol info gives the value from the setup
+  (proc test-sym/set-get-info
+    :push test-sym/setup-sym-mem :call
+    :push 0x1122
+    :fmp :!sym/info
+    :ret)
+  
+  ;; Expect that getting the set symbol value gives the value from the setup
+  (proc test-sym/set-get-value
+    :push test-sym/setup-sym-mem :call
+    :push 0x2233
+    :fmp :!sym/value
+    :ret)
+)

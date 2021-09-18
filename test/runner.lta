@@ -8,13 +8,14 @@
     (:str actual "Actual:   ")
     (:str passed "PASSED\n")
     (:str failed "FAIL\n")
-    (:str start "\n*** LTSP Tests ***\n\n")
+    (:str start "\n*** LTSP Tests ***\n")
     (:str finish "\n*** Done ***\n")
     (:str all-passed "All Tests Passed\n")
     (:str some-failed "Failed: ")
 
     ;; Test suite titles
-    (:str alloc-title "=== Allocate Tests ===\n"))
+    (:str alloc-title "\n=== Allocate Tests ===\n")
+    (:str symbol-title "\n=== Symbol Tests ===\n"))
 
   (main
     ;; Setup
@@ -22,6 +23,7 @@
 
     ;; Run tests
     :push alloc-suite :call
+    :push symbol-suite :call
 
     ;; Cleanup
     :push finish :prnmem-lb
@@ -46,10 +48,19 @@
     :push test-alloc/setup-tab-tail :call :push is :call
     :push test-alloc/setup-list-head :call :push is :call
     :push test-alloc/new-pair-address :call :push is :call
-    :push test-alloc/new-pair-type :call :push is :call
-    :push test-alloc/new-symbol-type :call :push is :call
-    :push test-alloc/new-int-type :call :push is :call
-    :push test-alloc/alloc-size-with-new-sym :call :push is :call
+    :push test-alloc/new-symbol-address :call :push is :call
+    :push test-alloc/new-pair-size :call :push is :call
+    :push test-alloc/new-symbol-size :call :push is :call
+    :ret)
+
+  (include "symbol.lta")
+  (include "test/test-symbol.lta")
+
+  (proc symbol-suite
+    :push symbol-title :prnmem-lb
+    :push test-sym/set-get-info :call :push is :call
+    :push test-sym/set-get-value :call :push is :call
+    
     :ret)
 
   ;;; Test Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

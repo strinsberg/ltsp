@@ -1,4 +1,14 @@
 (lt64-asm-mod
+  ;; TODO eventually this needs to be more complex and ensure that the
+  ;; next open memory will fit the data, as well as find the next open
+  ;; slot. This doesn't matter before GC, but at that point unsued memory
+  ;; needs to be reclaimed and used again by finding splitting and merging
+  ;; open memory. The only way to avoid this is to find a way to make
+  ;; all memory the same size, but I think symbols need at least 4 spaces
+  ;; even if they just hold a pointer to the symbol print name, so 6 spaces
+  ;; is easiest for splitting and merging to get the right sizes since everything
+  ;; else is 3.
+
   ;; Heap managment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; Getters and setters for heap pointers
@@ -18,46 +28,32 @@
   (macro :!alloc/list-head :push 3 :load)
   (macro :!alloc/set-list-head :push 3 :store)
 
+  ;; Setup the free memory portion of memory as a memory heap
+  ;; Uses first 4 words for bookkeeping
   (proc alloc/setup-fm
-    ;; Setup the free memory portion of memory as a memory heap
-    ;; Uses first 4 words for bookkeeping
     :fmp :push 4 :add :!alloc/set-next-open
     :fmp :push 2 :add :!alloc/set-tab-head
     :push 0 :!alloc/set-tab-tail
     :push 0 :!alloc/set-list-head
     :ret)
 
+  ;; Takes a size value of the stack and leaves the memory of the
+  ;; newly allocated memory on top. Updates the heap pointer to the
+  ;; memory after the new allocation.
   (proc alloc/alloc-size
-    ;; Takes a size value of the stack and leaves the memory of the
-    ;; newly allocated memory on top. Updates the heap pointer to the
-    ;; memory after the new allocation.
     :!alloc/next-open
     :swap :second :add
     :!alloc/set-next-open
     :ret)
 
-  ;; Memory ceation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Allocate enough memory for most 'objects': dotted pairs, numbers, etc.
   (proc alloc/new-pair
-    ;; Allocate memory for a new dotted pair and leave the addess on stack
-    :push 3
-    :push alloc/alloc-size :call        ;; Alloc 3 words
-    :push 0 :push 0 :pack
-    :second :store-lb                   ;; set info word to 0x0000
+    :push 3 :push alloc/alloc-size :call
     :ret)
 
+  ;; Allocate enough memory for a new symbol and leave its address on stack
   (proc alloc/new-symbol
-    ;; Allocate memory for a new symbol and leave its address on stack
-    :push 6
-    :push alloc/alloc-size :call        ;; Alloc 6 words
-    :push 1 :push 0 :pack
-    :second :store-lb                   ;; set info word to 0x0100
-    :ret)
-
-  (proc alloc/new-int
-    ;; Allocate memory for a new number and leave the addess on stack
-    :push alloc/new-pair :call          ;; Same size etc. as pair
-    :push 2 :push 0 :pack
-    :second :store-lb                     ;; set info word to 0x0200
+    :push 6 :push alloc/alloc-size :call
     :ret)
   
 )

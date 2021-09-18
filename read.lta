@@ -1,13 +1,17 @@
 (lt64-asm-mod
+  ;; Read a new form from stdin and store the structured data
+  ;; Leaves the address of the new form on the stack
   (proc read/form
-    ;; Read a new symbol and make memory for it
     :push read/symbol :call
     :ret)
 
+  ;; Read the next symbol and store up to its first 6 chars
+  ;; in a newly allocated symbol. Leave stop char on the stack.
   (proc read/symbol
-    ;; Read the next symbol and store up to its first 6 chars
-    ;; in a newly allocated symbol. Leave stop char on the stack.
     :push read/chars :call              ;; read chars into buffer until stop
+    ;; TODO before allocating a new symbol we need to search
+    ;; to see if it is already in the list
+    ;; Need a set of procedures for dealing with the sym list
     :push alloc/new-symbol :call
     :first :push 2 :add                 ;; sym string is at sym + 2
     :push 3 :buf-to-mem                 ;; copy 3 words (6chars) into sym
@@ -17,15 +21,17 @@
     :first :!alloc/set-list-head        ;; list head point to new sym
     :ret)
 
+  ;; Read chars into the buffer until we see one of the following:
+  ;; lp=40, rp=41, .=46, ,=44, ;=59, '=39,
+  ;; space=32, tab=9, newline=10
+  ;; Leave stop char on stack
   (proc read/chars
-    ;; Read chars into the buffer until we see one of the following:
-    ;; lp=40, rp=41, .=46, ,=44, ;=59, '=39,
-    ;; space=32, tab=9, newline=10
-    ;; Leave stop char on stack
     :push 0  ;; delimeter on stack
 
     ;; Read all chars up to stopping point onto stack
     :label chars-read-loop
+    ;; TODO make this check and the other two use a subroutine that checks
+    ;; to see if it is a stopping char not just a newline
     :readch :first :push 10 :eq :!zero?
     :push chars-read-loop :branch
 

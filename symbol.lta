@@ -1,0 +1,24 @@
+(lt64-asm-mod
+  ;; Take a symbol addres and load a symbol 'member'
+  (macro :!sym/info :load-lb)
+  (macro :!sym/value :push 1 :add :load-lb)
+  (macro :!sym/next :push 5 :add :load-lb)
+
+  ;; Take a value and symbol address and set in symbol member
+  (macro :!sym/set-info :store-lb)
+  (macro :!sym/set-value :push 1 :add :store-lb)
+  (macro :!sym/set-next :push 5 :add :store-lb)
+
+  ;; Take a symbol address and return the pointer to the member
+  (macro :!sym/name-ptr :push 2 :add)
+  (macro :!sym/end-ptr :push 6 :add)
+
+  ;; Use(don't pop) an address and setup initial symbol data values
+  (proc sym/make
+    :push 1 :push 0 :pack :second :!sym/set-info
+    :push 0 :second :!sym/set-value
+    :push 0 :second :!sym/set-next
+    :push 0 :!sym/name-ptr :store-lb
+    :ret)
+
+)

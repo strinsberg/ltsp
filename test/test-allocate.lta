@@ -2,66 +2,62 @@
   ;; allocate is included in test runner, since there are
   ;; no header guards we only want to include it once
 
-  ;; setup-fm ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Setup Free Mem ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Expect that next open points to fmp + 4
   (proc test-alloc/setup-next-open
-    ;; Expect that next open points to fmp + 4
     :fmp :push 4 :add
     :push alloc/setup-fm :call
     :!alloc/next-open
     :ret)
 
+  ;; Expect that tab head points to tab tail pointer (fmp + 2)
   (proc test-alloc/setup-tab-head
-    ;; Expect that tab head points to tab tail pointer (fmp + 2)
     :fmp :push 2 :add
     :push alloc/setup-fm :call
     :!alloc/tab-head
     :ret)
 
+  ;; Expect that tab tail pointer points to nil
   (proc test-alloc/setup-tab-tail
-    ;; Expect that tab tail pointer points to nil
     :push 0
     :push alloc/setup-fm :call
     :!alloc/tab-tail
     :ret)
 
+  ;; Expect that list head points to nil
   (proc test-alloc/setup-list-head
-    ;; Expect that list head points to nil
     :push 0
     :push alloc/setup-fm :call
     :!alloc/list-head
     :ret)
 
-  ;; allocate types ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Allocate Space ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Expect address is same as next open
   (proc test-alloc/new-pair-address
-    ;; Expect address is same as next open
     :push alloc/setup-fm :call
     :!alloc/next-open
     :push alloc/new-pair :call
     :ret)
 
-  (proc test-alloc/new-pair-type
-    ;; Expect the type is 0x0000
-    :push 0x0000
-    :push alloc/new-pair :call
-    :load-lb
-    :ret)
-
-  (proc test-alloc/new-symbol-type
-    ;; Expect the type is 0x0100
-    :push 0x0100
+  ;; Expect address is same as next open
+  (proc test-alloc/new-symbol-address
+    :push alloc/setup-fm :call
+    :!alloc/next-open
     :push alloc/new-symbol :call
-    :load-lb
     :ret)
 
-  (proc test-alloc/new-int-type
-    ;; Expect the type is 0x0200
-    :push 0x0200
-    :push alloc/new-int :call
-    :load-lb
+  ;; Expect that next-open is updated to fmp + 4(pointers) + 3(pair-size)
+  (proc test-alloc/new-pair-size
+    :push alloc/setup-fm :call
+    :fmp :push 7 :add
+    :push alloc/new-pair :call :pop
+    :!alloc/next-open
     :ret)
 
-  (proc test-alloc/alloc-size-with-new-sym
-    ;; Expect that next-open is fmp + 4(pointers) + 6(sym-size)
+  ;; Expect that next-open is updated to fmp + 4(pointers) + 6(sym-size)
+  (proc test-alloc/new-symbol-size
     :push alloc/setup-fm :call
     :fmp :push 10 :add
     :push alloc/new-symbol :call :pop

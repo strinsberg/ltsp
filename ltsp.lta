@@ -22,4 +22,5 @@
   (include "eval.lta")
   (include "print.lta")
   (include "allocate.lta")
+  (include "symbol.lta")
   )
