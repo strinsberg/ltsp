@@ -1,5 +1,6 @@
 (lt64-asm-mod
-  (include "allocate.lta")
+  ;; allocate is included in test runner, since there are
+  ;; no header guards we only want to include it once
 
   ;; setup-fm ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (proc test-alloc/setup-next-open

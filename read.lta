@@ -1,8 +1,61 @@
 (lt64-asm-mod
-  (proc read/read-form
-    ;; For now just read text into the buffer
-    ;; Eventually will take the input and create a form and leave
-    ;; its address on the stack
-    :readln
-    :ret))
+  (proc read/form
+    ;; Read a new symbol and make memory for it
+    :push read/symbol :call
+    :ret)
+
+  (proc read/symbol
+    ;; Read the next symbol and store up to its first 6 chars
+    ;; in a newly allocated symbol. Leave stop char on the stack.
+    :push read/chars :call              ;; read chars into buffer until stop
+    :push alloc/new-symbol :call
+    :first :push 2 :add                 ;; sym string is at sym + 2
+    :push 3 :buf-to-mem                 ;; copy 3 words (6chars) into sym
+
+    :!alloc/list-head                   ;; address of next sym
+    :second :push 5 :add :store-lb      ;; set sym to point to next sym
+    :first :!alloc/set-list-head        ;; list head point to new sym
+    :ret)
+
+  (proc read/chars
+    ;; Read chars into the buffer until we see one of the following:
+    ;; lp=40, rp=41, .=46, ,=44, ;=59, '=39,
+    ;; space=32, tab=9, newline=10
+    ;; Leave stop char on stack
+    :push 0  ;; delimeter on stack
+
+    ;; Read all chars up to stopping point onto stack
+    :label chars-read-loop
+    :readch :first :push 10 :eq :!zero?
+    :push chars-read-loop :branch
+
+    ;; Move all chars onto the return stack to reverse them
+    :label chars-reverse-loop
+    :rpush :rgrab :!zero? :!zero?
+    :push chars-reverse-loop :branch
+    :rpop :pop  ;; get rid of the 0 delimeter
+
+    ;; Take 2 chars at a time, pack them, move them to buffer
+    ;; If one of the pulled chars is the stoping char
+    ;; save it and store last char or 0 into buffer
+    :push 0
+    :label chars-buf-loop
+    :rpop :rpop
+    :second :push 10 :eq :push chars-first-stop :branch
+    :first :push 10 :eq :push chars-second-stop :branch
+    :swap :pack :second :bufstore
+    :!inc :push chars-buf-loop :jump
+
+    :label chars-first-stop
+    :rpush
+    :push 0 :swap  ;; swap lets us fall through without jumping
+
+    :label chars-second-stop
+    :swap
+    :rot :bufstore
+
+    ;; The stopping char is on the stack
+    :ret)
+  
+)
 

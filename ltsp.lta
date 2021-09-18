@@ -9,7 +9,7 @@
     ;; Start REPL
     :label main-loop
     :push prompt :prnmem-lb
-    :push read/read-form :call
+    :push read/form :call
     :push eval/eval-form :call
     :push print/print-form :call
     :push main-loop :jump

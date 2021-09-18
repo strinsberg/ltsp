@@ -36,6 +36,7 @@
     :halt)
 
   ;;; Test Suites ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (include "allocate.lta")
   (include "test/test-allocate.lta")
 
   (proc alloc-suite
