@@ -40,7 +40,15 @@
 
   (proc alloc-suite
     :push alloc-title :prnmem-lb
-    :push test-alloc/setup-fm :call :push is :call
+    :push test-alloc/setup-next-open :call :push is :call
+    :push test-alloc/setup-tab-head :call :push is :call
+    :push test-alloc/setup-tab-tail :call :push is :call
+    :push test-alloc/setup-list-head :call :push is :call
+    :push test-alloc/new-pair-address :call :push is :call
+    :push test-alloc/new-pair-type :call :push is :call
+    :push test-alloc/new-symbol-type :call :push is :call
+    :push test-alloc/new-int-type :call :push is :call
+    :push test-alloc/alloc-size-with-new-sym :call :push is :call
     :ret)
 
   ;;; Test Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

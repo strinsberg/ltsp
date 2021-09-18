@@ -1,74 +1,63 @@
 (lt64-asm-mod
   ;; Heap managment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Getters and setters for heap pointers
+  ;; fmp + 0 = next open memory pointer
+  ;; fmp + 1 = symtab head pointer
+  ;; fmp + 2 = symtab tail pointer
+  ;; fmp + 3 = symlist pointer
+  (macro :!alloc/next-open :push 0 :load)
+  (macro :!alloc/set-next-open :push 0 :store)
+
+  (macro :!alloc/tab-head :push 1 :load)
+  (macro :!alloc/set-tab-head :push 1 :store)
+
+  (macro :!alloc/tab-tail :push 2 :load)
+  (macro :!alloc/set-tab-tail :push 2 :store)
+
+  (macro :!alloc/list-head :push 3 :load)
+  (macro :!alloc/set-list-head :push 3 :store)
+
   (proc alloc/setup-fm
-    ;; Setup the free memory portion of memory as a memory heap for
-    ;; the dotted pairs
-    ;; Uses first 4 cells for bookkeeping
-    ;; fmp + 0 = next open memory
-    ;; Others are empty for now
-    :fmp :push 4 :add
-    :push 0 :store                     ;; Store fmp + 4 as the next open mem
+    ;; Setup the free memory portion of memory as a memory heap
+    ;; Uses first 4 words for bookkeeping
+    :fmp :push 4 :add :!alloc/set-next-open
+    :fmp :push 2 :add :!alloc/set-tab-head
+    :push 0 :!alloc/set-tab-tail
+    :push 0 :!alloc/set-list-head
     :ret)
 
-  (proc alloc/clear-mem
-    ;; Take a number of words and an address of the memory
-    :rpush                             ;; Put memory address on return stack
-    :push 0                            ;; Push 0 to start a loop counter
-
-    :label alloc/clear-mem-loop
-    :push 0
-    :second :rgrab :add :store-lb      ;; Store 0 at loop counter + mem address
-    :!inc                              ;; Incrememnt loop counter
-    :second :second :gt                ;; Is total size larger than counter
-    :push alloc/clear-mem-loop :branch ;; If yes loop
-
-    :rpop :pop                         ;; remove the mem address
-    :pop :pop                          ;; remove loop counter and size
-    :ret)
-
-  (macro :!next-open
-    :push 0 :load)
-
-  (macro :!save-next-open
-    :push 0 :store)
-
-  (macro :!alloc-size
+  (proc alloc/alloc-size
     ;; Takes a size value of the stack and leaves the memory of the
     ;; newly allocated memory on top. Updates the heap pointer to the
     ;; memory after the new allocation.
-    :push 0 :load
+    :!alloc/next-open
     :swap :second :add
-    :push 0 :store)
+    :!alloc/set-next-open
+    :ret)
 
   ;; Memory ceation ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (proc alloc/new-pair
     ;; Allocate memory for a new dotted pair and leave the addess on stack
-    :push 3 :!alloc-size          ;; Alloc 6 words
-    :push 1 :push 0 :pack
-    :first :push 8 :store-lb                    ;; set info word to 0x0001
-
-    :push 5 :second                     ;; setup to zero next 5 words
-    :push alloc/clear-mem :call
+    :push 3
+    :push alloc/alloc-size :call        ;; Alloc 3 words
+    :push 0 :push 0 :pack
+    :second :store-lb                   ;; set info word to 0x0000
     :ret)
 
   (proc alloc/new-symbol
     ;; Allocate memory for a new symbol and leave its address on stack
-    :push 6 :!alloc-size          ;; Alloc 6 words
-    :push 1 :push 1 :pack
-    :first :push 19 :store-lb                    ;; set info word to 0x0101
-
-    :push 5 :second                     ;; setup to zero next 5 words
-    :push alloc/clear-mem :call
+    :push 6
+    :push alloc/alloc-size :call        ;; Alloc 6 words
+    :push 1 :push 0 :pack
+    :second :store-lb                   ;; set info word to 0x0100
     :ret)
 
-  (proc alloc/new-number
+  (proc alloc/new-int
     ;; Allocate memory for a new number and leave the addess on stack
-    :push 3 :!alloc-size          ;; Alloc 6 words
-    :push 1 :push 0 :pack
-    :first :push 33 :store-lb                    ;; set info word to 0x0001
-
-    :push 5 :second                     ;; setup to zero next 5 words
-    :push alloc/clear-mem :call
+    :push alloc/new-pair :call          ;; Same size etc. as pair
+    :push 2 :push 0 :pack
+    :second :store-lb                     ;; set info word to 0x0200
     :ret)
   
 )

@@ -1,11 +1,70 @@
 (lt64-asm-mod
   (include "allocate.lta")
 
-  (proc test-alloc/setup-fm
-    ;; Expect that fmp + 0 (points to next open memory)
-    ;; is equal to fmp + 4
+  ;; setup-fm ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc test-alloc/setup-next-open
+    ;; Expect that next open points to fmp + 4
     :fmp :push 4 :add
     :push alloc/setup-fm :call
-    :push 0 :load
+    :!alloc/next-open
     :ret)
+
+  (proc test-alloc/setup-tab-head
+    ;; Expect that tab head points to tab tail pointer (fmp + 2)
+    :fmp :push 2 :add
+    :push alloc/setup-fm :call
+    :!alloc/tab-head
+    :ret)
+
+  (proc test-alloc/setup-tab-tail
+    ;; Expect that tab tail pointer points to nil
+    :push 0
+    :push alloc/setup-fm :call
+    :!alloc/tab-tail
+    :ret)
+
+  (proc test-alloc/setup-list-head
+    ;; Expect that list head points to nil
+    :push 0
+    :push alloc/setup-fm :call
+    :!alloc/list-head
+    :ret)
+
+  ;; allocate types ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc test-alloc/new-pair-address
+    ;; Expect address is same as next open
+    :push alloc/setup-fm :call
+    :!alloc/next-open
+    :push alloc/new-pair :call
+    :ret)
+
+  (proc test-alloc/new-pair-type
+    ;; Expect the type is 0x0000
+    :push 0x0000
+    :push alloc/new-pair :call
+    :load-lb
+    :ret)
+
+  (proc test-alloc/new-symbol-type
+    ;; Expect the type is 0x0100
+    :push 0x0100
+    :push alloc/new-symbol :call
+    :load-lb
+    :ret)
+
+  (proc test-alloc/new-int-type
+    ;; Expect the type is 0x0200
+    :push 0x0200
+    :push alloc/new-int :call
+    :load-lb
+    :ret)
+
+  (proc test-alloc/alloc-size-with-new-sym
+    ;; Expect that next-open is fmp + 4(pointers) + 6(sym-size)
+    :push alloc/setup-fm :call
+    :fmp :push 10 :add
+    :push alloc/new-symbol :call :pop
+    :!alloc/next-open
+    :ret)
+
 )
