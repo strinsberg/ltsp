@@ -12,14 +12,16 @@
     :push form-is-pair :branch
     :first :push read/digit? :call
     :push form-is-number :branch
-    :first :push read/starts-symbol? :call
+    :first :push read/valid-symbol-char? :call
     :push form-is-symbol :branch
 
     ;; Not a valid character to start a form
     :push invalid-start-char :prnmem-lb
     :!quote :prnch :first :prnch :!quote :prnch
     :!lp :prnch :wprn :!rp :prnch :!prn-nl
-    :halt
+    ;; For the repl errors end the whole read
+    ;; For files we would just quit, or do error recovery
+    :readln :!nil :ret
 
     :label form-is-pair
     :pop                               ;; discard the (
@@ -45,8 +47,31 @@
 
   ;; Symbol reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (proc read/starts-symbol?
-    :push 1
+  (macro :!init-rcount :push 0 :rpush)
+  (macro :!inc-rcount :rpop :push 1 :add :rpush)
+  (macro :!end-rcount :rpop :pop)
+  (macro :!eq-rcount :rgrab :eq)
+  (macro :!add-rcount :rgrab :add)
+
+  ;; Tell if the char on the stack can be in a symbol.
+  ;; Ignores chars that can't start a symbol and that would stop a symbol
+  ;; because they will be checked somewhere else.
+  ;; Leaves 1 for true and 0 for false
+  (proc read/valid-symbol-char?
+    :!init-rcount
+    :label valid-symbol-char-loop
+    :push invalid-sym :!add-rcount :load-lb
+    :first :!zero? :push valid-symbol-char-true :branch
+    :second :eq :push valid-symbol-char-false :branch
+    :!inc-rcount
+    :push valid-symbol-char-loop :jump
+
+    :label valid-symbol-char-true
+    :pop                               ;; remove the 0 that ended the list
+    :push 1 :!end-rcount :ret
+
+    :label valid-symbol-char-false
+    :push 0 :!end-rcount
     :ret)
 
   ;; Read the next symbol and store up to its first 6 chars
@@ -78,6 +103,7 @@
 
     ;; Read all chars up to stopping point onto stack
     :label chars-read-loop
+    ;; TODO check to make sure the chars are valid in a symbol
     ;; TODO make this check and the other two use a subroutine that checks
     ;; to see if it is a stopping char not just a newline
     :readch :first :push 10 :eq :!not

@@ -6,10 +6,10 @@
 
     ;; Char sets
     (:word whitespace 6 0x09 0x0A 0x0D 0x20 0x2C 0x00)
-    (:word invalid-sym 5 0x22 0x27 0x2E 0x3B 0x00)
+    (:word invalid-sym 5 0x22 0x27 0x2E 0x3B 0x00) ;; need more, like brackets?
 
     ;; error text
-    (:str invalid-start-char "Error: char cannot start a valid form: ")
+    (:str invalid-start-char "*** Error: Char cannot start a symbol: ")
   )
     
   (main
@@ -22,7 +22,7 @@
     :push read/form :call
     :push eval/eval-form :call
     :push print/form :call
-    :!prn-nl 
+    :!prn-nl :!prn-nl
     :push main-loop :jump
 
     ;; Quit. Needs some check in the repl to jump to here.
