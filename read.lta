@@ -1,14 +1,58 @@
 (lt64-asm-mod
+  ;; TODO need to handle EOF when reading
+  ;; Also somehow for the top level read to quit the interpreter
+
   ;; Read a new form from stdin and store the structured data
   ;; Leaves the address of the new form on the stack
   (proc read/form
+    :push read/eat-ws :call
+
+    ;; Check for what to read
+    :first :!lp :eq
+    :push form-is-pair :branch
+    :first :push read/digit? :call
+    :push form-is-number :branch
+    :first :push read/starts-symbol? :call
+    :push form-is-symbol :branch
+
+    ;; Not a valid character to start a form
+    :push invalid-start-char :prnmem-lb
+    :!quote :prnch :first :prnch :!quote :prnch
+    :!lp :prnch :wprn :!rp :prnch :!prn-nl
+    :halt
+
+    :label form-is-pair
+    :pop                               ;; discard the (
+    :push read/pair :call
+    :push read-form-end :jump
+
+    :label form-is-number
+    :push read/number :call
+    :push read-form-end :jump
+
+    :label form-is-symbol
     :push read/symbol :call
+
+    :label read-form-end
+    ;; cleanup?
+    :ret)
+
+  ;; Eats all whitespace in stdin and leaves the first non whitespace
+  ;; char on the stack.
+  (proc read/eat-ws
+    :readch
+    :ret)
+
+  ;; Symbol reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (proc read/starts-symbol?
+    :push 1
     :ret)
 
   ;; Read the next symbol and store up to its first 6 chars
   ;; in a newly allocated symbol. Leave stop char on the stack.
   (proc read/symbol
-    :push read/chars :call              ;; read chars into buffer until stop
+    :push read/sym-chars :call         ;; read chars into buffer until stop
 
     :bfp :push symlist/has-name? :call
     :first :push symbol-already-there :branch
@@ -27,22 +71,21 @@
   ;; kind of like the print-name, but in a loop
 
   ;; Read chars into the buffer until we see one of the following:
-  ;; lp=40, rp=41, .=46, ,=44, ;=59, '=39,
-  ;; space=32, tab=9, newline=10
-  ;; Leaves stop char on stack
-  (proc read/chars
-    :push 0  ;; delimeter on stack
+  ;; Expects the first char is on the stack already.
+  ;; Leaves stop char on stack.
+  (proc read/sym-chars
+    :push 0 :swap                      ;; delimeter on stack under first char
 
     ;; Read all chars up to stopping point onto stack
     :label chars-read-loop
     ;; TODO make this check and the other two use a subroutine that checks
     ;; to see if it is a stopping char not just a newline
-    :readch :first :push 10 :eq :!zero?
+    :readch :first :push 10 :eq :!not
     :push chars-read-loop :branch
 
     ;; Move all chars onto the return stack to reverse them
     :label chars-reverse-loop
-    :rpush :rgrab :!zero? :!zero?
+    :rpush :rgrab
     :push chars-reverse-loop :branch
     :rpop :pop  ;; get rid of the 0 delimeter
 
@@ -68,5 +111,26 @@
     ;; The stopping char is on the stack
     :ret)
 
+
+  ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Read a pair and leave the address on the stack.
+  ;; Does not expect anything on the stack.
+  (proc read/pair
+    :!nil
+    :ret)
+
+
+  ;; Number reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (proc read/digit?
+    :push 0
+    :ret)
+
+  ;; Read a number and leave the address on the stack.
+  ;; Expects the first character on the stack.
+  (proc read/number
+    :!nil
+    :ret)
 )
 

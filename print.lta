@@ -1,7 +1,17 @@
 (lt64-asm-mod
   ;; Take the address of a form on top of the stack and print it
   (proc print/form
-    :push sym/print-name :call  ;; for now we can just do symbols
+    :first :!nil :eq
+    :push print-form-is-nil :branch
+
+    ;; for now we can just do symbols
+    :push sym/print-name :call
+    :push print-form-end :jump
+
+    :label print-form-is-nil
+    :push nil-sym :prnmem-lb
+
+    :label print-form-end
     :ret)
   
 )
