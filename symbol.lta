@@ -13,6 +13,50 @@
   (macro :!sym/name-ptr :push 2 :add)
   (macro :!sym/end-ptr :push 6 :add)
 
+  ;; Take an address of a symbol name and a symbol. Copy the first 3
+  ;; words from the name into the symbol's name.
+  (proc sym/set-name
+    :second :load-lb
+    :second :!sym/name-ptr :store-lb
+    :second :push 1 :add :load-lb
+    :second :!sym/name-ptr :push 1 :add :store-lb
+    :swap :push 2 :add :load-lb
+    :swap :!sym/name-ptr :push 2 :add :store-lb
+    :ret)
+
+  ;; Take a symbol address and print its print name
+  ;; A bit cumbersome without a loop, but it is easy to reason about
+  ;; and probably not much more code.
+  ;; Tested informally and works as expected
+  (proc sym/print-name
+    :!sym/name-ptr
+
+    :first :load-lb :unpack :rot :pop
+    :first :!zero? :push print-name-done-low :branch
+    :prnch
+    :first :!zero? :push print-name-done :branch
+    :prnch
+    
+    :first :push 1 :add :load-lb :unpack :rot :pop
+    :first :!zero? :push print-name-done-low :branch
+    :prnch
+    :first :!zero? :push print-name-done :branch
+    :prnch
+
+    :first :push 2 :add :load-lb :unpack :rot :pop
+    :first :!zero? :push print-name-done-low :branch
+    :prnch
+    :first :!zero? :push print-name-done :branch
+    :prnch
+    :pop :ret
+
+    :label print-name-done-low
+    :pop
+    :label print-name-done
+    :pop :pop
+    :ret)
+
+
   ;; Use(don't pop) an address and setup initial symbol data values
   (proc sym/make
     :push 1 :push 0 :pack :second :!sym/set-info

@@ -6,7 +6,7 @@ PROGRAM=ltsp
 DEBUG=ltsp-debug
 TEST=ltsp-test
 
-LTASM= lt64-asm-0.0.3-3.jar
+LTASM= lt64-asm-0.0.3-4.jar
 ASM_FLAGS= -c $(CFILE)
 ASM_TEST_FLAGS= -c $(TEST_CFILE)
 

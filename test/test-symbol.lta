@@ -69,4 +69,16 @@
     :push 0x0000
     :fmp :push sym/make :call :!sym/name-ptr :load-lb
     :ret)
+
+  ;; Expect that if name was set the last word was copied
+  (proc test-sym/set-name
+    :push 0x7473 :push 0 :bufstore
+    :push 0x7665 :push 1 :bufstore
+    :push 0x6E65 :push 2 :bufstore
+
+    :push test-sym/setup-sym-mem :call
+    :push 0x6E65
+    :bfp :fmp :push sym/set-name :call
+    :fmp :!sym/name-ptr :push 2 :add :load-lb
+    :ret)
 )

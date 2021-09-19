@@ -20,9 +20,19 @@
     :ret)
   
   ;; Given the address of a symbol name check if it equals any of the
-  ;; stored symbol names. Put the address of the symbol or nil (0)
+  ;; stored symbol names. Put the address of the found symbol or nil (0)
   (proc symlist/has-name?
-    ;;for each symbol in the list
-    ;;check if the strings at each mem location are equal
+    :!symlist/head                    ;; Add address of first symbol
+
+    :label has-name-loop
+    :second :second :!sym/name-ptr :push 3 :memeq
+    :push has-name-end :branch
+
+    :!sym/next
+    :first :!zero? :push has-name-end :branch
+    :push has-name-loop :jump
+
+    :label has-name-end
+    :swap :pop                        ;; Can do for both cause next is right or nil
     :ret)
 )

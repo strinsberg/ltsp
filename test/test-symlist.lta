@@ -11,4 +11,68 @@
     :!symlist/head
     :ret)
 
+  ;; Expect that the symlist head equals the address returned from new-symbol
+  (proc test-symlist/add-sets-head-address
+    :push alloc/new-symbol :call   
+    :first :push symlist/add :call
+    :!symlist/head
+    :ret)
+
+
+  ;; Traversal setup ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc test-symlist/steve-to-buf
+    :push 0x7473 :push 0 :bufstore
+    :push 0x7665 :push 1 :bufstore
+    :push 0x0065 :push 2 :bufstore
+    :ret)
+
+  (proc test-symlist/toolong-to-buf
+    :push 0x6F73 :push 0 :bufstore
+    :push 0x6C6F :push 1 :bufstore
+    :push 0x6E6F :push 2 :bufstore
+    :push 0x0067 :push 3 :bufstore
+    :ret)
+
+  (proc test-symlist/steven-to-buf
+    :push 0x7473 :push 0 :bufstore
+    :push 0x7665 :push 1 :bufstore
+    :push 0x6E65 :push 2 :bufstore
+    :ret)
+
+  (proc test-symlist/setup-new-list
+    :push alloc/setup-fm :call                 ;; reset memory pointers
+
+    :push alloc/new-symbol :call               ;; get next sym address
+    :push test-symlist/steve-to-buf :call      ;; put "steve\0" in buffer
+    :bfp :second :push sym/set-name :call      ;; copy into sym name
+    :push symlist/add :call                    ;; add the symbol to the list
+        
+    :push alloc/new-symbol :call
+    :push test-symlist/toolong-to-buf :call
+    :bfp :second :push sym/set-name :call
+    :push symlist/add :call
+
+    :push alloc/new-symbol :call
+    :push test-symlist/steven-to-buf :call
+    :bfp :second :push sym/set-name :call
+    :push symlist/add :call
+    :ret)
+
+  ;; Traversal subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Expect that the name in the buffer exists in a symbol in the symbol
+  ;; list. Put 3 symbols in list with setup subroutine.
+  (proc test-symlist/has-name?-true
+    :push 1
+    :push test-symlist/setup-new-list :call
+    :push test-symlist/steve-to-buf :call
+    :bfp :push symlist/has-name? :call
+    :ret)
+
+  ;; Expect that the name in the buffer does not exists in a symbol in the symbol
+  ;; list. Put 3 symbols in list with setup subroutine.
+  (proc test-symlist/has-name?-false
+    :push 0
+        
+    :ret)
 )
