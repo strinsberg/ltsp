@@ -25,6 +25,8 @@
     :!symlist/head                    ;; Add address of first symbol
 
     :label has-name-loop
+    ;:first :wprn :!prn-nl
+    ;:first :push sym/print-name :call :!prn-nl
     :second :second :!sym/name-ptr :push 3 :memeq
     :push has-name-end :branch
 

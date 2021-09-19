@@ -79,7 +79,8 @@
     :push test-symlist/head-address :call :push is :call
     :push test-symlist/set-get-head :call :push is :call
     :push test-symlist/add-sets-head-address :call :push is :call
-    ;:push test-symlist/has-name?-true :call :push is :call
+    :push test-symlist/has-name?-true :call :push is :call
+    :push test-symlist/has-name?-false :call :push is :call
     :ret)
 
 

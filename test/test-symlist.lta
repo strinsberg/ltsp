@@ -27,7 +27,7 @@
     :ret)
 
   (proc test-symlist/toolong-to-buf
-    :push 0x6F73 :push 0 :bufstore
+    :push 0x6F74 :push 0 :bufstore
     :push 0x6C6F :push 1 :bufstore
     :push 0x6E6F :push 2 :bufstore
     :push 0x0067 :push 3 :bufstore
@@ -37,6 +37,12 @@
     :push 0x7473 :push 0 :bufstore
     :push 0x7665 :push 1 :bufstore
     :push 0x6E65 :push 2 :bufstore
+    :ret)
+
+  (proc test-symlist/dunk-to-buf
+    :push 0x7564 :push 0 :bufstore
+    :push 0x6B6E :push 1 :bufstore
+    :push 0x0000 :push 2 :bufstore
     :ret)
 
   (proc test-symlist/setup-new-list
@@ -63,8 +69,8 @@
   ;; Expect that the name in the buffer exists in a symbol in the symbol
   ;; list. Put 3 symbols in list with setup subroutine.
   (proc test-symlist/has-name?-true
-    :push 1
     :push test-symlist/setup-new-list :call
+    :!symlist/head :!sym/next :!sym/next
     :push test-symlist/steve-to-buf :call
     :bfp :push symlist/has-name? :call
     :ret)
@@ -73,6 +79,8 @@
   ;; list. Put 3 symbols in list with setup subroutine.
   (proc test-symlist/has-name?-false
     :push 0
-        
+    :push test-symlist/setup-new-list :call
+    :push test-symlist/dunk-to-buf :call
+    :bfp :push symlist/has-name? :call
     :ret)
 )
