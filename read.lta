@@ -9,22 +9,27 @@
   ;; in a newly allocated symbol. Leave stop char on the stack.
   (proc read/symbol
     :push read/chars :call              ;; read chars into buffer until stop
-    ;; TODO before allocating a new symbol we need to search
-    ;; to see if it is already in the list
-    ;; Need a set of procedures for dealing with the sym list
-    :push alloc/new-symbol :call
-    :first :push 2 :add                 ;; sym string is at sym + 2
-    :push 3 :buf-to-mem                 ;; copy 3 words (6chars) into sym
 
-    :!alloc/list-head                   ;; address of next sym
-    :second :push 5 :add :store-lb      ;; set sym to point to next sym
-    :first :!alloc/set-list-head        ;; list head point to new sym
+    :bfp :push symlist/has-name? :call
+    :first :push symbol-already-there :branch
+
+    :pop :push alloc/new-symbol :call
+    :bfp :second :push sym/set-name :call
+
+    :label symbol-already-there
+    :first :push symlist/add :call
     :ret)
+
+  ;; TODO the char reading could be better using the :readch-buf but it will
+  ;; still need to pull chars out of the buffer to check for the stop
+  ;; char in both bytes, so might be as easy to just duplicate the
+  ;; readch-buf op in here reading chars in and packing them if needed
+  ;; kind of like the print-name, but in a loop
 
   ;; Read chars into the buffer until we see one of the following:
   ;; lp=40, rp=41, .=46, ,=44, ;=59, '=39,
   ;; space=32, tab=9, newline=10
-  ;; Leave stop char on stack
+  ;; Leaves stop char on stack
   (proc read/chars
     :push 0  ;; delimeter on stack
 
@@ -62,6 +67,6 @@
 
     ;; The stopping char is on the stack
     :ret)
-  
+
 )
 
