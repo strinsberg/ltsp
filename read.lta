@@ -8,7 +8,7 @@
     :push read/eat-ws :call
 
     ;; Check for what to read
-    :first :!lp :eq
+    :first :!ch-lp :eq
     :push form-is-pair :branch
     :first :push read/digit? :call
     :push form-is-number :branch
@@ -17,8 +17,8 @@
 
     ;; Not a valid character to start a form
     :push invalid-start-char :prnmem-lb
-    :!quote :prnch :first :prnch :!quote :prnch
-    :!lp :prnch :wprn :!rp :prnch :!prn-nl
+    :!ch-quote :prnch :first :prnch :!ch-quote :prnch
+    :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
     ;; For the repl errors end the whole read
     ;; For files we would just quit, or do error recovery
     :readln :!nil :ret
@@ -47,37 +47,50 @@
 
   ;; Symbol reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (macro :!init-rcount :push 0 :rpush)
-  (macro :!inc-rcount :rpop :push 1 :add :rpush)
-  (macro :!end-rcount :rpop :pop)
-  (macro :!eq-rcount :rgrab :eq)
-  (macro :!add-rcount :rgrab :add)
-
   ;; Tell if the char on the stack can be in a symbol.
   ;; Ignores chars that can't start a symbol and that would stop a symbol
   ;; because they will be checked somewhere else.
   ;; Leaves 1 for true and 0 for false
   (proc read/valid-symbol-char?
+    :push invalid-sym
+    :push read/in-char-list? :call
+    :!not
+    :ret)
+
+  (proc read/whitespace?
+    :push whitespace
+    :push read/in-char-list? :call
+    :ret)
+
+  (proc read/stops-sym?
+    :push stops-sym
+    :push read/in-char-list? :call
+    :ret)
+
+  ;; Takes a char and a symbol for the memory it comes from
+  (proc read/in-char-list?
     :!init-rcount
-    :label valid-symbol-char-loop
-    :push invalid-sym :!add-rcount :load-lb
-    :first :!zero? :push valid-symbol-char-true :branch
-    :second :eq :push valid-symbol-char-false :branch
+    :label in-char-list-loop
+    :first :!add-rcount :load-lb                        ;; List char at counter
+    :first :!zero? :push in-char-list-false :branch      ;; Null char ends list
+    :push 2 :nth :eq :push in-char-list-true :branch   ;; Check if chars eq
     :!inc-rcount
-    :push valid-symbol-char-loop :jump
+    :push in-char-list-loop :jump
 
-    :label valid-symbol-char-true
-    :pop                               ;; remove the 0 that ended the list
-    :push 1 :!end-rcount :ret
-
-    :label valid-symbol-char-false
+    :label in-char-list-false
+    :pop :pop :pop                     ;; remove end list and list label
     :push 0 :!end-rcount
+    :ret
+
+    :label in-char-list-true
+    :pop :pop
+    :push 1 :!end-rcount
     :ret)
 
   ;; Read the next symbol and store up to its first 6 chars
   ;; in a newly allocated symbol. Leave stop char on the stack.
   (proc read/symbol
-    :push read/sym-chars :call         ;; read chars into buffer until stop
+    :push read/symbol-chars :call         ;; read chars into buffer until stop
 
     :bfp :push symlist/has-name? :call
     :first :push symbol-already-there :branch
@@ -89,52 +102,48 @@
     :first :push symlist/add :call
     :ret)
 
-  ;; TODO the char reading could be better using the :readch-buf but it will
-  ;; still need to pull chars out of the buffer to check for the stop
-  ;; char in both bytes, so might be as easy to just duplicate the
-  ;; readch-buf op in here reading chars in and packing them if needed
-  ;; kind of like the print-name, but in a loop
+  ;; Takes a start symbol and reads and packs chars of
+  ;; a symbol into the buffer
+  (proc read/symbol-chars
+    :!init-rcount :!inc-rcount             ;; already one char on stack
+    :label symbol-chars-loop
+    :readch
+    :first :push read/whitespace? :call
+    :second :push read/stops-sym? :call
+    :or
+    :push symbol-chars-stop :branch
 
-  ;; Read chars into the buffer until we see one of the following:
-  ;; Expects the first char is on the stack already.
-  ;; Leaves stop char on stack.
-  (proc read/sym-chars
-    :push 0 :swap                      ;; delimeter on stack under first char
+    ;; else not done
+    :rgrab :push std/odd? :call            
+    :push symbol-chars-store-chars :branch
 
-    ;; Read all chars up to stopping point onto stack
-    :label chars-read-loop
-    ;; TODO check to make sure the chars are valid in a symbol
-    ;; TODO make this check and the other two use a subroutine that checks
-    ;; to see if it is a stopping char not just a newline
-    :readch :first :push 10 :eq :!not
-    :push chars-read-loop :branch
+    ;; else even
+    :!inc-rcount
+    :push symbol-chars-loop :jump
 
-    ;; Move all chars onto the return stack to reverse them
-    :label chars-reverse-loop
-    :rpush :rgrab
-    :push chars-reverse-loop :branch
-    :rpop :pop  ;; get rid of the 0 delimeter
+    ;; if odd
+    :label symbol-chars-store-chars
+    :swap :pack                            ;; first char is not top
+    :rgrab :push 2 :div :bufstore          ;; divide counter cause packed
+    :!inc-rcount
+    :push symbol-chars-loop :jump
+    ;; end loop
+        
+    ;; if stopping
+    :label symbol-chars-stop
+    :rgrab :push std/odd? :call
+    :push symbol-chars-store-last :branch
 
-    ;; Take 2 chars at a time, pack them, move them to buffer
-    ;; If one of the pulled chars is the stoping char
-    ;; save it and store last char or 0 into buffer
+    ;; else stop char was the first of a pair so null terminate
     :push 0
-    :label chars-buf-loop
-    :rpop :rpop
-    :second :push 10 :eq :push chars-first-stop :branch
-    :first :push 10 :eq :push chars-second-stop :branch
-    :swap :pack :second :bufstore
-    :!inc :push chars-buf-loop :jump
+    :rgrab :push 2 :div :bufstore
+    :!end-rcount :ret
 
-    :label chars-first-stop
-    :rpush
-    :push 0 :swap  ;; swap lets us fall through without jumping
-
-    :label chars-second-stop
-    :swap
-    :rot :bufstore
-
-    ;; The stopping char is on the stack
+    ;; If stop char was the second of a pair
+    :label symbol-chars-store-last
+    :swap                                  ;; don't pack there is only one
+    :rgrab :push 2 :div :bufstore          ;; divide counter still
+    :!end-rcount
     :ret)
 
 

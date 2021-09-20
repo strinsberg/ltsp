@@ -5,8 +5,10 @@
     (:str nil-sym "NIL")
 
     ;; Char sets
-    (:word whitespace 6 0x09 0x0A 0x0D 0x20 0x2C 0x00)
-    (:word invalid-sym 5 0x22 0x27 0x2E 0x3B 0x00) ;; need more, like brackets?
+    (:word whitespace 6 0x09 0x0A 0x0D 0x20 0x2C 0x00) ;; \t \n cr space , 
+    (:word invalid-sym 9 0x22 0x27 0x2E 0x3B
+                         0x5B 0x5D 0x7B 0x7D 0x00) ;; " ' . ; [ ] { }
+    (:word stops-sym 3 0x28 0x29 0x00) ;; ( )  And whitespace
 
     ;; error text
     (:str invalid-start-char "*** Error: Char cannot start a symbol: ")
@@ -30,12 +32,12 @@
     :halt)
 
   (macro :!nil :push 0x000)
-  (macro :!quote :push 0x27)
-  (macro :!lp :push 0x28)
-  (macro :!rp :push 0x29)
-  (macro :!dot :push 0x2E)
-  (macro :!zero :push 0x30)
-  (macro :!nine :push 0x39)
+  (macro :!ch-quote :push 0x27)
+  (macro :!ch-lp :push 0x28)
+  (macro :!ch-rp :push 0x29)
+  (macro :!ch-dot :push 0x2E)
+  (macro :!ch-zero :push 0x30)
+  (macro :!ch-nine :push 0x39)
   
   (include "read.lta")
   (include "eval.lta")
@@ -43,4 +45,5 @@
   (include "allocate.lta")
   (include "symbol.lta")
   (include "symlist.lta")
+  (include "stdlib" odd?)
 )
