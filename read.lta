@@ -2,6 +2,15 @@
   ;; TODO need to handle EOF when reading
   ;; Also somehow for the top level read to quit the interpreter
 
+  (proc read/repl
+    :push read/form :call
+    :second :!ch-nl :eq
+    :push read-repl-end :branch
+    :readln ;; to remove any extra garbage after the first form
+    :pop
+    :label read-repl-end
+    :ret)
+
   ;; Read a new form from stdin and store the structured data
   ;; Leaves the address of the new form on the stack
   (proc read/form
@@ -182,6 +191,22 @@
 
   ;; Read a number and leave the address on the stack.
   ;; Expects the first character on the stack.
+  ;; The obvious easy way to do this is to just use wread, dread, or fread
+  ;; But since we don't know if it is an int or fixed we can't know
+  ;; which to use, in addition to the problem of one of the
+  ;; digits being on the stack.
+  ;; It should be possible to read them onto the stack and them one at a time
+  ;; convert them and sum them together. I.e. loop pop get numerical value
+  ;; multiply by 10 * counter add to sum.
+  ;; Then create the memory and add the number to it
+  ;; There could be routines for removing any decimal past 3 from the input
+  ;; before doing a float, since they are fixed point can just convert them
+  ;; exactly the same and discard the .
+  ;; Maybe keep count of the number of digits while doing it to ensure that
+  ;; it won't overflow.
+  ;; Use a flag for fixed point to say that it is fixed when creating the type
+  ;; and to ensure only 3 digits after the decimal
+  ;; gonna have to break it up at least like symbol if not more
   (proc read/number
     :!nil
     :ret)

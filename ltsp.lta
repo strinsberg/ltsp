@@ -22,7 +22,7 @@
     ;; Start REPL
     :label main-loop
     :push prompt :prnmem-lb
-    :push read/form :call
+    :push read/repl :call
     :push eval/eval-form :call
     :push print/form :call
     :!prn-nl :!prn-nl
@@ -34,6 +34,7 @@
 
   (macro :!nil :push 0x000)
   (macro :!T :push 0x001)
+  (macro :!ch-nl :push 0x0A)
   (macro :!ch-quote :push 0x27)
   (macro :!ch-lp :push 0x28)
   (macro :!ch-rp :push 0x29)
