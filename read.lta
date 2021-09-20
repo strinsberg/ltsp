@@ -1,7 +1,21 @@
 (lt64-asm-mod
   ;; TODO need to handle EOF when reading
   ;; Also somehow for the top level read to quit the interpreter
+  ;; TODO need to think about clearing the stack between all calls to
+  ;; read/repl. This of course assumes that there is no information on
+  ;; the stack before a read. I expect it is empty, we read a form and it
+  ;; should end with only the form address on top which is consumed by
+  ;; eval. If this is not done then over time various things like errors
+  ;; could fill up the stack. Obviously the best thing would be that by the
+  ;; we get back to read/repl there is nothing but the form would be best,
+  ;; but as things get complex that is harder to gurantee. NOTE that the form
+  ;; should be pushed to rstack and the dstack cleared and then the form
+  ;; moved back.
 
+  ;; Read the next form and discard anyting else found.
+  ;; Works with the idea that the line will be ended with a \n. So if
+  ;; after reading a form we find anything else it means that their is
+  ;; more text that needs to be discarded.
   (proc read/repl
     :push read/form :call
     :second :!ch-nl :eq
@@ -186,28 +200,77 @@
   ;; Number reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (proc read/digit?
-    :push 0
+    :first :!ch-zero :!dec :gt
+      :swap :!ch-nine :!inc :lt
+      :and
+      :push is-digit-true :branch
+    :!nil :ret
+
+    :label is-digit-true
+    :!T
     :ret)
 
   ;; Read a number and leave the address on the stack.
-  ;; Expects the first character on the stack.
-  ;; The obvious easy way to do this is to just use wread, dread, or fread
-  ;; But since we don't know if it is an int or fixed we can't know
-  ;; which to use, in addition to the problem of one of the
-  ;; digits being on the stack.
-  ;; It should be possible to read them onto the stack and them one at a time
-  ;; convert them and sum them together. I.e. loop pop get numerical value
-  ;; multiply by 10 * counter add to sum.
-  ;; Then create the memory and add the number to it
-  ;; There could be routines for removing any decimal past 3 from the input
-  ;; before doing a float, since they are fixed point can just convert them
-  ;; exactly the same and discard the .
-  ;; Maybe keep count of the number of digits while doing it to ensure that
-  ;; it won't overflow.
-  ;; Use a flag for fixed point to say that it is fixed when creating the type
-  ;; and to ensure only 3 digits after the decimal
-  ;; gonna have to break it up at least like symbol if not more
+  ;; Expects either a digit char or a minus/plus sign on the stack.
+  ;; Leaves T if the number was read successfully and NIL if not.
+  ;; Leaves a double word of the number under the result.
+  ;; If the number is more than 10 digits, or has more than 3 decimal places
+  ;; for fixed numbers, then an error is "thrown". However, it is still
+  ;; possible to give a large 10 digit number and overflow.
   (proc read/number
+    ;; TODO process sign properly, for now just use 1
+    ;; currently expect starting digit on stack
+    :dpush 1 :rot
+
+    :!init-rcount :!inc-rcount  ;; TODO only inc if we already have a digit
+    :label read-number-int-loop
+    :BREAK
+    :readch
+    :first :!ch-dot :eq
+      :push read-number-fixed-loop :branch
+    :first :push read/stops-sym? :call
+      :second :push read/whitespace? :call
+      :or :push read-number-build :branch
+    :first :push read/digit? :call :!not
+      :push read-number-char-error :branch
+    :push 10 :!eq-rcount
+      :push read-number-size-error :branch
+    :!inc-rcount
+    :push read-number-int-loop :jump
+
+
+
+    :label read-number-fixed-loop
+
+
+    :label read-number-build
+    :pop ;; temp for dealing with the stop char
+    :!dec-rcount :!rcount :dpush 0  ;; get num digits - 1 and push accumulator
+    :label read-number-build-loop
+    :BREAK
+
+    :dswap :swap :!ch-zero :sub ;; make char digit a number
+    :second :!rcount :sub ;; get factor exponent
+    :push 2 :mult :push build-num-factor :add :dload-lb ;; get factor
+    :rot :!->dword :dmult ;; mult by factor
+    :rot :rpush :dadd :rpop :rot :rot  ;; accumulate and order properly
+
+    :push 0 :!eq-rcount
+      :push read-number-set-sign :branch
+    :!dec-rcount
+    :push read-number-build-loop :jump
+
+    :label read-number-set-sign
+    :rot :pop ;; get rid of size
+    :dmult :dprn :!prn-nl
+    :halt
+
+    :label read-number-size-error
+
+    :label read-number-char-error
+
+    :label read-number-fixed-error
+
     :!nil
     :ret)
 
