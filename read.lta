@@ -38,7 +38,10 @@
   ;; Eats all whitespace in stdin and leaves the first non whitespace
   ;; char on the stack.
   (proc read/eat-ws
+    :label eat-ws-loop
     :readch
+    :first :push read/whitespace? :call
+    :push eat-ws-loop :branch
     :ret)
 
   ;; Symbol reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
