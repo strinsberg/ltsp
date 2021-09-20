@@ -16,12 +16,8 @@
     :push form-is-symbol :branch
 
     ;; Not a valid character to start a form
-    :push invalid-start-char :prnmem-lb
-    :!ch-quote :prnch :first :prnch :!ch-quote :prnch
-    :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-    ;; For the repl errors end the whole read
-    ;; For files we would just quit, or do error recovery
-    :readln :!nil :ret
+    :push read/symbol-start-error :call
+    :!nil :ret
 
     :label form-is-pair
     :pop                               ;; discard the (
@@ -91,6 +87,8 @@
   ;; in a newly allocated symbol. Leave stop char on the stack.
   (proc read/symbol
     :push read/symbol-chars :call         ;; read chars into buffer until stop
+    :!not
+    :push symbol-error-while-reading :branch
 
     :bfp :push symlist/has-name? :call
     :first :push symbol-already-there :branch
@@ -100,14 +98,24 @@
 
     :label symbol-already-there
     :first :push symlist/add :call
+    :ret
+    
+    :label symbol-error-while-reading
+    :!nil
     :ret)
 
   ;; Takes a start symbol and reads and packs chars of
   ;; a symbol into the buffer
+  ;; Leaves T on top if read successfully, otherwise NIL
+  ;; Under that it leaves the stopping char
   (proc read/symbol-chars
     :!init-rcount :!inc-rcount             ;; already one char on stack
     :label symbol-chars-loop
     :readch
+    :first :push read/valid-symbol-char? :call :!not
+    :push symbol-chars-invalid :branch
+
+    ;; else the symbol is valid
     :first :push read/whitespace? :call
     :second :push read/stops-sym? :call
     :or
@@ -128,6 +136,14 @@
     :!inc-rcount
     :push symbol-chars-loop :jump
     ;; end loop
+
+    ;; if character can't be in a symbol
+    :label symbol-chars-invalid
+    :push read/symbol-char-error :call
+    :!end-rcount
+    ;; TODO we need to pop chars from the stack or too many of these will
+    ;; eventually overflow it
+    :!nil :ret
         
     ;; if stopping
     :label symbol-chars-stop
@@ -137,15 +153,14 @@
     ;; else stop char was the first of a pair so null terminate
     :push 0
     :rgrab :push 2 :div :bufstore
-    :!end-rcount :ret
+    :!end-rcount :!T :ret
 
     ;; If stop char was the second of a pair
     :label symbol-chars-store-last
     :swap                                  ;; don't pack there is only one
     :rgrab :push 2 :div :bufstore          ;; divide counter still
-    :!end-rcount
+    :!end-rcount :!T
     :ret)
-
 
   ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -167,5 +182,23 @@
   (proc read/number
     :!nil
     :ret)
+
+  ;; Errors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (proc read/symbol-char-error
+    :push invalid-symbol-char :prnmem-lb
+    :!ch-quote :prnch :first :prnch :!ch-quote :prnch
+    :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
+    ;; For the repl errors end the whole read
+    ;; For files we would just quit, or do error recovery
+    :readln
+    :ret)
+
+  (proc read/symbol-start-error
+    :push invalid-start-char :prnmem-lb
+    :!ch-quote :prnch :first :prnch :!ch-quote :prnch
+    :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
+    :readln
+    :ret)
+
 )
 

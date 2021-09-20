@@ -12,6 +12,7 @@
 
     ;; error text
     (:str invalid-start-char "*** Error: Char cannot start a symbol: ")
+    (:str invalid-symbol-char "*** Error: Char cannot be in a symbol: ")
   )
     
   (main
@@ -32,12 +33,17 @@
     :halt)
 
   (macro :!nil :push 0x000)
+  (macro :!T :push 0x001)
   (macro :!ch-quote :push 0x27)
   (macro :!ch-lp :push 0x28)
   (macro :!ch-rp :push 0x29)
   (macro :!ch-dot :push 0x2E)
   (macro :!ch-zero :push 0x30)
   (macro :!ch-nine :push 0x39)
+
+  (macro :!debug-char :first :prnch :push 10 :prnch)
+  (macro :!debug-fst :first :wprn :push 10 :prnch)
+  (macro :!debug-sec :second :wprn :push 10 :prnch)
   
   (include "read.lta")
   (include "eval.lta")
