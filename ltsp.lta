@@ -19,6 +19,11 @@
     ;; error text
     (:str invalid-start-char "*** Error: Char cannot start a symbol: ")
     (:str invalid-symbol-char "*** Error: Char cannot be in a symbol: ")
+    (:str invalid-number-char "*** Error: Char cannot be in a number: ")
+    (:str number-too-large
+    "*** Error: Numbers are limited to a max of 10 digits, including decimal digits")
+    (:str number-too-many-decimals
+    "*** Error: Fixed point numbers are limited to a maximum of 3 decimal digits")
   )
     
   (main
@@ -44,6 +49,8 @@
   (macro :!ch-quote :push 0x27)
   (macro :!ch-lp :push 0x28)
   (macro :!ch-rp :push 0x29)
+  (macro :!ch-plus :push 0x2B)
+  (macro :!ch-minus :push 0x2D)
   (macro :!ch-dot :push 0x2E)
   (macro :!ch-zero :push 0x30)
   (macro :!ch-nine :push 0x39)

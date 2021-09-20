@@ -1,295 +1,350 @@
 (lt64-asm-mod
-  ;; TODO need to handle EOF when reading
-  ;; Also somehow for the top level read to quit the interpreter
-  ;; TODO need to think about clearing the stack between all calls to
-  ;; read/repl. This of course assumes that there is no information on
-  ;; the stack before a read. I expect it is empty, we read a form and it
-  ;; should end with only the form address on top which is consumed by
-  ;; eval. If this is not done then over time various things like errors
-  ;; could fill up the stack. Obviously the best thing would be that by the
-  ;; we get back to read/repl there is nothing but the form would be best,
-  ;; but as things get complex that is harder to gurantee. NOTE that the form
-  ;; should be pushed to rstack and the dstack cleared and then the form
-  ;; moved back.
 
-  ;; Read the next form and discard anyting else found.
-  ;; Works with the idea that the line will be ended with a \n. So if
-  ;; after reading a form we find anything else it means that their is
-  ;; more text that needs to be discarded.
-  (proc read/repl
-    :push read/form :call
-    :second :!ch-nl :eq
-    :push read-repl-end :branch
-    :readln ;; to remove any extra garbage after the first form
-    :pop
-    :label read-repl-end
-    :ret)
+;; TODO need to handle EOF when reading
+;; Also somehow for the top level read to quit the interpreter
+;; TODO need to think about clearing the stack between all calls to
+;; read/repl. This of course assumes that there is no information on
+;; the stack before a read. I expect it is empty, we read a form and it
+;; should end with only the form address on top which is consumed by
+;; eval. If this is not done then over time various things like errors
+;; could fill up the stack. Obviously the best thing would be that by the
+;; we get back to read/repl there is nothing but the form would be best,
+;; but as things get complex that is harder to gurantee. NOTE that the form
+;; should be pushed to rstack and the dstack cleared and then the form
+;; moved back.
 
-  ;; Read a new form from stdin and store the structured data
-  ;; Leaves the address of the new form on the stack
-  (proc read/form
-    :push read/eat-ws :call
+;; Read the next form and discard anyting else found.
+;; Works with the idea that the line will be ended with a \n. So if
+;; after reading a form we find anything else it means that their is
+;; more text that needs to be discarded.
+(proc read/repl
+  :push read/form :call
+  :second :!ch-nl :eq
+  :push read-repl-end :branch
+  :readln ;; to remove any extra garbage after the first form
+  :pop
+  :label read-repl-end
+  :ret)
 
-    ;; Check for what to read
-    :first :!ch-lp :eq
-    :push form-is-pair :branch
-    :first :push read/digit? :call
-    :push form-is-number :branch
-    :first :push read/valid-symbol-char? :call
-    :push form-is-symbol :branch
+;; Read a new form from stdin and store the structured data
+;; Leaves the address of the new form on the stack
+(proc read/form
+  :push read/eat-ws :call
 
-    ;; Not a valid character to start a form
-    :push read/symbol-start-error :call
-    :!nil :ret
+  ;; Check for what to read
+  :first :!ch-lp :eq
+  :push form-is-pair :branch
+  :first :push read/digit? :call
+  :push form-is-number :branch
+  :first :push read/valid-symbol-char? :call
+  :push form-is-symbol :branch
 
-    :label form-is-pair
-    :pop                               ;; discard the (
-    :push read/pair :call
-    :push read-form-end :jump
+  ;; Not a valid character to start a form
+  :push read/symbol-start-error :call
+  :!nil :ret
 
-    :label form-is-number
-    :push read/number :call
-    :push read-form-end :jump
+  :label form-is-pair
+  :pop                               ;; discard the (
+  :push read/pair :call
+  :push read-form-end :jump
 
-    :label form-is-symbol
-    :push read/symbol :call
+  :label form-is-number
+  :push read/number :call
+  :push read-form-end :jump
 
-    :label read-form-end
-    ;; cleanup?
-    :ret)
+  :label form-is-symbol
+  :push read/symbol :call
 
-  ;; Eats all whitespace in stdin and leaves the first non whitespace
-  ;; char on the stack.
-  (proc read/eat-ws
-    :label eat-ws-loop
-    :readch
-    :first :push read/whitespace? :call
-    :push eat-ws-loop :branch
-    :ret)
+  :label read-form-end
+  ;; cleanup?
+  :ret)
 
-  ;; Symbol reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Eats all whitespace in stdin and leaves the first non whitespace
+;; char on the stack.
+(proc read/eat-ws
+  :label eat-ws-loop
+  :readch
+  :first :push read/whitespace? :call
+  :push eat-ws-loop :branch
+  :ret)
 
-  ;; Tell if the char on the stack can be in a symbol.
-  ;; Ignores chars that can't start a symbol and that would stop a symbol
-  ;; because they will be checked somewhere else.
-  ;; Leaves 1 for true and 0 for false
-  (proc read/valid-symbol-char?
-    :push invalid-sym
-    :push read/in-char-list? :call
-    :!not
-    :ret)
+;; Symbol reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (proc read/whitespace?
-    :push whitespace
-    :push read/in-char-list? :call
-    :ret)
+;; Tell if the char on the stack can be in a symbol.
+;; Ignores chars that can't start a symbol and that would stop a symbol
+;; because they will be checked somewhere else.
+;; Leaves 1 for true and 0 for false
+(proc read/valid-symbol-char?
+  :push invalid-sym
+  :push read/in-char-list? :call
+  :!not
+  :ret)
 
-  (proc read/stops-sym?
-    :push stops-sym
-    :push read/in-char-list? :call
-    :ret)
+(proc read/whitespace?
+  :push whitespace
+  :push read/in-char-list? :call
+  :ret)
 
-  ;; Takes a char and a symbol for the memory it comes from
-  (proc read/in-char-list?
-    :!init-rcount
-    :label in-char-list-loop
-    :first :!add-rcount :load-lb                        ;; List char at counter
-    :first :!zero? :push in-char-list-false :branch      ;; Null char ends list
-    :push 2 :nth :eq :push in-char-list-true :branch   ;; Check if chars eq
-    :!inc-rcount
-    :push in-char-list-loop :jump
+(proc read/stops-sym?
+  :push stops-sym
+  :push read/in-char-list? :call
+  :ret)
 
-    :label in-char-list-false
-    :pop :pop :pop                     ;; remove end list and list label
-    :push 0 :!end-rcount
-    :ret
+;; Takes a char and a symbol for the memory it comes from
+(proc read/in-char-list?
+  :!init-rcount
+  :label in-char-list-loop
+  :first :!add-rcount :load-lb                        ;; List char at counter
+  :first :!zero? :push in-char-list-false :branch      ;; Null char ends list
+  :push 2 :nth :eq :push in-char-list-true :branch   ;; Check if chars eq
+  :!inc-rcount
+  :push in-char-list-loop :jump
 
-    :label in-char-list-true
-    :pop :pop
-    :push 1 :!end-rcount
-    :ret)
+  :label in-char-list-false
+  :pop :pop :pop                     ;; remove end list and list label
+  :push 0 :!end-rcount
+  :ret
 
-  ;; Read the next symbol and store up to its first 6 chars
-  ;; in a newly allocated symbol. Leave stop char on the stack.
-  (proc read/symbol
-    :push read/symbol-chars :call         ;; read chars into buffer until stop
-    :!not
-    :push symbol-error-while-reading :branch
+  :label in-char-list-true
+  :pop :pop
+  :push 1 :!end-rcount
+  :ret)
 
-    :bfp :push symlist/has-name? :call
-    :first :push symbol-already-there :branch
+;; Read the next symbol and store up to its first 6 chars
+;; in a newly allocated symbol. Leave stop char on the stack.
+(proc read/symbol
+  :push read/symbol-chars :call         ;; read chars into buffer until stop
+  :!not
+  :push symbol-error-while-reading :branch
 
-    :pop :push alloc/new-symbol :call
-    :bfp :second :push sym/set-name :call
+  :bfp :push symlist/has-name? :call
+  :first :push symbol-already-there :branch
 
-    :label symbol-already-there
-    :first :push symlist/add :call
-    :ret
-    
-    :label symbol-error-while-reading
-    :!nil
-    :ret)
+  :pop :push alloc/new-symbol :call
+  :bfp :second :push sym/set-name :call
 
-  ;; Takes a start symbol and reads and packs chars of
-  ;; a symbol into the buffer
-  ;; Leaves T on top if read successfully, otherwise NIL
-  ;; Under that it leaves the stopping char
-  (proc read/symbol-chars
-    :!init-rcount :!inc-rcount             ;; already one char on stack
-    :label symbol-chars-loop
-    :readch
-    :first :push read/valid-symbol-char? :call :!not
-    :push symbol-chars-invalid :branch
+  :label symbol-already-there
+  :first :push symlist/add :call
+  :ret
+  
+  :label symbol-error-while-reading
+  :!nil
+  :ret)
 
-    ;; else the symbol is valid
-    :first :push read/whitespace? :call
-    :second :push read/stops-sym? :call
-    :or
-    :push symbol-chars-stop :branch
+;; Takes a start symbol and reads and packs chars of
+;; a symbol into the buffer
+;; Leaves T on top if read successfully, otherwise NIL
+;; Under that it leaves the stopping char
+(proc read/symbol-chars
+  :!init-rcount :!inc-rcount             ;; already one char on stack
+  :label symbol-chars-loop
+  :readch
+  :first :push read/valid-symbol-char? :call :!not
+  :push symbol-chars-invalid :branch
 
-    ;; else not done
-    :rgrab :push std/odd? :call            
-    :push symbol-chars-store-chars :branch
+  ;; else the symbol is valid
+  :first :push read/whitespace? :call
+  :second :push read/stops-sym? :call
+  :or
+  :push symbol-chars-stop :branch
 
-    ;; else even
-    :!inc-rcount
-    :push symbol-chars-loop :jump
+  ;; else not done
+  :rgrab :push std/odd? :call            
+  :push symbol-chars-store-chars :branch
 
-    ;; if odd
-    :label symbol-chars-store-chars
-    :swap :pack                            ;; first char is not top
-    :rgrab :push 2 :div :bufstore          ;; divide counter cause packed
-    :!inc-rcount
-    :push symbol-chars-loop :jump
-    ;; end loop
+  ;; else even
+  :!inc-rcount
+  :push symbol-chars-loop :jump
 
-    ;; if character can't be in a symbol
-    :label symbol-chars-invalid
-    :push read/symbol-char-error :call
-    :!end-rcount
-    ;; TODO we need to pop chars from the stack or too many of these will
-    ;; eventually overflow it
-    :!nil :ret
-        
-    ;; if stopping
-    :label symbol-chars-stop
-    :rgrab :push std/odd? :call
-    :push symbol-chars-store-last :branch
+  ;; if odd
+  :label symbol-chars-store-chars
+  :swap :pack                            ;; first char is not top
+  :rgrab :push 2 :div :bufstore          ;; divide counter cause packed
+  :!inc-rcount
+  :push symbol-chars-loop :jump
+  ;; end loop
 
-    ;; else stop char was the first of a pair so null terminate
-    :push 0
-    :rgrab :push 2 :div :bufstore
-    :!end-rcount :!T :ret
+  ;; if character can't be in a symbol
+  :label symbol-chars-invalid
+  :push read/symbol-char-error :call
+  :!end-rcount
+  ;; TODO we need to pop chars from the stack or too many of these will
+  ;; eventually overflow it
+  :!nil :ret
+      
+  ;; if stopping
+  :label symbol-chars-stop
+  :rgrab :push std/odd? :call
+  :push symbol-chars-store-last :branch
 
-    ;; If stop char was the second of a pair
-    :label symbol-chars-store-last
-    :swap                                  ;; don't pack there is only one
-    :rgrab :push 2 :div :bufstore          ;; divide counter still
-    :!end-rcount :!T
-    :ret)
+  ;; else stop char was the first of a pair so null terminate
+  :push 0
+  :rgrab :push 2 :div :bufstore
+  :!end-rcount :!T :ret
 
-  ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; If stop char was the second of a pair
+  :label symbol-chars-store-last
+  :swap                                  ;; don't pack there is only one
+  :rgrab :push 2 :div :bufstore          ;; divide counter still
+  :!end-rcount :!T
+  :ret)
 
-  ;; Read a pair and leave the address on the stack.
-  ;; Does not expect anything on the stack.
-  (proc read/pair
-    :!nil
-    :ret)
+;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-  ;; Number reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  (proc read/digit?
-    :first :!ch-zero :!dec :gt
-      :swap :!ch-nine :!inc :lt
-      :and
-      :push is-digit-true :branch
-    :!nil :ret
-
-    :label is-digit-true
-    :!T
-    :ret)
-
-  ;; Read a number and leave the address on the stack.
-  ;; Expects either a digit char or a minus/plus sign on the stack.
-  ;; Leaves T if the number was read successfully and NIL if not.
-  ;; Leaves a double word of the number under the result.
-  ;; If the number is more than 10 digits, or has more than 3 decimal places
-  ;; for fixed numbers, then an error is "thrown". However, it is still
-  ;; possible to give a large 10 digit number and overflow.
-  (proc read/number
-    ;; TODO process sign properly, for now just use 1
-    ;; currently expect starting digit on stack
-    :dpush 1 :rot
-
-    :!init-rcount :!inc-rcount  ;; TODO only inc if we already have a digit
-    :label read-number-int-loop
-    :BREAK
-    :readch
-    :first :!ch-dot :eq
-      :push read-number-fixed-loop :branch
-    :first :push read/stops-sym? :call
-      :second :push read/whitespace? :call
-      :or :push read-number-build :branch
-    :first :push read/digit? :call :!not
-      :push read-number-char-error :branch
-    :push 10 :!eq-rcount
-      :push read-number-size-error :branch
-    :!inc-rcount
-    :push read-number-int-loop :jump
+;; Read a pair and leave the address on the stack.
+;; Does not expect anything on the stack.
+(proc read/pair
+  :!nil
+  :ret)
 
 
+;; Number reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    :label read-number-fixed-loop
+(proc read/digit?
+  :first :!ch-zero :!dec :gt
+    :swap :!ch-nine :!inc :lt
+    :and
+    :push is-digit-true :branch
+  :!nil :ret
 
+  :label is-digit-true
+  :!T
+  :ret)
 
-    :label read-number-build
-    :pop ;; temp for dealing with the stop char
-    :!dec-rcount :!rcount :dpush 0  ;; get num digits - 1 and push accumulator
-    :label read-number-build-loop
-    :BREAK
+;; Read a number and leave the address on the stack.
+;; Expects either a digit char or a minus/plus sign on the stack.
+;; Leaves T if the number was read successfully and NIL if not.
+;; Leaves a double word of the number under the result.
+;; If the number is more than 10 digits, or has more than 3 decimal places
+;; for fixed numbers, then an error is "thrown". However, it is still
+;; possible to give a large 10 digit number and overflow.
+(proc  read/number
+:BREAK :!init-rcount
+       :push read/set-number-sign :call
+:BREAK :rpop :add :rpush ;; add the 0 or 1 from the sign result to the counter
 
-    :dswap :swap :!ch-zero :sub ;; make char digit a number
-    :second :!rcount :sub ;; get factor exponent
-    :push 2 :mult :push build-num-factor :add :dload-lb ;; get factor
-    :rot :!->dword :dmult ;; mult by factor
-    :rot :rpush :dadd :rpop :rot :rot  ;; accumulate and order properly
+:label read-number-int-loop
+:BREAK :readch
+       :first :!ch-dot :eq
+         :push read-number-fixed :branch
+       :first :push read/stops-sym? :call
+         :second :push read/whitespace? :call
+         :or :push read-number-build :branch
+       :first :push read/digit? :call :!not
+         :push read-number-char-error :branch
+       :push 10 :!eq-rcount
+         :push read-number-size-error :branch
+       :!inc-rcount
+       :push read-number-int-loop :jump
 
-    :push 0 :!eq-rcount
-      :push read-number-set-sign :branch
-    :!dec-rcount
-    :push read-number-build-loop :jump
+:label read-number-fixed
+       :pop :!init-rcount  ;; pop the dot and start a new counter
+:label read-number-fixed-loop
+:BREAK :readch
+       :first :push read/stops-sym? :call
+         :second :push read/whitespace? :call
+         :or :push read-number-fixed-end
+         :branch
+       :first :push read/digit? :call :!not
+         :push read-number-char-error :branch
+       :push 3 :!eq-rcount
+         :push read-number-fixed-error :branch
+       :rpop :rgrab :second :rpush
+         :add :push 10 :eq
+         :push read-number-size-error :branch
+       :!inc-rcount
+       :push read-number-fixed-loop :jump
+:label read-number-fixed-end
+       :rpop :rpop :add :rpush  ;; merge the two counters
 
-    :label read-number-set-sign
-    :rot :pop ;; get rid of size
-    :dmult :dprn :!prn-nl
-    :halt
+:label read-number-build
+:BREAK :rpop :swap :rpush  ;; move stop char to rstack and put num size on dstack
+       :!dec
+       :push read/build-number :call
+:BREAK :rpop :rot :rot  ;; Put the stop char back under the number
+       :!T
+       :halt ;:ret
 
-    :label read-number-size-error
+:label read-number-size-error
+       :push number-too-large :prnmem-lb :!prn-nl
+       :!nil :ret
+:label read-number-char-error
+       :push read/number-char-error :call
+       :!nil :ret
+:label read-number-fixed-error
+       :push number-too-many-decimals :prnmem-lb :!prn-nl
+       :!nil :ret
+) ;; end read/number
 
-    :label read-number-char-error
+;; Uses the char on top of the stack, if it is a digit then it pushes a
+;; double word 1 under the digit on the dstack.
+;; Leaves a 1 or 0 to indicate if there was already a digit or just a sign
+;; 1 for digit.
+;; If the char is a - or + it pops the char and puts the appropriately
+;; signed double word 1 on the stack.
+(proc  read/set-number-sign
+       :first :!ch-minus :eq
+         :push set-number-sign-negative :branch
+       :first :!ch-plus :eq
+         :push set-number-sign-positive :branch
+       :dpush 1 :rot
+       :push 1
+       :ret
+:label set-number-sign-negative
+       :pop :dpush -1
+       :push 0
+       :ret
+:label set-number-sign-positive
+       :pop :dpush 1
+       :push 0
+       :ret
+)
 
-    :label read-number-fixed-error
+;; Takes the size of the number, and the reverse digits ending in a 1 or -1
+;; for the sign.
+;; Leaves the double word of the number on the stack
+(proc  read/build-number
+       :first :rpush  ;; duplicate size and put it on the rstack as a counter
+       :dpush 0  ;; result accumulator
+:label read-number-build-loop
+       :dswap :swap :!ch-zero :sub ;; make char digit a number
+       :second :!rcount :sub ;; get factor exponent
+       :push 2 :mult :push build-num-factor :add :dload-lb ;; get factor
+       :rot :!->dword :dmult ;; mult by factor
+       :rot :rpush :dadd :rpop :rot :rot  ;; accumulate and order properly
+       :push 0 :!eq-rcount
+         :push read-number-set-sign :branch
+       :!dec-rcount
+       :push read-number-build-loop :jump
+:label read-number-set-sign
+       :rot :pop ;; get rid of size
+       :dmult ;; set the sign
+       :!end-rcount
+       :ret
+)
 
-    :!nil
-    :ret)
+;; Errors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(proc read/symbol-char-error
+  :push invalid-symbol-char :prnmem-lb
+  :!ch-quote :prnch :first :prnch :!ch-quote :prnch
+  :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
+  ;; For the repl errors end the whole read
+  ;; For files we would just quit, or do error recovery
+  :readln
+  :ret)
 
-  ;; Errors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  (proc read/symbol-char-error
-    :push invalid-symbol-char :prnmem-lb
-    :!ch-quote :prnch :first :prnch :!ch-quote :prnch
-    :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-    ;; For the repl errors end the whole read
-    ;; For files we would just quit, or do error recovery
-    :readln
-    :ret)
+(proc read/symbol-start-error
+  :push invalid-start-char :prnmem-lb
+  :!ch-quote :prnch :first :prnch :!ch-quote :prnch
+  :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
+  :readln
+  :ret)
 
-  (proc read/symbol-start-error
-    :push invalid-start-char :prnmem-lb
-    :!ch-quote :prnch :first :prnch :!ch-quote :prnch
-    :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-    :readln
-    :ret)
-
+(proc read/number-char-error
+  :push invalid-number-char :prnmem-lb
+  :!ch-quote :prnch :first :prnch :!ch-quote :prnch
+  :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
+  :readln
+  :ret)
 )
 
