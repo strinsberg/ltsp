@@ -33,11 +33,11 @@
 
   ;; Check for what to read
   :first :!ch-lp :eq
-  :push form-is-pair :branch
-  :first :push read/digit? :call
-  :push form-is-number :branch
+    :push form-is-pair :branch
+  :first :push read/starts-number? :call
+    :push form-is-number :branch
   :first :push read/valid-symbol-char? :call
-  :push form-is-symbol :branch
+    :push form-is-symbol :branch
 
   ;; Not a valid character to start a form
   :push read/symbol-start-error :call
@@ -168,8 +168,6 @@
   :label symbol-chars-invalid
   :push read/symbol-char-error :call
   :!end-rcount
-  ;; TODO we need to pop chars from the stack or too many of these will
-  ;; eventually overflow it
   :!nil :ret
       
   ;; if stopping
@@ -200,31 +198,56 @@
 
 ;; Number reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(proc read/digit?
-  :first :!ch-zero :!dec :gt
-    :swap :!ch-nine :!inc :lt
-    :and
-    :push is-digit-true :branch
-  :!nil :ret
+;; Take a char and leave 1 if it can start a number, otherwise 0
+(proc  read/starts-number?
+       :first :!ch-minus :eq
+         :second :!ch-plus :eq
+         :or
+         :swap :push read/digit? :call
+         :or
+       :ret
+)
 
-  :label is-digit-true
-  :!T
-  :ret)
+;; Take a char and leave 1 if it is a digit and 0 otherwise
+(proc  read/digit?
+       :first :!ch-zero :!dec :gt
+         :swap :!ch-nine :!inc :lt
+         :and
+       :ret
+)
 
-;; Read a number and leave the address on the stack.
+(proc  read/number
+       :push read/number-chars :call
+       :first :push 0 :eq
+         :push number-error-while-reading :branch
+       :push 1 :eq
+         :push read-number-int :branch
+       ;; else fixed point
+       :push alloc/new-pair :call
+       :push number/make-fixed :call
+       :ret
+:label read-number-int
+       :push alloc/new-pair :call
+       :push number/make-int :call
+       :ret
+:label number-error-while-reading
+       :ret
+)
+
+;; Read the chars of a number and leave the address on the stack.
 ;; Expects either a digit char or a minus/plus sign on the stack.
 ;; Leaves T if the number was read successfully and NIL if not.
 ;; Leaves a double word of the number under the result.
 ;; If the number is more than 10 digits, or has more than 3 decimal places
 ;; for fixed numbers, then an error is "thrown". However, it is still
 ;; possible to give a large 10 digit number and overflow.
-(proc  read/number
-:BREAK :!init-rcount
+(proc  read/number-chars
+       :!init-rcount
        :push read/set-number-sign :call
-:BREAK :rpop :add :rpush ;; add the 0 or 1 from the sign result to the counter
+       :rpop :add :rpush ;; add the 0 or 1 from the sign result to the counter
 
 :label read-number-int-loop
-:BREAK :readch
+       :readch
        :first :!ch-dot :eq
          :push read-number-fixed :branch
        :first :push read/stops-sym? :call
@@ -240,7 +263,7 @@
 :label read-number-fixed
        :pop :!init-rcount  ;; pop the dot and start a new counter
 :label read-number-fixed-loop
-:BREAK :readch
+       :readch
        :first :push read/stops-sym? :call
          :second :push read/whitespace? :call
          :or :push read-number-fixed-end
@@ -251,30 +274,35 @@
          :push read-number-fixed-error :branch
        :rpop :rgrab :second :rpush
          :add :push 10 :eq
-         :push read-number-size-error :branch
+         :push read-number-fixed-size-error :branch
        :!inc-rcount
        :push read-number-fixed-loop :jump
 :label read-number-fixed-end
        :rpop :rpop :add :rpush  ;; merge the two counters
 
 :label read-number-build
-:BREAK :rpop :swap :rpush  ;; move stop char to rstack and put num size on dstack
+       :rpop :swap :rpush  ;; move stop char to rstack and put num size on dstack
        :!dec
        :push read/build-number :call
-:BREAK :rpop :rot :rot  ;; Put the stop char back under the number
-       :!T
-       :halt ;:ret
+       :rpop :rot :rot  ;; Put the stop char back under the number
+       :!T ;; fixed or int ?
+       :ret
 
+:label read-number-fixed-size-error
+       :!end-rcount
 :label read-number-size-error
-       :push number-too-large :prnmem-lb :!prn-nl
+:BREAK       :push number-too-large :prnmem-lb :!prn-nl
+       :!end-rcount
        :!nil :ret
 :label read-number-char-error
-       :push read/number-char-error :call
+:BREAK       :push read/number-char-error :call
+       :!end-rcount
        :!nil :ret
 :label read-number-fixed-error
-       :push number-too-many-decimals :prnmem-lb :!prn-nl
+:BREAK       :push number-too-many-decimals :prnmem-lb :!prn-nl
+       :!end-rcount :!end-rcount
        :!nil :ret
-) ;; end read/number
+) ;; end read/number-chars
 
 ;; Uses the char on top of the stack, if it is a digit then it pushes a
 ;; double word 1 under the digit on the dstack.
@@ -328,23 +356,18 @@
   :push invalid-symbol-char :prnmem-lb
   :!ch-quote :prnch :first :prnch :!ch-quote :prnch
   :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-  ;; For the repl errors end the whole read
-  ;; For files we would just quit, or do error recovery
-  :readln
   :ret)
 
 (proc read/symbol-start-error
   :push invalid-start-char :prnmem-lb
   :!ch-quote :prnch :first :prnch :!ch-quote :prnch
   :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-  :readln
   :ret)
 
 (proc read/number-char-error
   :push invalid-number-char :prnmem-lb
   :!ch-quote :prnch :first :prnch :!ch-quote :prnch
   :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-  :readln
   :ret)
 )
 

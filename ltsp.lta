@@ -65,5 +65,6 @@
   (include "allocate.lta")
   (include "symbol.lta")
   (include "symlist.lta")
+  (include "number.lta")
   (include "stdlib" odd?)
 )

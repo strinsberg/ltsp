@@ -55,5 +55,4 @@
   (proc alloc/new-symbol
     :push 6 :push alloc/alloc-size :call
     :ret)
-  
 )

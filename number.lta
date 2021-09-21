@@ -1,0 +1,35 @@
+(lt64-asm-mod
+
+;; Take an address and load the 'field'
+(macro :!number/info :load-lb)
+(macro :!number/value :push 1 :add :dload-lb)
+
+;; Take an address and a value and set the 'field'
+(macro :!number/set-info :store-lb)
+(macro :!number/set-value :push 1 :add :dstore-lb)
+
+;; Take an address and check its type
+(macro :!number/int? :load-lb :push 8 :sr :push 0x03 :eq)
+(macro :!number/float? :load-lb :push 8 :sr :push 0x04 :eq)
+
+;; Takes an address of a pair sized memory 'object' and a double word
+;; on the stack. Sets up the memory as an int and moves the number into it.
+;; Leaves the address of the memory on the stack.
+(proc  number/make-int
+       :push 0x0300 :second :!number/set-info
+       :rot :rot :push 2 :nth :!number/set-value
+       :ret
+)
+
+;; Takes an address of a pair sized memory 'object' and a double word
+;; on the stack. Sets up the memory as a fixed point number
+;; and moves the number into it.
+;; Leaves the address of the memory on the stack.
+(proc  number/make-fixed
+       :push 0x0400 :second :!number/set-info
+       :rot :rot :push 2 :nth :!number/set-value
+       :ret
+)
+
+
+)
