@@ -42,8 +42,17 @@
     ;; Right now infinite loop requires control c
     :halt)
 
-  (macro :!nil :push 0x000)
-  (macro :!T :push 0x001)
+  ;; Constants and flags
+  ;; These all use values that will be well below program end
+  ;; and therefor will never be confused with valid addresses
+  (macro :!nil :push 0x00)
+  (macro :!T :push 0x01)
+  (macro :!error :push 0x03)
+  (macro :!end-pair :push 0x04)
+  (macro :!read-int :push 0x05)
+  (macro :!read-fixed :push 0x06)
+
+  ;; Characters
   (macro :!ch-nl :push 0x0A)
   (macro :!ch-space :push 0x20)
   (macro :!ch-quote :push 0x27)

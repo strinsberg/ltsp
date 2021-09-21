@@ -2,6 +2,8 @@
 
 ;; Take the address of a form on top of the stack and print it
 (proc  print/form
+       :first :!error :eq
+         :push print-form-is-error :branch
        :first :!nil :eq
          :push print-form-is-nil :branch
        :first :!number/int?
@@ -16,6 +18,7 @@
        :push sym/print-name :call
        :ret
 
+:label print-form-is-error
 :label print-form-is-nil
        :push nil-sym :prnmem-lb
        :ret
@@ -26,7 +29,7 @@
        :!number/value
        :fprn :ret
 :label print-form-pair
-       ;:push print/pair :call
+       :push print/pair :call
        :ret
 :label print-form-dotted
        :push print/dotted :call

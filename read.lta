@@ -18,49 +18,61 @@
 ;; after reading a form we find anything else it means that their is
 ;; more text that needs to be discarded.
 (proc  read/repl
+       :readch
+       :push read/eat-ws :call
        :push read/form :call
-       :second :!ch-nl :eq
+       :swap :second :!error :eq :!not
+         :swap :!ch-nl :eq
+         :or
          :push read-repl-end :branch
        :readln ;; to remove any extra garbage after the first form
        :pop
 :label read-repl-end
+       ;; TODO clear stack. Form is on top, but rest is garbage?
+       ;; Form might also be an error, so eval and print must deal with that
        :ret
 )
 
 ;; Read a new form from stdin and store the structured data
+;; Expects the first character of the form is on the stack
 ;; Leaves the address of the new form on the stack
 (proc  read/form
-       :push read/eat-ws :call
-       ;; check for what to read
        :first :!ch-lp :eq
          :push form-is-pair :branch
        :first :push read/starts-number? :call
          :push form-is-number :branch
        :first :push read/valid-symbol-char? :call
          :push form-is-symbol :branch
+       :first :!ch-lp :eq
+         :push form-is-pair :branch
+       :first :!ch-rp :eq
+         :push read-form-end-pair :branch
        ;; else not a valid character to start a form
-       :push read/symbol-start-error :call
-       :!nil :ret
+       :first :push read/symbol-start-error :call
+       :!error :ret
 
-:label form-is-pair
-       :pop                               ;; discard the (
-       :push read/pair :call
-       :ret
 :label form-is-number
        :push read/number :call
        :ret
 :label form-is-symbol
        :push read/symbol :call
        :ret
+:label form-is-pair
+       :push read/pair :call
+       :ret
+:label read-form-end-pair
+       :pop :!end-pair :ret
 )
 
 ;; Eats all white space in stdin and leaves the first non white space
 ;; char on the stack.
 (proc  read/eat-ws
-:label eat-ws-loop
-       :readch
-       :first :push read/whitespace? :call
-         :push eat-ws-loop :branch
+:label read-eat-ws-loop
+       :first :push read/whitespace? :call :!not
+         :push read-eat-ws-end :branch
+       :pop :readch
+       :push read-eat-ws-loop :jump
+:label read-eat-ws-end
        :ret
 )
 
@@ -131,7 +143,7 @@
        :first :push symlist/add :call
        :ret
 :label symbol-error-while-reading
-       :!nil
+       :!error
        :ret
 )
 
@@ -165,7 +177,7 @@
 :label symbol-chars-invalid
        :push read/symbol-char-error :call
        :!end-rcount
-       :!nil :ret
+       :!error :ret
 :label symbol-chars-stop
        :rgrab :push std/odd? :call
          :push symbol-chars-store-last :branch
@@ -182,10 +194,35 @@
 ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Read a pair and leave the address on the stack.
-;; Does not expect anything on the stack.
-(proc read/pair
-  :!nil
-  :ret)
+(proc  read/pair
+       :readch  ;; because there is not char on the stack
+       :push read/eat-ws :call
+       :push alloc/new-pair :call
+       :rpush :swap
+:label read-pair-loop
+       :push read/form :call
+       :first :!error :eq
+         :push read-pair-form-error :branch
+       :rot :swap :second 
+       :push pair/make :call :!pair/set-car
+       :swap :push read/eat-ws :call
+       :push read/form :call
+       :first :!end-pair :eq
+         :push read-pair-end :branch
+       :first :!nil :eq
+         :push read-pair-cdr-nil :branch
+       :rot :second :swap :!pair/set-cdr :swap
+       :push read-pair-loop :jump
+
+:label read-pair-end
+       :!nil :!pair/set-cdr
+       :rpop :ret
+:label read-pair-cdr-nil
+       :swap :!pair/set-cdr
+       :rpop :ret
+:label read-pair-form-error
+       :ret
+)
 
 
 ;; Number reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -212,9 +249,9 @@
 ;; for the given number if it is valid, otherwise NIL.
 (proc  read/number
        :push read/number-chars :call
-       :first :push 0 :eq
+       :first :!error :eq
          :push number-error-while-reading :branch
-       :push 1 :eq
+       :!read-int :eq
          :push read-number-int :branch
        ;; else fixed point
        :push alloc/new-pair :call
@@ -280,22 +317,22 @@
        :!dec
        :push read/build-number :call
        :rpop :rot :rot  ;; Put the stop char back under the number
-       :!T ;; TODO fixed or int ?
+       :!read-int ;; TODO fixed or int ?
        :ret
 :label read-number-fixed-size-error
        :!end-rcount
 :label read-number-size-error
        :push number-too-large :prnmem-lb :!prn-nl
        :!end-rcount
-       :!nil :ret
+       :!error :ret
 :label read-number-char-error
        :push read/number-char-error :call
        :!end-rcount
-       :!nil :ret
+       :!error :ret
 :label read-number-fixed-error
        :push number-too-many-decimals :prnmem-lb :!prn-nl
        :!end-rcount :!end-rcount
-       :!nil :ret
+       :!error :ret
 ) ;; end read/number-chars
 
 ;; Uses the char on top of the stack, if it is a digit then it pushes a
