@@ -8,8 +8,16 @@
          :push print-form-int :branch
        :first :!number/float?
          :push print-form-fixed :branch
+       :first :!pair/pair?
+         :push print-form-pair :branch
+       :first :!pair/pair-dotted?
+         :push print-form-dotted :branch
        ;; else symbol
        :push sym/print-name :call
+       :ret
+
+:label print-form-is-nil
+       :push nil-sym :prnmem-lb
        :ret
 :label print-form-int
        :!number/value
@@ -17,8 +25,36 @@
 :label print-form-fixed
        :!number/value
        :fprn :ret
-:label print-form-is-nil
-       :push nil-sym :prnmem-lb
+:label print-form-pair
+       :push print/pair :call
+       :ret
+:label print-form-dotted
+       :push print/dotted :call
+       :ret
+)
+
+;; Takes the address of a pair and prints it as an s-expression.
+(proc  print/pair
+       :!ch-lp :prnch
+:label print-pair-loop
+       :first :!pair/car :push print/form :call
+       :!pair/cdr
+       :first :!nil :eq
+         :push print-pair-end :branch
+       :!ch-space :prnch
+       :push print-pair-loop :jump
+:label print-pair-end
+       :!ch-rp :prnch
+       :ret
+)
+
+;; Takes the address of a dotted pair and prints it as (car . cdr)
+(proc  print/dotted
+       :!ch-lp :prnch
+       :first :!pair/car :push print/form :call
+       :!ch-space :prnch :!ch-dot :prnch :!ch-space :prnch
+       :!pair/cdr :push print/form :call
+       :!ch-rp :prnch
        :ret
 )
   
