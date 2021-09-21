@@ -41,12 +41,12 @@
          :push form-is-pair :branch
        :first :push read/starts-number? :call
          :push form-is-number :branch
-       :first :push read/valid-symbol-char? :call
-         :push form-is-symbol :branch
        :first :!ch-lp :eq
          :push form-is-pair :branch
-       :first :!ch-rp :eq
+:BREAK :first :!ch-rp :eq
          :push read-form-end-pair :branch
+       :first :push read/valid-symbol-char? :call
+         :push form-is-symbol :branch
        ;; else not a valid character to start a form
        :first :push read/symbol-start-error :call
        :!error :ret
@@ -54,14 +54,14 @@
 :label form-is-number
        :push read/number :call
        :ret
-:label form-is-symbol
-       :push read/symbol :call
-       :ret
 :label form-is-pair
        :push read/pair :call
        :ret
 :label read-form-end-pair
-       :pop :!end-pair :ret
+       :!end-pair :ret
+:label form-is-symbol
+       :push read/symbol :call
+       :ret
 )
 
 ;; Eats all white space in stdin and leaves the first non white space
@@ -195,19 +195,20 @@
 
 ;; Read a pair and leave the address on the stack.
 (proc  read/pair
-       :readch  ;; because there is not char on the stack
+:BREAK :pop :readch  ;; remove the ( and read the next char
        :push read/eat-ws :call
        :push alloc/new-pair :call
-       :rpush :swap
+       :rpush :rgrab :swap
+:BREAK
 :label read-pair-loop
-       :push read/form :call
-       :first :!error :eq
+:BREAK :push read/form :call
+:BREAK :first :!error :eq
          :push read-pair-form-error :branch
        :rot :swap :second 
        :push pair/make :call :!pair/set-car
-       :swap :push read/eat-ws :call
-       :push read/form :call
-       :first :!end-pair :eq
+:BREAK :swap :push read/eat-ws :call
+:BREAK :push read/form :call
+:BREAK :first :!end-pair :eq
          :push read-pair-end :branch
        :first :!nil :eq
          :push read-pair-cdr-nil :branch
@@ -215,7 +216,15 @@
        :push read-pair-loop :jump
 
 :label read-pair-end
-       :!nil :!pair/set-cdr
+       :pop ;; get rid of :!end-pair
+       :!nil :rot :!pair/set-cdr
+       ;; PROBLEM is that will have [), addr ->
+       ;; And if this is not the end of the reading when will we
+       ;; read the next char in? if we are returning to read/repl
+       ;; it won't matter because it will eat the ) and the \n
+       ;; however if this was a nested pair then the inside of the
+       ;; calling read/form or read/pair will need to eat the ) and get the
+       ;; next char before it can do anything else
        :rpop :ret
 :label read-pair-cdr-nil
        :swap :!pair/set-cdr
