@@ -16,6 +16,20 @@
        :ret
 )
 
+;; Uses an address for pair size memory and sets it up as a dotted-pair.
+(proc  pair/make
+       :push 0x0100 :second :!pair/set-info
+       :ret
+)
+
+;; Take an address of a pair and set it as a pair.
+(proc  pair/set-pair
+       :first :!pair/info
+       :unpack :swap :pop :push 0x00 :swap :pack
+       :swap :!pair/set-info
+       :ret
+)
+
 ;; Take an address of a pair and set it as a dotted-pair.
 (proc  pair/set-dotted
        :first :!pair/info
