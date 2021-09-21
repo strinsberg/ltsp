@@ -59,7 +59,7 @@
 
   ;; Use(don't pop) an address and setup initial symbol data values
   (proc sym/make
-    :push 1 :push 0 :pack :second :!sym/set-info
+    :push 0x0200 :second :!sym/set-info
     :push 0 :second :!sym/set-value
     :push 0 :second :!sym/set-next
     :push 0 :second :!sym/name-ptr :store-lb

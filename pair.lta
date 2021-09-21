@@ -1,0 +1,28 @@
+(lt64-asm-mod
+
+;; Take an address and load the 'field'
+(macro :!pair/info :load-lb)
+(macro :!pair/car :push 1 :add :load-lb)
+(macro :!pair/cdr :push 2 :add :load-lb)
+
+;; Take an address and a value and set the 'field'
+(macro :!pair/set-info :store-lb)
+(macro :!pair/set-car :push 1 :add :store-lb)
+(macro :!pair/set-cdr :push 2 :add :store-lb)
+
+;; Uses an address for pair size memory and sets it up.
+(proc  pair/make
+       :push 0x0000 :second :!pair/set-info
+       :ret
+)
+
+;; Take an address of a pair and set it as a dotted-pair.
+(proc  pair/set-dotted
+       :first :!pair/info
+       :unpack :swap :pop :push 0x01 :swap :pack
+       :swap :!pair/set-info
+       :ret
+)
+
+
+)

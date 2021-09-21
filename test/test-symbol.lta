@@ -48,7 +48,7 @@
   ;; Make tests ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (proc test-sym/make-sets-info
     :push test-sym/setup-sym-mem :call
-    :push 0x0100
+    :push 0x0200
     :fmp :push sym/make :call :!sym/info
     :ret)
 
