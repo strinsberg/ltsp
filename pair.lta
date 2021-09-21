@@ -10,6 +10,10 @@
 (macro :!pair/set-car :push 1 :add :store-lb)
 (macro :!pair/set-cdr :push 2 :add :store-lb)
 
+;; Take a pair and check its type
+(macro :!pair/pair? :load-lb :push 8 :sr :push 0x00 :eq)
+(macro :!pair/dotted? :load-lb :push 8 :sr :push 0x01 :eq)
+
 ;; Uses an address for pair size memory and sets it up.
 (proc  pair/make
        :push 0x0000 :second :!pair/set-info

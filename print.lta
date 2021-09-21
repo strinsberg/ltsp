@@ -10,7 +10,7 @@
          :push print-form-fixed :branch
        :first :!pair/pair?
          :push print-form-pair :branch
-       :first :!pair/pair-dotted?
+       :first :!pair/dotted?
          :push print-form-dotted :branch
        ;; else symbol
        :push sym/print-name :call
@@ -26,7 +26,7 @@
        :!number/value
        :fprn :ret
 :label print-form-pair
-       :push print/pair :call
+       ;:push print/pair :call
        :ret
 :label print-form-dotted
        :push print/dotted :call

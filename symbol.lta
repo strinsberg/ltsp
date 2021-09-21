@@ -1,10 +1,10 @@
 (lt64-asm-mod
-  ;; Take a symbol addres and load a symbol 'member'
+  ;; Take a symbol address and load a symbol 'member'
   (macro :!sym/info :load-lb)
   (macro :!sym/value :push 1 :add :load-lb)
   (macro :!sym/next :push 5 :add :load-lb)
 
-  ;; Take a value and symbol address and set in symbol member
+  ;; Take a symbol address and a value and set in symbol member
   (macro :!sym/set-info :store-lb)
   (macro :!sym/set-value :push 1 :add :store-lb)
   (macro :!sym/set-next :push 5 :add :store-lb)

@@ -124,6 +124,7 @@
          :first :push symbol-already-there :branch
        ;; else allocate and setup symbol
        :pop :push alloc/new-symbol :call
+       :push sym/make :call
        :bfp :second :push sym/set-name :call
        ;; fall through
 :label symbol-already-there
@@ -270,17 +271,17 @@
          :push read-number-fixed-size-error :branch
        :!inc-rcount
        :push read-number-fixed-loop :jump
+
 :label read-number-fixed-end
        :rpop :rpop :add :rpush  ;; merge the two counters
-
+       ;; fall through
 :label read-number-build
        :rpop :swap :rpush  ;; move stop char to rstack and put num size on dstack
        :!dec
        :push read/build-number :call
        :rpop :rot :rot  ;; Put the stop char back under the number
-       :!T ;; fixed or int ?
+       :!T ;; TODO fixed or int ?
        :ret
-
 :label read-number-fixed-size-error
        :!end-rcount
 :label read-number-size-error
