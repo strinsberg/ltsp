@@ -284,15 +284,15 @@
 :label read-number-fixed-size-error
        :!end-rcount
 :label read-number-size-error
-:BREAK       :push number-too-large :prnmem-lb :!prn-nl
+       :push number-too-large :prnmem-lb :!prn-nl
        :!end-rcount
        :!nil :ret
 :label read-number-char-error
-:BREAK       :push read/number-char-error :call
+       :push read/number-char-error :call
        :!end-rcount
        :!nil :ret
 :label read-number-fixed-error
-:BREAK       :push number-too-many-decimals :prnmem-lb :!prn-nl
+       :push number-too-many-decimals :prnmem-lb :!prn-nl
        :!end-rcount :!end-rcount
        :!nil :ret
 ) ;; end read/number-chars

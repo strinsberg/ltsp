@@ -15,7 +15,6 @@
             1 10 100 1000 10000 100000             ;; 10^0 - 10^5
             1000000 10000000 100000000 1000000000) ;; 10^6 - 10^9
             
-
     ;; error text
     (:str invalid-start-char "*** Error: Char cannot start a symbol: ")
     (:str invalid-symbol-char "*** Error: Char cannot be in a symbol: ")
