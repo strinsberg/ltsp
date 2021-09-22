@@ -21,7 +21,7 @@
        :readch
        :push read/eat-ws :call
        :push read/form :call
-       :swap :second :!error :eq :!not
+       :swap :second :!error :eq
          :swap :!ch-nl :eq
          :or
          :push read-repl-end :branch
@@ -43,7 +43,7 @@
          :push form-is-number :branch
        :first :!ch-lp :eq
          :push form-is-pair :branch
-:BREAK :first :!ch-rp :eq
+       :first :!ch-rp :eq
          :push read-form-end-pair :branch
        :first :push read/valid-symbol-char? :call
          :push form-is-symbol :branch
@@ -193,43 +193,45 @@
 
 ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Read a pair and leave the address on the stack.
 (proc  read/pair
-:BREAK :pop :readch  ;; remove the ( and read the next char
+       :pop :readch
        :push read/eat-ws :call
+       :push read/form :call
+       :first :!end-pair :eq
+         :push read-pair-start-nil :branch
+       :first :!error :eq
+         :push read-pair-read-error :branch
        :push alloc/new-pair :call
-       :rpush :rgrab :swap
-:BREAK
-:label read-pair-loop
-:BREAK :push read/form :call
-:BREAK :first :!error :eq
-         :push read-pair-form-error :branch
-       :rot :swap :second 
-       :push pair/make :call :!pair/set-car
-:BREAK :swap :push read/eat-ws :call
-:BREAK :push read/form :call
-:BREAK :first :!end-pair :eq
-         :push read-pair-end :branch
-       :first :!nil :eq
-         :push read-pair-cdr-nil :branch
-       :rot :second :swap :!pair/set-cdr :swap
-       :push read-pair-loop :jump
+       :push pair/make :call
+       :rpush :rgrab
+       :!pair/set-car
+       :rgrab
+:label read-pair-list-loop
+       :swap
+       :push read/eat-ws :call
+       :push read/form :call
+       :first :!end-pair :eq
+         :push read-pair-finish-up :branch
+       :first :!error :eq
+         :push read-pair-read-error :branch
+       :rot :swap
+       :push alloc/new-pair :call
+       :push pair/make :call
+       :first :rot :swap
+       :!pair/set-car
+       :first :rot
+       :!pair/set-cdr
+       :push read-pair-list-loop :jump
 
-:label read-pair-end
-       :pop ;; get rid of :!end-pair
-       :!nil :rot :!pair/set-cdr
-       ;; PROBLEM is that will have [), addr ->
-       ;; And if this is not the end of the reading when will we
-       ;; read the next char in? if we are returning to read/repl
-       ;; it won't matter because it will eat the ) and the \n
-       ;; however if this was a nested pair then the inside of the
-       ;; calling read/form or read/pair will need to eat the ) and get the
-       ;; next char before it can do anything else
-       :rpop :ret
-:label read-pair-cdr-nil
-       :swap :!pair/set-cdr
-       :rpop :ret
-:label read-pair-form-error
+:label read-pair-start-nil
+       :pop :!nil
+       :ret
+:label read-pair-finish-up
+       :pop :!nil
+       :rot :!pair/set-cdr
+       :rpop
+       :ret
+:label read-pair-read-error
        :ret
 )
 
@@ -412,5 +414,6 @@
        :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
        :ret
 )
+
 )
 
