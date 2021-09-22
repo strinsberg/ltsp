@@ -40,13 +40,14 @@
 (proc  print/pair
        :!ch-lp :prnch
 :label print-pair-loop
-       :first :!pair/car :push print/form :call
+:BREAK :first :!pair/car :push print/form :call
        :!pair/cdr
        :first :!nil :eq
          :push print-pair-end :branch
        :!ch-space :prnch
        :push print-pair-loop :jump
 :label print-pair-end
+       :pop
        :!ch-rp :prnch
        :ret
 )

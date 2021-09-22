@@ -194,6 +194,7 @@
 ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (proc  read/pair
+:push 1111 :wprn :!prn-nl
        :pop :readch
        :push read/eat-ws :call
        :push read/form :call
@@ -207,6 +208,7 @@
        :!pair/set-car
        :rgrab
 :label read-pair-list-loop
+:push 2222 :wprn :!prn-nl
        :swap
        :push read/eat-ws :call
        :push read/form :call
@@ -227,7 +229,8 @@
        :pop :!nil
        :ret
 :label read-pair-finish-up
-       :pop :!nil
+:push 3333 :wprn :!prn-nl
+:BREAK :pop :!nil
        :rot :!pair/set-cdr
        :rpop
        :ret
