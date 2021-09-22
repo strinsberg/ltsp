@@ -27,15 +27,13 @@ debug: clean
 	gcc $(CFILE) $(DEBUG_FLAGS)
 
 .PHONY: tests
-tests: clean
+tests: release
+	python3 test/cli_runner.py
+
+.PHONY: lta-tests
+lta-tests: clean
 	java -jar $(LTASM) $(TEST_RUNNER) $(ASM_TEST_FLAGS)
 	gcc $(TEST_CFILE) $(TEST_FLAGS)
-	./$(TEST)
-
-.PHONY: debug-tests
-debug-tests: clean
-	java -jar $(LTASM) $(TEST_RUNNER) $(ASM_TEST_FLAGS)
-	gcc $(TEST_CFILE) $(DEBUG_TEST_FLAGS)
 	./$(TEST)
 
 .PHONY: clean

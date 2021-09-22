@@ -3,3 +3,5 @@
 ltsp
 ltsp-debug
 ltsp-test
+__pycache__/*
+test/__pycache__/*
