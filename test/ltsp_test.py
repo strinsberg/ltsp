@@ -1,5 +1,6 @@
 import clitest as cli
 import pexpect as pex
+import sys
 
 class LtspSuite(cli.TestSuite):
     def __init__(self, name, tests):
@@ -20,14 +21,14 @@ class LtspSuite(cli.TestSuite):
                 repl.sendline(action[0])
                 # to clear the sent text from the buffer
                 # this should never fail
-                if not self.expect_action(action[0], repl, test, act, timed, eof):
+                if not self.expect_action(action[0], repl, test, f'Send {j+1}', timed, eof):
                     test.expected = act + "To find sent text in buffer"
                     passed = False
                     break
-                if not self.expect_action(action[1], repl, test, act, timed, eof):
+                if not self.expect_action(action[1], repl, test, f'Action {j+1}:', timed, eof):
                     passed = False
                     break
-                passed = self.expect_prompt(repl, test, act, timed, eof)
+                passed = self.expect_prompt(repl, test, f'Prompt {j+1}', timed, eof)
 
             cli.display_test_results(test, passed, i+1, False)
             if not passed:
@@ -36,7 +37,7 @@ class LtspSuite(cli.TestSuite):
     def expect_prompt(self, repl, test, act, timed, eof):
         prompt = "ltsp> "
         prompt_idx = repl.expect_exact([prompt, pex.EOF, pex.TIMEOUT],
-                                 timeout=0.5)
+                                 timeout=0.2)
         test.expected = act + f'"{prompt}"'
         if prompt_idx == 1:
             test.actual = eof + f'"{repl.before.decode("utf-8")}"'
@@ -48,7 +49,7 @@ class LtspSuite(cli.TestSuite):
 
     def expect_action(self, action, repl, test, act, timed, eof):
         exp_idx = repl.expect_exact([action, pex.EOF, pex.TIMEOUT],
-                              timeout=0.5)
+                              timeout=0.2)
         test.expected = act + f'"{action}"'
         if exp_idx == 1:
             test.actual = eof + f'"{repl.before.decode("utf-8")}"'

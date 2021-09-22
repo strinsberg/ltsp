@@ -138,9 +138,10 @@
        :pop :push alloc/new-symbol :call
        :push sym/make :call
        :bfp :second :push sym/set-name :call
-       ;; fall through
-:label symbol-already-there
        :first :push symlist/add :call
+       :ret
+
+:label symbol-already-there
        :ret
 :label symbol-error-while-reading
        :!error
@@ -194,7 +195,6 @@
 ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (proc  read/pair
-:push 1111 :wprn :!prn-nl
        :pop :readch
        :push read/eat-ws :call
        :push read/form :call
@@ -208,7 +208,6 @@
        :!pair/set-car
        :rgrab
 :label read-pair-list-loop
-:push 2222 :wprn :!prn-nl
        :swap
        :push read/eat-ws :call
        :push read/form :call
@@ -229,7 +228,6 @@
        :pop :!nil
        :ret
 :label read-pair-finish-up
-:push 3333 :wprn :!prn-nl
 :BREAK :pop :!nil
        :rot :!pair/set-cdr
        :rpop

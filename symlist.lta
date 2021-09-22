@@ -15,18 +15,19 @@
   ;; Take a symbol address on the top of the stack insert that symbol between
   ;; symlist head and the first symbol in the list (or nil).
   (proc symlist/add
+    :first :wprn :!prn-nl
+    :first :push sym/print-name :call :!prn-nl
+    :first :!sym/next :wprn :!prn-nl
     :!symlist/head :second :!sym/set-next
     :!symlist/set-head
     :ret)
   
-  ;; Given the address of a symbol name check if it equals any of the
+  ;; Takes the address of a symbol name check if it equals any of the
   ;; stored symbol names. Put the address of the found symbol or nil (0)
   (proc symlist/has-name?
     :!symlist/head                    ;; Add address of first symbol
 
     :label has-name-loop
-    ;:first :wprn :!prn-nl
-    ;:first :push sym/print-name :call :!prn-nl
     :second :second :!sym/name-ptr :push 3 :memeq
     :push has-name-end :branch
 
