@@ -41,11 +41,16 @@
        :!ch-lp :prnch
 :label print-pair-loop
 :BREAK :first :!pair/car :push print/form :call
+       ;:!prn-nl
+       ;:first :wprn :!prn-nl
+       ;:first :!pair/car :wprn :!prn-nl
+       ;:first :!pair/cdr :wprn :!prn-nl
        :!pair/cdr
        :first :!nil :eq
          :push print-pair-end :branch
        :!ch-space :prnch
        :push print-pair-loop :jump
+
 :label print-pair-end
        :pop
        :!ch-rp :prnch

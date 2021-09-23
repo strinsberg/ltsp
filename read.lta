@@ -195,6 +195,7 @@
 ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (proc  read/pair
+       ;:push 00000 :wprn :!prn-nl
        :pop :readch
        :push read/eat-ws :call
        :push read/form :call
@@ -208,7 +209,8 @@
        :!pair/set-car
        :rgrab
 :label read-pair-list-loop
-       :swap
+       ;:push 11111 :wprn :!prn-nl
+:BREAK       :swap
        :push read/eat-ws :call
        :push read/form :call
        :first :!end-pair :eq
@@ -228,8 +230,9 @@
        :pop :!nil
        :ret
 :label read-pair-finish-up
-:BREAK :pop :!nil
-       :rot :!pair/set-cdr
+       ;:push 22222 :wprn :!prn-nl
+:BREAK :pop :pop :readch  ;; means top level pair must always have a newline
+       :!nil :rot :!pair/set-cdr
        :rpop
        :ret
 :label read-pair-read-error
@@ -260,6 +263,7 @@
 ;; Takes a starting character for a number and leaves the address of a form
 ;; for the given number if it is valid, otherwise NIL.
 (proc  read/number
+       ;:push 5555 :wprn :!prn-nl
        :push read/number-chars :call
        :first :!error :eq
          :push number-error-while-reading :branch
