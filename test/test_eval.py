@@ -108,7 +108,19 @@ builtin_tests = [
 
     # Eq?
     PexTest(
-        "eval cons on a symbol onto unquoted empty list",
-        [pair("(cons a ())", "(a)")],
+        "Check if two symbols are eq? T",
+        [pair("(eq? (quote a) (quote a))", "T")],
+    ),
+    PexTest(
+        "Check if two symbols are eq? F",
+        [pair("(eq? (quote a) (quote b))", "F")],
+    ),
+    PexTest(
+        "Check if a symbol eq? a list, F",
+        [pair("(eq? (quote a) (quote (a)))", "F")],
+    ),
+    PexTest(
+        "Check if a list eq? a list, F",
+        [pair("(eq? (quote (a)) (quote (a)))", "F")],
     ),
 ]

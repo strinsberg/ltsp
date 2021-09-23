@@ -34,28 +34,28 @@
          :push eval-apply-cons :branch
        :first :!ATOM? :eq
          :push eval-apply-atom? :branch
+       :first :!EQ? :eq
+         :push eval-apply-eq? :branch
        :!NIL ;; for now so all lists must be quoted to not be evalled
        :ret
 
 :label eval-apply-quote
-       :pop
-       :!pair/cdr :!pair/car
+       :pop :!pair/cdr :!pair/car
        :ret
 :label eval-apply-car
-       :pop
-       :push eval/pair-car :call
+       :pop :push eval/pair-car :call
        :ret
 :label eval-apply-cdr
-       :pop
-       :push eval/pair-cdr :call
+       :pop :push eval/pair-cdr :call
        :ret
 :label eval-apply-cons
-       :pop
-       :push eval/pair-cons :call
+       :pop :push eval/pair-cons :call
        :ret
 :label eval-apply-atom?
-       :pop
-       :push eval/apply-atom? :call
+       :pop :push eval/apply-atom? :call
+       :ret
+:label eval-apply-eq?
+       :pop :push eval/apply-eq? :call
        :ret
 )
 
@@ -96,12 +96,12 @@
        :first :push eval/first-arg :call
        :second :push eval/second-arg :call
        :rot :pop
-
        :push alloc/new-pair :call
        :second :push eval/atom? :call
          :push eval-pair-cons-dotted :branch
        :push pair/make :call
        :push eval-pair-cons-finish :jump
+
 :label eval-pair-cons-dotted
        :push pair/make-dotted :call
        ;; fallthrough
@@ -117,6 +117,17 @@
          :push eval-apply-atom?-true :branch
        :!F :ret
 :label eval-apply-atom?-true
+       :!T :ret
+)
+
+(proc  eval/apply-eq?
+       :first :push eval/first-arg :call
+       :second :push eval/second-arg :call
+       :rot :pop
+       :eq
+         :push eval-apply-eq?-true :branch
+       :!F :ret
+:label eval-apply-eq?-true
        :!T :ret
 )
 
