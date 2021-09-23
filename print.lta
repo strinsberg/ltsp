@@ -45,6 +45,8 @@
        ;:first :wprn :!prn-nl
        ;:first :!pair/car :wprn :!prn-nl
        ;:first :!pair/cdr :wprn :!prn-nl
+       :first :!pair/dotted?
+         :push print-pair-end-dotted :branch
        :!pair/cdr
        :first :!nil :eq
          :push print-pair-end :branch
@@ -55,14 +57,27 @@
        :pop
        :!ch-rp :prnch
        :ret
+:label print-pair-end-dotted
+       :!ch-space :prnch
+       :!pair/cdr
+       :push print/form :call
+       :!ch-rp :prnch
+       :ret
 )
 
 ;; Takes the address of a dotted pair and prints it as (car . cdr)
 (proc  print/dotted
        :!ch-lp :prnch
        :first :!pair/car :push print/form :call
+       :first :!pair/cdr :!NIL :eq
+         :push print-dotted-cdr-nil :branch
        :!ch-space :prnch :!ch-dot :prnch :!ch-space :prnch
        :!pair/cdr :push print/form :call
+       :!ch-rp :prnch
+       :ret
+
+:label print-dotted-cdr-nil
+       :pop
        :!ch-rp :prnch
        :ret
 )

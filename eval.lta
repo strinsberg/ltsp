@@ -30,6 +30,8 @@
          :push eval-apply-car :branch
        :first :!CDR :eq
          :push eval-apply-cdr :branch
+       :first :!CONS :eq
+         :push eval-apply-cons :branch
        :!NIL ;; for now so all lists must be quoted to not be evalled
        :ret
 
@@ -39,20 +41,69 @@
        :ret
 :label eval-apply-car
        :pop
-       :push eval/pair-args :call
-       :!pair/car
+       :push eval/pair-car :call
        :ret
 :label eval-apply-cdr
        :pop
-       :push eval/pair-args :call
-       :!pair/cdr
+       :push eval/pair-cdr :call
+       :ret
+:label eval-apply-cons
+       :pop
+       :push eval/pair-cons :call
        :ret
 )
 
-(proc  eval/pair-args
+(proc  eval/pair-first
        :!pair/cdr :!pair/car
        :push eval/form :call
        :ret
 )
+
+(proc  eval/pair-second
+       :!pair/cdr :!pair/cdr :!pair/car
+       :push eval/form :call
+       :ret
+)
+
+
+(proc  eval/pair-car
+       :push eval/pair-first :call
+       :first :push eval/atom? :call
+         :push eval-pair-car-nil :branch
+       :!pair/car
+       :ret
+:label eval-pair-car-nil
+       :pop :!NIL :ret
+)
+
+(proc  eval/pair-cdr
+       :push eval/pair-first :call
+       :first :push eval/atom? :call
+         :push eval-pair-cdr-nil :branch
+       :!pair/cdr
+       :ret
+:label eval-pair-cdr-nil
+       :pop :!NIL :ret
+)
+
+(proc  eval/pair-cons
+       :first :push eval/pair-first :call
+       :second :push eval/pair-second :call
+       :rot :pop
+
+       :push alloc/new-pair :call
+       :second :push eval/atom? :call
+         :push eval-pair-cons-dotted :branch
+       :push pair/make :call
+       :push eval-pair-cons-finish :jump
+:label eval-pair-cons-dotted
+       :push pair/make-dotted :call
+       ;; fallthrough
+:label eval-pair-cons-finish
+       :rot :second :!pair/set-car
+       :swap :second :!pair/set-cdr
+       :ret
+)
+
 )
 

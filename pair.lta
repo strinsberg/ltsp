@@ -17,12 +17,16 @@
 ;; Uses an address for pair size memory and sets it up.
 (proc  pair/make
        :push 0x0000 :second :!pair/set-info
+       :!NIL :second :!pair/set-car
+       :!NIL :second :!pair/set-cdr
        :ret
 )
 
 ;; Uses an address for pair size memory and sets it up as a dotted-pair.
 (proc  pair/make-dotted
        :push 0x0100 :second :!pair/set-info
+       :!NIL :second :!pair/set-car
+       :!NIL :second :!pair/set-cdr
        :ret
 )
 
