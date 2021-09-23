@@ -1,6 +1,6 @@
 (lt64-asm-mod
 
-(proc eval/eval-form
+(proc eval/form
     :first :push eval/atom? :call
       :push eval-form-atom :branch
     ;; else is list (for now)
@@ -26,7 +26,9 @@
        :first :!pair/car
        :first :!QUOTE :eq
          :push eval-apply-quote :branch
-       :pop
+       :first :!CAR :eq
+         :push eval-apply-car :branch
+       :!NIL ;; for now so all lists must be quoted to not be evalled
        :ret
 
 :label eval-apply-quote
@@ -34,8 +36,10 @@
        :!pair/cdr :!pair/car
        :ret
 :label eval-apply-car
-;       :pop
-;       :first :!pair/cdr :!pair/car
+       :pop
+       :!pair/cdr :!pair/car
+       :push eval/form :call
+       :!pair/car
        :ret)
 )
 

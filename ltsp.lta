@@ -52,7 +52,7 @@
     :label main-loop
     :push prompt :prnmem-lb
     :push read/repl :call
-    :push eval/eval-form :call
+    :push eval/form :call
     :push print/form :call
     :!prn-nl :!prn-nl
     :push main-loop :jump
