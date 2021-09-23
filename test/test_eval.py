@@ -80,4 +80,35 @@ builtin_tests = [
         [pair("(cons a ())", "(a)")],
     ),
 
+    # Atom?
+    PexTest(
+        "A quoted symbol is an atom",
+        [pair("(atom? (quote a))", "T")],
+    ),
+    PexTest(
+        "An integer is an atom",
+        [pair("(atom? 1237)", "T")],
+    ),
+    PexTest(
+        "A fixed point number is an atom",
+        [pair("(atom? 12.37)", "T")],
+    ),
+    PexTest(
+        "Nil is an atom",
+        [pair("(atom? NIL)", "T")],
+    ),
+    PexTest(
+        "A dotted pair is NOT an atom",
+        [pair("(atom? (cons a b))", "F")],
+    ),
+    PexTest(
+        "A list is not an atom",
+        [pair("(atom? (cons a (quote b c)))", "F")],
+    ),
+
+    # Eq?
+    PexTest(
+        "eval cons on a symbol onto unquoted empty list",
+        [pair("(cons a ())", "(a)")],
+    ),
 ]
