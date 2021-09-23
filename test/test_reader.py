@@ -55,12 +55,23 @@ symbol_tests = [
 
 list_tests = [
     lt.PexTest(
-        "Test list with nothing",
+        "The empty list",
+        [("()", "NIL")],
+    ),
+    lt.PexTest(
+        "Single level list",
+        [pair("(a b 123)")],
+    ),
+    lt.PexTest(
+        "List with consecutive identical symbols",
         [pair("(a a a b a a b b b a c s)")],
     ),
     lt.PexTest(
-        "Test list with consecutive identical symbols",
-        [pair("(a a a b a a b b b a c s)")],
+        "List with a list element",
+        [pair("(a (b) 123)")],
     ),
-
+    lt.PexTest(
+        "Tree nested list",
+        [pair("(a (b (c) (d)) (e (f (g (h)))))")],
+    ),
 ]

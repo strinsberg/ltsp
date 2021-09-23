@@ -15,9 +15,9 @@
   ;; Take a symbol address on the top of the stack insert that symbol between
   ;; symlist head and the first symbol in the list (or nil).
   (proc symlist/add
-    :first :wprn :!prn-nl
-    :first :push sym/print-name :call :!prn-nl
-    :first :!sym/next :wprn :!prn-nl
+    ;:first :wprn :!prn-nl
+    ;:first :push sym/print-name :call :!prn-nl
+    ;:first :!sym/next :wprn :!prn-nl
     :!symlist/head :second :!sym/set-next
     :!symlist/set-head
     :ret)
