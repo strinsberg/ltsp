@@ -4,12 +4,6 @@
     (:str prompt "ltsp> ")
     (:str nil-sym "NIL")
 
-    ;; Char sets
-    (:word whitespace 4 0x09 0x20 0x2C 0x00) ;; \t space , ;;no \n and <CR> for repl
-    (:word invalid-sym 9 0x22 0x27 0x2E 0x3B
-                         0x5B 0x5D 0x7B 0x7D 0x00) ;; " ' . ; [ ] { }
-    (:word stops-sym 4 0x0A 0x28 0x29 0x00) ;; \n ( )  And whitespace
-
     ;; Number sets
     (:dword build-num-factor 10
             1 10 100 1000 10000 100000             ;; 10^0 - 10^5
@@ -54,15 +48,24 @@
 
   ;; Characters
   (macro :!ch-nl :push 0x0A)
+  (macro :!ch-tab :push 0x09)
+  (macro :!ch-newline :push 0x0A)
   (macro :!ch-space :push 0x20)
+  (macro :!ch-dquote :push 0x22)
   (macro :!ch-quote :push 0x27)
   (macro :!ch-lp :push 0x28)
   (macro :!ch-rp :push 0x29)
   (macro :!ch-plus :push 0x2B)
+  (macro :!ch-comma :push 0x2C)
   (macro :!ch-minus :push 0x2D)
   (macro :!ch-dot :push 0x2E)
   (macro :!ch-zero :push 0x30)
   (macro :!ch-nine :push 0x39)
+  (macro :!ch-semi :push 0x3B)
+  (macro :!ch-lsq :push 0x5B)
+  (macro :!ch-rsq :push 0x5D)
+  (macro :!ch-lbr :push 0x7B)
+  (macro :!ch-rbr :push 0x7D)
 
   (macro :!debug-char :first :prnch :push 10 :prnch)
   (macro :!debug-fst :first :wprn :push 10 :prnch)

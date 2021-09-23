@@ -21,8 +21,8 @@ class LtspSuite(cli.TestSuite):
                 repl.sendline(action[0])
                 # to clear the sent text from the buffer
                 # this should never fail
-                if not self.expect_action(action[0], repl, test, f'Send {j+1}', timed, eof):
-                    test.expected = act + "To find sent text in buffer"
+                if not self.expect_action(action[0], repl, test, "", timed, eof):
+                    test.expected = f"Send {j+1}: To find sent text in buffer"
                     passed = False
                     break
                 if not self.expect_action(action[1], repl, test, f'Action {j+1}:', timed, eof):
@@ -36,8 +36,9 @@ class LtspSuite(cli.TestSuite):
 
     def expect_prompt(self, repl, test, act, timed, eof):
         prompt = "ltsp> "
-        prompt_idx = repl.expect_exact([prompt, pex.EOF, pex.TIMEOUT],
-                                 timeout=0.2)
+        prompt_idx = repl.expect_exact([prompt.replace("\n", "\r\n"),
+                                        pex.EOF, pex.TIMEOUT],
+                                       timeout=0.2)
         test.expected = act + f'"{prompt}"'
         if prompt_idx == 1:
             test.actual = eof + f'"{repl.before.decode("utf-8")}"'
@@ -48,8 +49,9 @@ class LtspSuite(cli.TestSuite):
         return True
 
     def expect_action(self, action, repl, test, act, timed, eof):
-        exp_idx = repl.expect_exact([action, pex.EOF, pex.TIMEOUT],
-                              timeout=0.2)
+        exp_idx = repl.expect_exact([action.replace("\n", "\r\n"),
+                                     pex.EOF, pex.TIMEOUT],
+                                    timeout=0.2)
         test.expected = act + f'"{action}"'
         if exp_idx == 1:
             test.actual = eof + f'"{repl.before.decode("utf-8")}"'

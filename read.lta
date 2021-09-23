@@ -83,25 +83,39 @@
 ;; because they will be checked somewhere else.
 ;; Leaves 1 for true and 0 for false
 (proc  read/valid-symbol-char?
-       :push invalid-sym
-       :push read/in-char-list? :call
-       :!not
+       :first :!ch-quote :eq
+         :second :!ch-dquote :eq
+         :or :second :!ch-lbr :eq
+         :or :second :!ch-rbr :eq
+         :or :second :!ch-lsq :eq
+         :or :second :!ch-rsq :eq
+         :or :second :!ch-dot :eq
+         :or :second :!ch-semi :eq
+         :or :!not
+       :swap :pop
        :ret
 )
 
-;; Tale a char on the stack and leave 1 if it is a white space char,
+;; Take a char on the stack and leave 1 if it is a white space char,
 ;; otherwise leave 0.
 (proc  read/whitespace?
-       :push whitespace
-       :push read/in-char-list? :call
+       :first :!ch-space :eq
+         :second :!ch-newline :eq
+         :or :second :!ch-tab :eq
+         :or :second :!ch-comma :eq
+         :or
+       :swap :pop
        :ret
 )
 
-;; Tale a char on the stack and leave 1 if it is a symbol stopping char,
+;; Take a char on the stack and leave 1 if it is a symbol stopping char,
 ;; otherwise leave 0.
 (proc  read/stops-sym?
-       :push stops-sym
-       :push read/in-char-list? :call
+       :first :!ch-lp :eq
+         :second :!ch-rp :eq
+         :or :second :push read/whitespace? :call
+         :or
+       :swap :pop
        :ret
 )
 
@@ -158,9 +172,7 @@
        :readch
        :first :push read/valid-symbol-char? :call :!not
          :push symbol-chars-invalid :branch
-       :first :push read/whitespace? :call
-         :second :push read/stops-sym? :call
-         :or
+       :first :push read/stops-sym? :call
          :push symbol-chars-stop :branch
        :rgrab :push std/odd? :call            
          :push symbol-chars-store-chars :branch

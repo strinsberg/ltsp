@@ -51,6 +51,54 @@ symbol_tests = [
         [pair("hi"), pair("there"), pair("hi"), pair("hi"), pair("there"),
          pair("what"), pair("hi"), pair("what"), pair("what")],
     ),
+
+    # white space
+    # newlines after the symbol will stop the repl stripping, so anything
+    # after them will be read at the next prompt. Since the repl has no
+    # readline support this means that it will not be possible to enter
+    # manually, but could be sent by something else.
+    lt.PexTest(
+        "Test reading a symbol surrounded by simple white space",
+        [(" , hello!  ,,", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol surrounded by white space, tabs",
+        [(" \t, hello!\t  ,", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol surrounded by white space, newlines",
+        [(" , \n hello! \t ,,", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading multiple symbols separated by a newline",
+        [("hello!\n World!", "hello!"), ("", "World!")],
+    ),
+
+    # stopping chars
+    lt.PexTest(
+        "Test reading a symbol ended by space",
+        [("hello! ", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol ended by newline",
+        [("hello!\n", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol ended by tab",
+        [("hello!\t", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol ended by ,",
+        [("hello!,", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol ended by (",
+        [("hello!(", "hello!")],
+    ),
+    lt.PexTest(
+        "Test reading a symbol ended by )",
+        [("hello!)", "hello!")],
+    ),
 ]
 
 list_tests = [
