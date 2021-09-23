@@ -1,8 +1,32 @@
 (lt64-asm-prog
   (static
+    ;; buitlin symbols
+    ;; Are setup manually assuming memory starts at 3
+    ;; Do not put anything before these.
+    ;; A sym is 6 words long. And each word for the name is ordered low
+    ;; byte high byte so abcd is ba dc
+    ;;             type    print-name                   next
+    (:word NIL 6   0x0200  0x494e 0x004c 0x0000 0x0000  0x00)
+    (:word T 6     0x0200  0x0054 0x0000 0x0000 0x0000  0x03)
+    (:word F 6     0x0200  0x0046 0x4c00 0x0000 0x0000  0x09)
+    (:word car 6   0x0200  0x6163 0x0072 0x0000 0x0000  0x0F)
+    (:word cdr 6   0x0200  0x6463 0x0072 0x0000 0x0000  0x15)
+    (:word cons 6  0x0200  0x6f63 0x736e 0x0000 0x0000  0x1b)
+    (:word atom? 6 0x0200  0x4e49 0x6d6f 0x003f 0x0000  0x21)
+    (:word eq? 6   0x0200  0x7165 0x003f 0x0000 0x0000  0x27)
+    ;; :!builtin-syms-start should point to 6 above the last next val
+    ;; currently 0x2d. Add 6 for every addition
+
     ;; strings
     (:str prompt "ltsp> ")
     (:str nil-sym "NIL")
+    (:str T-sym "T")
+    (:str F-sym "F")
+    (:str car-sym "car")
+    (:str cdr-sym "cdr")
+    (:str cons-sym "cons")
+    (:str atom?-sym "atom?")
+    (:str eq?-sym "eq")
 
     ;; Number sets
     (:dword build-num-factor 10
@@ -37,14 +61,23 @@
     :halt)
 
   ;; Constants and flags
-  ;; These all use values that will be well below program end
-  ;; and therefor will never be confused with valid addresses
-  (macro :!nil :push 0x00)
-  (macro :!T :push 0x01)
-  (macro :!error :push 0x03)
-  (macro :!end-pair :push 0x04)
-  (macro :!read-int :push 0x05)
-  (macro :!read-fixed :push 0x06)
+  ;; All are invalid addresses for in memory objects
+  (macro :!error :push -1)
+  (macro :!end-pair :push 0x00)
+  (macro :!read-int :push 0x01)
+  (macro :!read-fixed :push 0x02)
+
+  ;; Builtin Symbol Addresses
+  (macro :!nil :push 0x03)
+  (macro :!NIL :push 0x03)
+  (macro :!T :push 0x09)
+  (macro :!F :push 0x0F)
+  (macro :!CAR :push 0x15)
+  (macro :!CDR :push 0x1b)
+  (macro :!CONS :push 0x21)
+  (macro :!ATOM? :push 0x27)
+  (macro :!EQ? :push 0x2d)
+  (macro :!builtin-syms-start :push 0x2d)
 
   ;; Characters
   (macro :!ch-nl :push 0x0A)
@@ -67,18 +100,20 @@
   (macro :!ch-lbr :push 0x7B)
   (macro :!ch-rbr :push 0x7D)
 
+  ;; Debugging
   (macro :!debug-char :first :prnch :push 10 :prnch)
   (macro :!debug-fst :first :wprn :push 10 :prnch)
   (macro :!debug-sec :second :wprn :push 10 :prnch)
   (macro :!debug-thr :push 2 :nth :wprn :push 10 :prnch)
   (macro :!debug-rs :rgrab :wprn :push 10 :prnch)
   
+  ;; Includes
   (include "read.lta")
   (include "eval.lta")
   (include "print.lta")
-  (include "allocate.lta")
   (include "symbol.lta")
   (include "symlist.lta")
+  (include "allocate.lta")
   (include "number.lta")
   (include "pair.lta")
   (include "stdlib" odd?)

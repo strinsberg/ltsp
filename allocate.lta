@@ -34,7 +34,7 @@
     :fmp :push 4 :add :!alloc/set-next-open
     :fmp :push 2 :add :!alloc/set-tab-head
     :push 0 :!alloc/set-tab-tail
-    :push 0 :!alloc/set-list-head
+    :!builtin-syms-start :!alloc/set-list-head
     :ret)
 
   ;; Takes a size value of the stack and leaves the memory of the

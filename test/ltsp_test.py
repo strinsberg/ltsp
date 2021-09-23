@@ -2,6 +2,9 @@ import clitest as cli
 import pexpect as pex
 import sys
 
+
+# Test and Suite classes #####################################################
+
 class LtspSuite(cli.TestSuite):
     def __init__(self, name, tests):
         super().__init__(name, "./ltsp", tests)
@@ -25,10 +28,12 @@ class LtspSuite(cli.TestSuite):
                     test.expected = f"Send {j+1}: To find sent text in buffer"
                     passed = False
                     break
-                if not self.expect_action(action[1], repl, test, f'Action {j+1}:', timed, eof):
+                if not self.expect_action(action[1], repl, test,
+                                          f'Action {j+1}:', timed, eof):
                     passed = False
                     break
-                passed = self.expect_prompt(repl, test, f'Prompt {j+1}', timed, eof)
+                passed = self.expect_prompt(repl, test, f'Prompt {j+1}',
+                                            timed, eof)
 
             cli.display_test_results(test, passed, i+1, False)
             if not passed:
@@ -65,3 +70,36 @@ class PexTest(cli.Test):
     def __init__(self, name, actions):
         super().__init__(name, actions, expected="")
 
+
+# Helpers ####################################################################
+def rnd_symbol():
+    symbol = []
+    length = rnd.randint(1, 10)
+    for i in range(length):
+        symbol.append(chr(rnd.randint(ord("a"), ord("z"))))
+    return "".join(symbol)
+
+def sym_pair():
+    s = rnd_symbol()
+    return (s, s[:6])
+
+def rnd_syms(n):
+    return [sym_pair() for _ in range(n)]
+
+def pair(text):
+    return (text, text)
+
+def rnd_lisp_list():
+    length = rnd.randint(1, 20)
+    send = []
+    expect = []
+    for i in range(length):
+        pair = sym_pair()
+        send.append(pair[0])
+        expect.append(pair[1])
+    a = "(" + " ".join(send) + ")"
+    b = "(" + " ".join(expect) + ")"
+    return (a, b)
+
+def rnd_lists(n):
+    return [rnd_lisp_list() for _ in range(n)]

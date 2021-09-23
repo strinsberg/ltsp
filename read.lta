@@ -119,28 +119,6 @@
        :ret
 )
 
-;; Takes a char and a symbol for the memory it comes from
-(proc  read/in-char-list?
-       :!init-rcount
-:label in-char-list-loop
-       :first :!add-rcount :load-lb       ;; List char at counter
-       :first :!zero?
-         :push in-char-list-false :branch ;; Null char ends list
-       :push 2 :nth :eq
-         :push in-char-list-true :branch  ;; Check if chars eq
-       :!inc-rcount
-       :push in-char-list-loop :jump
-
-:label in-char-list-false
-       :pop :pop :pop                     ;; remove end list and list label
-       :push 0 :!end-rcount
-       :ret
-:label in-char-list-true
-       :pop :pop
-       :push 1 :!end-rcount
-       :ret
-)
-
 ;; Read the next symbol and store up to its first 6 chars
 ;; in a newly allocated symbol. Leave stop char on the stack.
 (proc  read/symbol
