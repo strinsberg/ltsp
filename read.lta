@@ -195,7 +195,6 @@
 ;; Pair reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (proc  read/pair
-       ;:push 00000 :wprn :!prn-nl
        :pop :readch
        :push read/eat-ws :call
        :push read/form :call
@@ -209,8 +208,7 @@
        :!pair/set-car
        :rgrab
 :label read-pair-list-loop
-       ;:push 11111 :wprn :!prn-nl
-:BREAK       :swap
+       :swap
        :push read/eat-ws :call
        :push read/form :call
        :first :!end-pair :eq
@@ -230,8 +228,7 @@
        :pop :!nil
        :ret
 :label read-pair-finish-up
-       ;:push 22222 :wprn :!prn-nl
-:BREAK :pop :pop :readch  ;; means top level pair must always have a newline
+       :pop :pop :readch  ;; means top level pair must always have a newline
        :!nil :rot :!pair/set-cdr
        :rpop
        :ret
@@ -263,7 +260,6 @@
 ;; Takes a starting character for a number and leaves the address of a form
 ;; for the given number if it is valid, otherwise NIL.
 (proc  read/number
-       ;:push 5555 :wprn :!prn-nl
        :push read/number-chars :call
        :first :!error :eq
          :push number-error-while-reading :branch
@@ -273,6 +269,7 @@
        :push alloc/new-pair :call
        :push number/make-fixed :call
        :ret
+
 :label read-number-int
        :push alloc/new-pair :call
        :push number/make-int :call
@@ -292,14 +289,13 @@
        :!init-rcount
        :push read/set-number-sign :call
        :rpop :add :rpush ;; add the 0 or 1 from the sign result to the counter
-
 :label read-number-int-loop
        :readch
        :first :!ch-dot :eq
          :push read-number-fixed :branch
        :first :push read/stops-sym? :call
          :second :push read/whitespace? :call
-         :or :push read-number-build :branch
+         :or :push read-number-int-build :branch
        :first :push read/digit? :call :!not
          :push read-number-char-error :branch
        :push 10 :!eq-rcount
@@ -326,14 +322,25 @@
        :push read-number-fixed-loop :jump
 
 :label read-number-fixed-end
-       :rpop :rpop :add :rpush  ;; merge the two counters
-       ;; fall through
-:label read-number-build
-       :rpop :swap :rpush  ;; move stop char to rstack and put num size on dstack
-       :!dec
+       :push 3 :!eq-rcount
+         :push read-number-fixed-build :branch
+       :!ch-zero :swap
+       :!inc-rcount
+       :push read-number-fixed-end :jump
+
+:label read-number-fixed-build
+       :rpop :rpop :add :!dec
+       :swap :rpush  ;; move stop char to rstack and put num size on dstack
        :push read/build-number :call
        :rpop :rot :rot  ;; Put the stop char back under the number
-       :!read-int ;; TODO fixed or int ?
+       :!read-fixed
+       :ret
+:label read-number-int-build
+       :rpop :!dec
+       :swap :rpush
+       :push read/build-number :call
+       :rpop :rot :rot
+       :!read-int
        :ret
 :label read-number-fixed-size-error
        :!end-rcount

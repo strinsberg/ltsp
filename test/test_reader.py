@@ -75,3 +75,38 @@ list_tests = [
         [pair("(a (b (c) (d)) (e (f (g (h)))))")],
     ),
 ]
+
+number_tests = [
+    lt.PexTest(
+        "Positive integer",
+        [pair("123")],
+    ),
+    lt.PexTest(
+        "Positive integer, explicit sign",
+        [("+123", "123")],
+    ),
+    lt.PexTest(
+        "Negative integer",
+        [pair("-123")],
+    ),
+    lt.PexTest(
+        "Positive fixed point",
+        [pair("123.567")],
+    ),
+    lt.PexTest(
+        "Positive fixed point, 2 significant digits",
+        [("123.56", "123.560")],
+    ),
+    lt.PexTest(
+        "Positive fixed point, 1 significant digits",
+        [("123.5", "123.500")],
+    ),
+    lt.PexTest(
+        "Positive fixed point, explicit sign",
+        [("+123.789", "123.789")],
+    ),
+    lt.PexTest(
+        "Negative fixed point",
+        [pair("-123.432")],
+    ),
+]

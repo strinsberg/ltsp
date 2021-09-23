@@ -67,6 +67,8 @@
   (macro :!debug-char :first :prnch :push 10 :prnch)
   (macro :!debug-fst :first :wprn :push 10 :prnch)
   (macro :!debug-sec :second :wprn :push 10 :prnch)
+  (macro :!debug-thr :push 2 :nth :wprn :push 10 :prnch)
+  (macro :!debug-rs :rgrab :wprn :push 10 :prnch)
   
   (include "read.lta")
   (include "eval.lta")
