@@ -1,7 +1,41 @@
 (lt64-asm-mod
-  (proc eval/eval-form
-    ;; does nothing for now
-    ;; Eventually will take the form address on top of the stack, evaluate it
-    ;; and put the result forms address on the stack
-    :ret))
+
+(proc eval/eval-form
+    :first :push eval/atom? :call
+      :push eval-form-atom :branch
+    ;; else is list (for now)
+    :push eval/apply :call
+    :ret
+
+:label eval-form-atom
+    ;; just "return" the atom
+    :ret)
+
+;; Take an address and check if it is atom
+(proc  eval/atom?
+       :first :!sym/symbol?
+         :second :!number/int?
+         :or :second :!number/fixed?
+         :or
+       :swap :pop
+       :ret)
+
+;; Takes an address of a pair and applies the car as a function on the cdr
+;; Leaves the result's address.
+(proc  eval/apply
+       :first :!pair/car
+       :first :!QUOTE :eq
+         :push eval-apply-quote :branch
+       :pop
+       :ret
+
+:label eval-apply-quote
+       :pop
+       :!pair/cdr :!pair/car
+       :ret
+:label eval-apply-car
+;       :pop
+;       :first :!pair/cdr :!pair/car
+       :ret)
+)
 

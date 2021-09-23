@@ -10,7 +10,7 @@
 
 ;; Take an address and check its type
 (macro :!number/int? :load-lb :push 8 :sr :push 0x03 :eq)
-(macro :!number/float? :load-lb :push 8 :sr :push 0x04 :eq)
+(macro :!number/fixed? :load-lb :push 8 :sr :push 0x04 :eq)
 
 ;; Takes an address of a pair sized memory 'object' and a double word
 ;; on the stack. Sets up the memory as an int and moves the number into it.

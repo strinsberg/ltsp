@@ -8,7 +8,7 @@
          :push print-form-is-nil :branch
        :first :!number/int?
          :push print-form-int :branch
-       :first :!number/float?
+       :first :!number/fixed?
          :push print-form-fixed :branch
        :first :!pair/pair?
          :push print-form-pair :branch

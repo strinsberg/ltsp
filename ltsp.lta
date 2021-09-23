@@ -12,10 +12,11 @@
     (:word car 6   0x0200  0x6163 0x0072 0x0000 0x0000  0x0F)
     (:word cdr 6   0x0200  0x6463 0x0072 0x0000 0x0000  0x15)
     (:word cons 6  0x0200  0x6f63 0x736e 0x0000 0x0000  0x1b)
-    (:word atom? 6 0x0200  0x4e49 0x6d6f 0x003f 0x0000  0x21)
+    (:word atom? 6 0x0200  0x7461 0x6d6f 0x003f 0x0000  0x21)
     (:word eq? 6   0x0200  0x7165 0x003f 0x0000 0x0000  0x27)
+    (:word quote 6 0x0200  0x7571 0x746f 0x0065 0x0000  0x2d)
     ;; :!builtin-syms-start should point to 6 above the last next val
-    ;; currently 0x2d. Add 6 for every addition
+    ;; currently 0x33. Add 6 for every addition
 
     ;; strings
     (:str prompt "ltsp> ")
@@ -61,11 +62,13 @@
     :halt)
 
   ;; Constants and flags
-  ;; All are invalid addresses for in memory objects
-  (macro :!error :push -1)
-  (macro :!end-pair :push 0x00)
-  (macro :!read-int :push 0x01)
-  (macro :!read-fixed :push 0x02)
+  ;; All should be invalid addresses for in memory objects, not guaranteed yet
+  (macro :!false :push 0)
+  (macro :!true :push 1)
+  (macro :!error :push 2)
+  (macro :!end-pair :push -1)
+  (macro :!read-int :push -2)
+  (macro :!read-fixed :push -3)
 
   ;; Builtin Symbol Addresses
   (macro :!nil :push 0x03)
@@ -77,7 +80,8 @@
   (macro :!CONS :push 0x21)
   (macro :!ATOM? :push 0x27)
   (macro :!EQ? :push 0x2d)
-  (macro :!builtin-syms-start :push 0x2d)
+  (macro :!QUOTE :push 0x33)
+  (macro :!builtin-syms-start :push 0x33)
 
   ;; Characters
   (macro :!ch-nl :push 0x0A)

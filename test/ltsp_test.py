@@ -46,10 +46,10 @@ class LtspSuite(cli.TestSuite):
                                        timeout=0.2)
         test.expected = act + f'"{prompt}"'
         if prompt_idx == 1:
-            test.actual = eof + f'"{repl.before.decode("utf-8")}"'
+            test.actual = eof + f'"{repl.before.decode("ascii")}"'
             return False
         elif prompt_idx == 2:
-            test.actual = timed + f'"{repl.before.decode("utf-8")}"'
+            test.actual = timed + f'"{repl.before.decode("ascii")}"'
             return False
         return True
 
@@ -59,10 +59,10 @@ class LtspSuite(cli.TestSuite):
                                     timeout=0.2)
         test.expected = act + f'"{action}"'
         if exp_idx == 1:
-            test.actual = eof + f'"{repl.before.decode("utf-8")}"'
+            test.actual = eof + f'"{repl.before.decode("ascii")}"'
             return False
         elif exp_idx == 2:
-            test.actual = timed + f'"{repl.before.decode("utf-8")}"'
+            test.actual = timed + f'"{repl.before.decode("ascii")}"'
             return False
         return True
 
@@ -81,13 +81,21 @@ def rnd_symbol():
 
 def sym_pair():
     s = rnd_symbol()
-    return (s, s[:6])
+    return pair(s, s[:6])
 
 def rnd_syms(n):
     return [sym_pair() for _ in range(n)]
 
-def pair(text):
-    return (text, text)
+def out(text):
+    return f'\n{text}\n'
+
+def pair(inp, outp=None):
+    if not outp:
+        outp = inp
+    return (inp, out(outp))
+
+def quoted(text):
+    return pair(f"(quote {text})", text)
 
 def rnd_lisp_list():
     length = rnd.randint(1, 20)
