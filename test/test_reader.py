@@ -1,6 +1,7 @@
 import ltsp_test as lt
 import random as rnd
 
+# Helpers ####################################################################
 def rnd_symbol():
     symbol = []
     length = rnd.randint(1, 10)
@@ -33,6 +34,8 @@ def rnd_lisp_list():
 def rnd_lists(n):
     return [rnd_lisp_list() for _ in range(n)]
 
+
+# Tests ######################################################################
 symbol_tests = [
     lt.PexTest(
         "Test reading a single 2 character symbol",
@@ -43,8 +46,12 @@ symbol_tests = [
         [pair("hello!")],
     ),
     lt.PexTest(
-        "Test reading a single 6+ character symbol",
-        [("hello!worldthisissteve", "hello!")],
+        "Test reading a single 8 character symbol",
+        [pair("wombat!?")],
+    ),
+    lt.PexTest(
+        "Test reading a single 8+ character symbol",
+        [("hello!worldthisissteve", "hello!wo")],
     ),
     lt.PexTest(
         "Test consecutive identical symbols in between others",

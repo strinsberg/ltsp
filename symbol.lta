@@ -1,16 +1,14 @@
 (lt64-asm-mod
   ;; Take a symbol address and load a symbol 'member'
   (macro :!sym/info :load-lb)
-  (macro :!sym/value :push 1 :add :load-lb)
   (macro :!sym/next :push 5 :add :load-lb)
 
   ;; Take a symbol address and a value and set in symbol member
   (macro :!sym/set-info :store-lb)
-  (macro :!sym/set-value :push 1 :add :store-lb)
   (macro :!sym/set-next :push 5 :add :store-lb)
 
   ;; Take a symbol address and return the pointer to the member
-  (macro :!sym/name-ptr :push 2 :add)
+  (macro :!sym/name-ptr :push 1 :add)
   (macro :!sym/end-ptr :push 6 :add)
 
   ;; Take an address of a symbol name and a symbol. Copy the first 3
@@ -20,8 +18,10 @@
     :second :!sym/name-ptr :store-lb
     :second :push 1 :add :load-lb
     :second :!sym/name-ptr :push 1 :add :store-lb
-    :swap :push 2 :add :load-lb
-    :swap :!sym/name-ptr :push 2 :add :store-lb
+    :second :push 2 :add :load-lb
+    :second :!sym/name-ptr :push 2 :add :store-lb
+    :swap :push 3 :add :load-lb
+    :swap :!sym/name-ptr :push 3 :add :store-lb
     :ret)
 
   ;; Take a symbol address and print its print name
@@ -48,6 +48,12 @@
     :prnch
     :first :!zero? :push print-name-done :branch
     :prnch
+
+    :first :push 3 :add :load-lb :unpack :rot :pop
+    :first :!zero? :push print-name-done-low :branch
+    :prnch
+    :first :!zero? :push print-name-done :branch
+    :prnch
     :pop :ret
 
     :label print-name-done-low
@@ -60,7 +66,6 @@
   ;; Use(don't pop) an address and setup initial symbol data values
   (proc sym/make
     :push 0x0200 :second :!sym/set-info
-    :push 0 :second :!sym/set-value
     :push 0 :second :!sym/set-next
     :push 0 :second :!sym/name-ptr :store-lb
     :ret)
