@@ -28,6 +28,8 @@
          :push eval-apply-quote :branch
        :first :!CAR :eq
          :push eval-apply-car :branch
+       :first :!CDR :eq
+         :push eval-apply-cdr :branch
        :!NIL ;; for now so all lists must be quoted to not be evalled
        :ret
 
@@ -37,9 +39,20 @@
        :ret
 :label eval-apply-car
        :pop
+       :push eval/pair-args :call
+       :!pair/car
+       :ret
+:label eval-apply-cdr
+       :pop
+       :push eval/pair-args :call
+       :!pair/cdr
+       :ret
+)
+
+(proc  eval/pair-args
        :!pair/cdr :!pair/car
        :push eval/form :call
-       :!pair/car
-       :ret)
+       :ret
+)
 )
 
