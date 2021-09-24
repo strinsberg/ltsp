@@ -1,24 +1,15 @@
 (lt64-asm-mod
 
 (proc eval/form
-    :first :push eval/atom? :call
+      :first :push eval/atom? :call
       :push eval-form-atom :branch
-    ;; else is list (for now)
-    :push eval/apply :call
-    :ret
-
+      ;; else is list (for now)
+      :push eval/apply :call
+      :ret
 :label eval-form-atom
-    ;; just "return" the atom
-    :ret)
-
-;; Take an address and check if it is atom
-(proc  eval/atom?
-       :first :!sym/symbol?
-         :second :!number/int?
-         :or :second :!number/fixed?
-         :or
-       :swap :pop
-       :ret)
+      ;; just "return" the atom
+      :ret
+)
 
 ;; Takes an address of a pair and applies the car as a function on the cdr
 ;; Leaves the result's address.
@@ -43,13 +34,13 @@
        :pop :!pair/cdr :!pair/car
        :ret
 :label eval-apply-car
-       :pop :push eval/pair-car :call
+       :pop :push eval/apply-car :call
        :ret
 :label eval-apply-cdr
-       :pop :push eval/pair-cdr :call
+       :pop :push eval/apply-cdr :call
        :ret
 :label eval-apply-cons
-       :pop :push eval/pair-cons :call
+       :pop :push eval/apply-cons :call
        :ret
 :label eval-apply-atom?
        :pop :push eval/apply-atom? :call
@@ -59,20 +50,10 @@
        :ret
 )
 
-(proc  eval/first-arg
-       :!pair/cdr :!pair/car
-       :push eval/form :call
-       :ret
-)
-
-(proc  eval/second-arg
-       :!pair/cdr :!pair/cdr :!pair/car
-       :push eval/form :call
-       :ret
-)
 
 
-(proc  eval/pair-car
+;; Eval applications ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(proc  eval/apply-car
        :push eval/first-arg :call
        :first :push eval/atom? :call
          :push eval-pair-car-nil :branch
@@ -82,7 +63,7 @@
        :pop :!NIL :ret
 )
 
-(proc  eval/pair-cdr
+(proc  eval/apply-cdr
        :push eval/first-arg :call
        :first :push eval/atom? :call
          :push eval-pair-cdr-nil :branch
@@ -92,7 +73,7 @@
        :pop :!NIL :ret
 )
 
-(proc  eval/pair-cons
+(proc  eval/apply-cons
        :first :push eval/first-arg :call
        :second :push eval/second-arg :call
        :rot :pop
@@ -124,12 +105,117 @@
        :first :push eval/first-arg :call
        :second :push eval/second-arg :call
        :rot :pop
-       :eq
-         :push eval-apply-eq?-true :branch
+       ;; checks dont remove the forms
+       :push eval/both-symbols? :call
+         :push eval-apply-eq-symbols :branch
+       :push eval/both-fixed? :call
+         :push eval-apply-eq-fixed :branch
+       :push eval/both-numbers? :call
+         :push eval-apply-eq-numbers :branch
+       :pop :pop
        :!F :ret
-:label eval-apply-eq?-true
-       :!T :ret
+
+:label eval-apply-eq-symbols
+       :eq :push eval/bool-to-T-F :call
+       :ret
+:label eval-apply-eq-fixed
+       :!number/value
+       :rot :!number/value
+       :deq :push eval/bool-to-T-F :call
+       :ret
+:label eval-apply-eq-numbers
+       :push eval/get-number-value-as-int :call
+       :rot
+       :push eval/get-number-value-as-int :call
+       :deq :push eval/bool-to-T-F :call
+       :ret
 )
+
+
+;; Eval helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Take an address and check if it is atom
+(proc  eval/atom?
+       :first :!sym/symbol?
+         :second :!number/int?
+         :or :second :!number/fixed?
+         :or
+       :swap :pop
+       :ret
+)
+
+;; Takes a form address for a function application, i.e. (func arg arg ...),
+;; and leave the form resulting from the evaluation of the first argument.
+(proc  eval/first-arg
+       :!pair/cdr :!pair/car
+       :push eval/form :call
+       :ret
+)
+
+;; Takes a form address for a function application, i.e. (func arg arg ...),
+;; and leave the form resulting from the evaluation of the second argument.
+(proc  eval/second-arg
+       :!pair/cdr :!pair/cdr :!pair/car
+       :push eval/form :call
+       :ret
+)
+
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both symbols and 0 otherwise.
+(proc  eval/both-symbols?
+       :second :!sym/symbol?
+         :second :!sym/symbol?
+         :and
+       :ret
+)
+
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both fixed point numbers and 0 otherwise.
+(proc  eval/both-fixed?
+       :second :!number/fixed?
+         :second :!number/fixed?
+         :and
+       :ret
+)
+
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both numbers (fixed or int) and 0 otherwise.
+(proc  eval/both-numbers?
+       :first :!number/int?
+         :second :!number/fixed?
+         :or
+         :push 2 :nth :!number/int?
+           :push 3 :nth :!number/fixed?
+           :or
+         :and
+       :ret
+)
+
+;; Take the top value and return F if it is :!false (0), otherwise T.
+;; For use when some VM check returns 0 or 1 and the subroutine uses this
+;; to return T or F.
+;; **NOT** for use to check for falsy values when expecting T, F, or NIL.
+(proc  eval/bool-to-T-F
+       :!false :eq
+         :push eval-bool-to-T-F-false :branch
+       :!T :ret
+:label eval-bool-to-T-F-false
+       :!F :ret
+)
+
+;; Takes the address of a number and returns the value as an int.
+;; If the number is an int just return the value, and if it is fixed then
+;; scale it down and return that value.
+(proc  eval/get-number-value-as-int
+       :first :!number/int?
+         :push eval-get-number-value-as-int-is-int :branch
+       ;; else number is fixed point
+       :!number/value :dpush 1000 :ddiv
+       :ret
+:label eval-get-number-value-as-int-is-int
+       :!number/value :ret
+)
+
 
 )
 

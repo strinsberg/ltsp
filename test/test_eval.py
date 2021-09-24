@@ -106,7 +106,7 @@ builtin_tests = [
         [pair("(atom? (cons a (quote b c)))", "F")],
     ),
 
-    # Eq?
+    # Eq? Only works on symbols and ints, not lists.
     PexTest(
         "Check if two symbols are eq? T",
         [pair("(eq? (quote a) (quote a))", "T")],
@@ -116,11 +116,57 @@ builtin_tests = [
         [pair("(eq? (quote a) (quote b))", "F")],
     ),
     PexTest(
+        "Check if a symbol eq? a number F",
+        [pair("(eq? (quote a) 1234)", "F")],
+    ),
+    PexTest(
         "Check if a symbol eq? a list, F",
         [pair("(eq? (quote a) (quote (a)))", "F")],
     ),
     PexTest(
         "Check if a list eq? a list, F",
         [pair("(eq? (quote (a)) (quote (a)))", "F")],
+    ),
+    PexTest(
+        "Check if two ints are eq? T",
+        [pair("(eq? 1234 1234)", "T")],
+    ),
+    PexTest(
+        "Check if two negative ints are eq? T",
+        [pair("(eq? -1234 -1234)", "T")],
+    ),
+    PexTest(
+        "Check if two ints are eq? F",
+        [pair("(eq? 1234 6432)", "F")],
+    ),
+    PexTest(
+        "Check if two fixed point are eq? T",
+        [pair("(eq? 12.34 12.340)", "T")],
+    ),
+    PexTest(
+        "Check if two negative fixed point are eq? T",
+        [pair("(eq? -12.34 -12.340)", "T")],
+    ),
+    PexTest(
+        "Check if two fixed point are eq? F",
+        [pair("(eq? 12.34 1.234)", "F")],
+    ),
+    PexTest(
+        "Check if an int and a fixed are eq? T",
+        [pair("(eq? 1234 1234.000)", "T")],
+    ),
+    PexTest(
+        "Check if a fixed and an int are eq? T",
+        [pair("(eq? 1234.000 1234)", "T")],
+    ),
+    # this test is used because these two numbers have the same internal
+    # representation with fixed point scaling
+    PexTest(
+        "Check if an int and a fixed are eq? F",
+        [pair("(eq? 1234 1.234)", "F")],
+    ),
+    PexTest(
+        "Check if a fixed and an int are eq? F",
+        [pair("(eq? 1.234 1234)", "F")],
     ),
 ]

@@ -12,6 +12,10 @@
 (macro :!number/int? :load-lb :push 8 :sr :push 0x03 :eq)
 (macro :!number/fixed? :load-lb :push 8 :sr :push 0x04 :eq)
 
+;; Currently macros with double ops seem to not work!!!!
+;; calling this completely throws off addressing during assembly
+;(macro :!number/scale :dpush 1000)
+
 ;; Takes an address of a pair sized memory 'object' and a double word
 ;; on the stack. Sets up the memory as an int and moves the number into it.
 ;; Leaves the address of the memory on the stack.
