@@ -23,16 +23,15 @@
 
     ;; Builtin environment elements
     (:word env-NIL   4 0x0f00 0x03 0x03 0x00)
-    (:word env-T     4 0x0f00 0x03 0x03 0x3f)
-    (:word env-F     4 0x0f00 0x03 0x03 0x43)
+    (:word env-T     4 0x0f00 0x09 0x09 0x3f)
+    (:word env-F     4 0x0f00 0x0F 0x0F 0x43)
     ;; Each starts 4 past the previous one
     ;; The last is currently 0x47
 
     ;; strings
     (:str prompt "ltsp> ")
     (:str nil-sym "NIL")
-    (:str T-sym "T")
-    (:str F-sym "F")
+    (:str error-sym "ERROR")
 
     ;; Number sets
     (:dword build-num-factor 10
@@ -40,13 +39,14 @@
             1000000 10000000 100000000 1000000000) ;; 10^6 - 10^9
             
     ;; error text
-    (:str invalid-start-char "*** Error: Char cannot start a symbol: ")
-    (:str invalid-symbol-char "*** Error: Char cannot be in a symbol: ")
-    (:str invalid-number-char "*** Error: Char cannot be in a number: ")
+    (:str invalid-start-char "*** Char cannot start a symbol: ")
+    (:str invalid-symbol-char "*** Char cannot be in a symbol: ")
+    (:str invalid-number-char "*** Char cannot be in a number: ")
     (:str number-too-large
-    "*** Error: Numbers are limited to a max of 10 digits, including decimal digits")
+    "*** Numbers are limited to a max of 10 digits, including decimal digits")
     (:str number-too-many-decimals
-    "*** Error: Fixed point numbers are limited to a maximum of 3 decimal digits")
+    "*** Fixed point numbers are limited to a maximum of 3 decimal digits")
+    (:str symbol-unfound-error "*** Symbol has not been defined: ")
   )
     
   (main
@@ -57,7 +57,9 @@
     :label main-loop
     :push prompt :prnmem-lb
     :push read/repl :call
+    :!alloc/env-start  ;; builtin env will be on top
     :push eval/form :call
+    :pop  ;; remove the env so it will only be defs/builtins for next loop
     :push print/form :call
     :!prn-nl :!prn-nl
     :push main-loop :jump
@@ -110,6 +112,9 @@
   (macro :!ch-rsq :push 0x5D)
   (macro :!ch-lbr :push 0x7B)
   (macro :!ch-rbr :push 0x7D)
+
+  ;; helpers
+  (macro :!third :push 2 :nth)
 
   ;; Debugging
   (macro :!debug-char :first :prnch :push 10 :prnch)

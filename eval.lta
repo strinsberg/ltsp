@@ -7,26 +7,46 @@
 ;; TODO each subroutine needs some documentation to at least say what
 ;; each one expects on the stack and what each one leaves on the stack.
 
+;; Takes an env and then a form to evaluate
+;; Leaves a (possibly new) env and the result of evaluating the form
 (proc eval/form
-      :first :push eval/atom? :call
+      :second :!NIL :eq
+        :push eval-form-symbol :branch ;; later all symbols
+      :second :push eval/atom? :call
         :push eval-form-atom :branch
       ;; else is list (for now)
       :push eval/apply :call
       :ret
 :label eval-form-atom
-      ;; just "return" the atom
+      ;; just leave it all alone
       :ret
+:label eval-form-symbol
+      :second :second
+      :push env/find :call
+      :first :!false :eq
+        :push eval-form-symbol-undefined :branch
+      :rot :pop
+      :ret
+:label eval-form-symbol-undefined
+      :pop
+      :push symbol-unfound-error :prnmem-lb
+      :push sym/print-name :call :!prn-nl
+      :!error :rot :pop :swap
+      :ret
+      ;; This is still unhandled in all of the other evals and possibly print
 )
 
-;; Takes an address of a pair and applies the car as a function on the cdr
-;; Leaves the result's address.
+;; Takes and env and  an address of a pair and applies the car
+;; of the pair as a function on the cdr. Leaves the env and the
+;; result's address.
 (proc  eval/apply
-       :first :!pair/car
+       :second :!pair/car
        :first :push eval/basic-form? :call
          :push eval-apply-basic-form :branch
        :first :push eval/special-form? :call
          :push eval-apply-special-form :branch
-       :!NIL ;; for now so all lists must be quoted to not be evalled
+       :rot :pop :pop
+       :!NIL :swap ;; for now so all lists must be quoted to not be evalled
        :ret
 
 :label eval-apply-basic-form
@@ -70,11 +90,12 @@
        :first :!EQ? :eq
          :push eval-apply-basic-eq? :branch
        ;; should be unrechable if only called for basic forms
-       :pop :pop :!NIL
+       :rot :pop :pop :!NIL :swap
        :ret
 
 :label eval-apply-basic-quote
-       :pop :!pair/cdr :!pair/car
+       :pop :swap :!pair/cdr :!pair/car
+       :swap
        :ret
 :label eval-apply-basic-car
        :pop :push eval/apply-car :call
@@ -94,31 +115,31 @@
 )
 
 (proc  eval/apply-car
-       :push eval/first-arg :call
+       :second :push eval/first-arg :call
        :first :push eval/atom? :call
          :push eval-pair-car-nil :branch
-       :!pair/car
+       :rot :pop :!pair/car :swap
        :ret
 :label eval-pair-car-nil
-       :pop :!NIL :ret
+       :rot :pop :!NIL :swap :ret
 )
 
 (proc  eval/apply-cdr
-       :push eval/first-arg :call
+       :second :push eval/first-arg :call
        :first :push eval/atom? :call
          :push eval-pair-cdr-nil :branch
-       :!pair/cdr
+       :rot :pop :!pair/cdr :swap
        :ret
 :label eval-pair-cdr-nil
-       :pop :!NIL :ret
+       :rot :pop :!NIL :swap :ret
 )
 
 (proc  eval/apply-cons
-       :first :push eval/first-arg :call
-       :second :push eval/second-arg :call
-       :rot :pop
+       :second :push eval/first-arg :call
+       :!third :push eval/second-arg :call
+       :drot :swap :pop
        :push alloc/new-pair :call
-       :second :push eval/atom? :call
+       :!third :push eval/atom? :call
          :push eval-pair-cons-dotted :branch
        :push pair/make :call
        :push eval-pair-cons-finish :jump
@@ -127,9 +148,9 @@
        :push pair/make-dotted :call
        ;; fallthrough
 :label eval-pair-cons-finish
+       :rot :second :!pair/set-cdr
        :rot :second :!pair/set-car
-       :swap :second :!pair/set-cdr
-       :ret
+       :swap :ret
 )
 
 (proc  eval/apply-atom?
@@ -142,9 +163,10 @@
 )
 
 (proc  eval/apply-eq?
-       :first :push eval/first-arg :call
-       :second :push eval/second-arg :call
-       :rot :pop
+       :second :push eval/first-arg :call
+       :!third :push eval/second-arg :call
+       :drot :swap :pop
+       :rot :rot
        ;; checks dont remove the forms
        :push eval/both-symbols? :call
          :push eval-apply-eq-symbols :branch
@@ -153,11 +175,11 @@
        :push eval/both-numbers? :call
          :push eval-apply-eq-numbers :branch
        :pop :pop
-       :!F :ret
+       :!F :swap :ret
 
 :label eval-apply-eq-symbols
        :eq :push eval/bool-to-T-F :call
-       :ret
+       :swap :ret
 :label eval-apply-eq-fixed
        :!number/value
        :rot :!number/value
@@ -168,7 +190,7 @@
        :rot
        :push eval/get-number-value-as-int :call
        :deq :!->word :push eval/bool-to-T-F :call
-       :ret
+       :swap :ret
 )
 
 
@@ -189,10 +211,10 @@
        :first :!COND :eq
          :push eval-apply-special-cond :branch
        ;; add lambda, list, define later
-       :pop :pop :!NIL
+       :rot :pop :pop :!NIL :swap
        :ret
 :label eval-apply-special-cond
-       :pop :!pair/cdr
+       :pop :swap :!pair/cdr :swap
        :push eval/apply-cond :call
        :ret
 )
@@ -202,22 +224,22 @@
 ;; If no condition evaluates to a truthy value leaves NIL
 (proc  eval/apply-cond
 :label eval-apply-cond-pairs-loop
-       :first :!NIL :eq
+       :second :!NIL :eq
          :push eval-apply-cond-none :branch
-       :first :!pair/car :!pair/car
+       :second :!pair/car :!pair/car :swap
        :push eval/form :call
-       :push eval/falsy? :call :!not
+       :swap :push eval/falsy? :call :!not
          :push eval-apply-cond-true :branch
        ;; else the condition was not met
-       :!pair/cdr
+       :swap :!pair/cdr :swap
        :push eval-apply-cond-pairs-loop :jump
 
 :label eval-apply-cond-none
        :ret
 :label eval-apply-cond-true
-       :!pair/car ;; the condition, action pair
+       :swap :!pair/car ;; the condition, action pair
        :!pair/cdr :!pair/car ;; the action
-       :push eval/form :call
+       :swap :push eval/form :call
        :ret
 )
 

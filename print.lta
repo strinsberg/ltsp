@@ -19,6 +19,8 @@
        :ret
 
 :label print-form-is-error
+       :push error-sym :prnmem-lb
+       :ret
 :label print-form-is-nil
        :push nil-sym :prnmem-lb
        :ret

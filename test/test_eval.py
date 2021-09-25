@@ -202,5 +202,12 @@ special_form_tests = [
     ),
 ]
 
+symbol_tests = [
+    PexTest(
+        "Nil evaluates to nil",
+        [pair("NIL")]
+    ),
+]
+
 """
 """

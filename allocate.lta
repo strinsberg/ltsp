@@ -33,7 +33,7 @@
   (proc alloc/setup-fm
     :fmp :push 4 :add :!alloc/set-next-open
     :!builtin-syms-start :!alloc/set-symlist-head
-    :fmp :push 3 :add :!alloc/set-env-start
+    :!builtin-env-start :!alloc/set-env-start
     :push 0 :!alloc/set-unused-ptr
     :ret)
 
