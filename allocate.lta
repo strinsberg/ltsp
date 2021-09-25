@@ -13,28 +13,28 @@
 
   ;; Getters and setters for heap pointers
   ;; fmp + 0 = next open memory pointer
-  ;; fmp + 1 = symtab head pointer
-  ;; fmp + 2 = symtab tail pointer
-  ;; fmp + 3 = symlist pointer
+  ;; fmp + 1 = symlist head pointer
+  ;; fmp + 2 = env builtin/def pointer
+  ;; fmp + 3 = unused
   (macro :!alloc/next-open :push 0 :load)
   (macro :!alloc/set-next-open :push 0 :store)
 
-  (macro :!alloc/tab-head :push 1 :load)
-  (macro :!alloc/set-tab-head :push 1 :store)
+  (macro :!alloc/symlist-head :push 1 :load)
+  (macro :!alloc/set-symlist-head :push 1 :store)
 
-  (macro :!alloc/tab-tail :push 2 :load)
-  (macro :!alloc/set-tab-tail :push 2 :store)
+  (macro :!alloc/env-start :push 2 :load)
+  (macro :!alloc/set-env-start :push 2 :store)
 
-  (macro :!alloc/list-head :push 3 :load)
-  (macro :!alloc/set-list-head :push 3 :store)
+  (macro :!alloc/unused-ptr :push 3 :load)
+  (macro :!alloc/set-unused-ptr :push 3 :store)
 
   ;; Setup the free memory portion of memory as a memory heap
   ;; Uses first 4 words for bookkeeping
   (proc alloc/setup-fm
     :fmp :push 4 :add :!alloc/set-next-open
-    :fmp :push 2 :add :!alloc/set-tab-head
-    :push 0 :!alloc/set-tab-tail
-    :!builtin-syms-start :!alloc/set-list-head
+    :!builtin-syms-start :!alloc/set-symlist-head
+    :fmp :push 3 :add :!alloc/set-env-start
+    :push 0 :!alloc/set-unused-ptr
     :ret)
 
   ;; Takes a size value of the stack and leaves the memory of the
@@ -49,6 +49,11 @@
   ;; Allocate enough memory for most 'objects': dotted pairs, numbers, etc.
   (proc alloc/new-pair
     :push 3 :push alloc/alloc-size :call
+    :ret)
+
+  ;; Allocate enough memory for most 'objects': dotted pairs, numbers, etc.
+  (proc alloc/new-env-item
+    :push 4 :push alloc/alloc-size :call
     :ret)
 
   ;; Allocate enough memory for a new symbol and leave its address on stack

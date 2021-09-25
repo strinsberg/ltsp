@@ -1,4 +1,11 @@
 (lt64-asm-mod
+;; TODO there is no error checking or handling in the eval and apply
+;; subroutines. Currently most errors are in the reading phase, but
+;; as we go on at least a few errors will be introduced in different
+;; places and all the code that calls an eval or an application will need
+;; to either handle or pass on errors when they happen.
+;; TODO each subroutine needs some documentation to at least say what
+;; each one expects on the stack and what each one leaves on the stack.
 
 (proc eval/form
       :first :push eval/atom? :call
@@ -214,13 +221,6 @@
        :ret
 )
 
-(proc  eval/falsy?
-       :first :!F :eq
-         :swap :!NIL :eq
-         :or
-       :ret
-)
-
 
 ;; Eval helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -304,6 +304,13 @@
        :ret
 :label eval-get-number-value-as-int-is-int
        :!number/value :ret
+)
+
+(proc  eval/falsy?
+       :first :!F :eq
+         :swap :!NIL :eq
+         :or
+       :ret
 )
 
 

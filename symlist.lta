@@ -9,23 +9,20 @@
   ;; and remove (in linked list fashion) the symbols that are no longer in
   ;; use.
 
-  (macro :!symlist/head :push 3 :load)
-  (macro :!symlist/set-head :push 3 :store)
-
   ;; Take a symbol address on the top of the stack insert that symbol between
   ;; symlist head and the first symbol in the list (or nil).
   (proc symlist/add
     ;:first :wprn :!prn-nl
     ;:first :push sym/print-name :call :!prn-nl
     ;:first :!sym/next :wprn :!prn-nl
-    :!symlist/head :second :!sym/set-next
-    :!symlist/set-head
+    :!alloc/symlist-head :second :!sym/set-next
+    :!alloc/set-symlist-head
     :ret)
   
 ;; Takes the address of a symbol name check if it equals any of the
 ;; stored symbol names. Put the address of the found symbol or nil (0)
 (proc  symlist/has-name?
-       :!symlist/head                    ;; Add address of first symbol
+       :!alloc/symlist-head                    ;; Add address of first symbol
 
 :label has-name-loop
        :second :second :!sym/name-ptr
