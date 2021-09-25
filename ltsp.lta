@@ -15,8 +15,9 @@
     (:word atom?  6 0x0200  0x7461 0x6d6f 0x003f 0x0000  0x21)
     (:word eq?    6 0x0200  0x7165 0x003f 0x0000 0x0000  0x27)
     (:word quote  6 0x0200  0x7571 0x746f 0x0065 0x0000  0x2d)
+    (:word cond   6 0x0200  0x6f63 0x646e 0x0000 0x0000  0x33)
     ;; :!builtin-syms-start should point to 6 above the last next val
-    ;; currently 0x33. Add 6 for every addition
+    ;; currently 0x39. Add 6 for every addition
 
     ;; strings
     (:str prompt "ltsp> ")
@@ -76,7 +77,8 @@
   (macro :!ATOM? :push 0x27)
   (macro :!EQ? :push 0x2d)
   (macro :!QUOTE :push 0x33)
-  (macro :!builtin-syms-start :push 0x33)
+  (macro :!COND :push 0x39)
+  (macro :!builtin-syms-start :push 0x39)
 
   ;; Characters
   (macro :!ch-nl :push 0x0A)

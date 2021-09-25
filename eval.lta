@@ -2,7 +2,7 @@
 
 (proc eval/form
       :first :push eval/atom? :call
-      :push eval-form-atom :branch
+        :push eval-form-atom :branch
       ;; else is list (for now)
       :push eval/apply :call
       :ret
@@ -15,44 +15,77 @@
 ;; Leaves the result's address.
 (proc  eval/apply
        :first :!pair/car
-       :first :!QUOTE :eq
-         :push eval-apply-quote :branch
-       :first :!CAR :eq
-         :push eval-apply-car :branch
-       :first :!CDR :eq
-         :push eval-apply-cdr :branch
-       :first :!CONS :eq
-         :push eval-apply-cons :branch
-       :first :!ATOM? :eq
-         :push eval-apply-atom? :branch
-       :first :!EQ? :eq
-         :push eval-apply-eq? :branch
+       :first :push eval/basic-form? :call
+         :push eval-apply-basic-form :branch
+       :first :push eval/special-form? :call
+         :push eval-apply-special-form :branch
        :!NIL ;; for now so all lists must be quoted to not be evalled
        :ret
 
-:label eval-apply-quote
-       :pop :!pair/cdr :!pair/car
+:label eval-apply-basic-form
+       :push eval/apply-basic :call
        :ret
-:label eval-apply-car
-       :pop :push eval/apply-car :call
-       :ret
-:label eval-apply-cdr
-       :pop :push eval/apply-cdr :call
-       :ret
-:label eval-apply-cons
-       :pop :push eval/apply-cons :call
-       :ret
-:label eval-apply-atom?
-       :pop :push eval/apply-atom? :call
-       :ret
-:label eval-apply-eq?
-       :pop :push eval/apply-eq? :call
+:label eval-apply-special-form
+       :push eval/apply-special :call
        :ret
 )
 
 
+;; Basic Forms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Eval applications ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(proc  eval/basic-form?
+      :first :!QUOTE :eq
+        :second :!CAR :eq
+        :or :second :!CDR :eq
+        :or :second :!CONS :eq
+        :or :second :!ATOM? :eq
+        :or :second :!EQ? :eq
+        :or
+      :swap :pop
+      :ret
+)
+
+;; Takes a the address of a basic function symbol and the
+;; pair for the function application of that symbol and applies the
+;; appropriate function to the arguments.
+;; Leaves the result's address.
+(proc  eval/apply-basic
+       :first :!QUOTE :eq
+         :push eval-apply-basic-quote :branch
+       :first :!CAR :eq
+         :push eval-apply-basic-car :branch
+       :first :!CDR :eq
+         :push eval-apply-basic-cdr :branch
+       :first :!CONS :eq
+         :push eval-apply-basic-cons :branch
+       :first :!ATOM? :eq
+         :push eval-apply-basic-atom? :branch
+       :first :!EQ? :eq
+         :push eval-apply-basic-eq? :branch
+       ;; should be unrechable if only called for basic forms
+       :pop :pop :!NIL
+       :ret
+
+:label eval-apply-basic-quote
+       :pop :!pair/cdr :!pair/car
+       :ret
+:label eval-apply-basic-car
+       :pop :push eval/apply-car :call
+       :ret
+:label eval-apply-basic-cdr
+       :pop :push eval/apply-cdr :call
+       :ret
+:label eval-apply-basic-cons
+       :pop :push eval/apply-cons :call
+       :ret
+:label eval-apply-basic-atom?
+       :pop :push eval/apply-atom? :call
+       :ret
+:label eval-apply-basic-eq?
+       :pop :push eval/apply-eq? :call
+       :ret
+)
+
 (proc  eval/apply-car
        :push eval/first-arg :call
        :first :push eval/atom? :call
@@ -128,6 +161,36 @@
        :rot
        :push eval/get-number-value-as-int :call
        :deq :push eval/bool-to-T-F :call
+       :ret
+)
+
+
+;; Special forms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(proc  eval/special-form?
+       :first :!COND :eq
+       ;; add lambda, list, define later
+       :swap :pop
+       :ret
+)
+
+;; Takes a the address of a special form symbol and the
+;; pair for the function application of that symbol and applies the
+;; appropriate function to the arguments.
+;; Leaves the result's address.
+(proc  eval/apply-special
+       :first :!COND :eq
+         :push eval-apply-special-cond :branch
+       ;; add lambda, list, define later
+       :pop :pop :!NIL
+       :ret
+:label eval-apply-special-cond
+       :pop :push eval/apply-cond :call
+       :ret
+)
+
+(proc  eval/apply-cond
+       :pop :!F
        :ret
 )
 

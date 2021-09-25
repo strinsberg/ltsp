@@ -8,6 +8,7 @@ test_suites = [
     lt.LtspSuite("Reading Lists", read.list_tests),
     lt.LtspSuite("Reading Numbers", read.number_tests),
     lt.LtspSuite("Eval Builtin Functions", ev.builtin_tests),
+    lt.LtspSuite("Eval Special Forms", ev.special_form_tests),
 ]
 
 
