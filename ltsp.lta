@@ -18,6 +18,15 @@
     (:word cond   6 0x0200  0x6f63 0x646e 0x0000 0x0000  0x33)
     ;; :!builtin-syms-start should point to 6 above the last next val
     ;; currently 0x39. Add 6 for every addition
+    ;; ***Adding new symbols means updating the env items too***
+    ;; The env should start 6 past the above address
+
+    ;; Builtin environment elements
+    (:word env-NIL   4 0x0f00 0x03 0x03 0x00)
+    (:word env-T     4 0x0f00 0x03 0x03 0x3f)
+    (:word env-F     4 0x0f00 0x03 0x03 0x43)
+    ;; Each starts 4 past the previous one
+    ;; The last is currently 0x47
 
     ;; strings
     (:str prompt "ltsp> ")
@@ -79,6 +88,7 @@
   (macro :!QUOTE :push 0x33)
   (macro :!COND :push 0x39)
   (macro :!builtin-syms-start :push 0x39)
+  (macro :!builtin-env-start :push 0x47)
 
   ;; Characters
   (macro :!ch-nl :push 0x0A)
