@@ -154,13 +154,13 @@
 :label eval-apply-eq-fixed
        :!number/value
        :rot :!number/value
-       :deq :push eval/bool-to-T-F :call
+       :deq :!->word :push eval/bool-to-T-F :call
        :ret
 :label eval-apply-eq-numbers
        :push eval/get-number-value-as-int :call
        :rot
        :push eval/get-number-value-as-int :call
-       :deq :push eval/bool-to-T-F :call
+       :deq :!->word :push eval/bool-to-T-F :call
        :ret
 )
 
@@ -185,12 +185,39 @@
        :pop :pop :!NIL
        :ret
 :label eval-apply-special-cond
-       :pop :push eval/apply-cond :call
+       :pop :!pair/cdr
+       :push eval/apply-cond :call
        :ret
 )
 
+;; Takes the list of condition, action pairs from a cond form
+;; Leaves the result of the first action that evaluated as not NIL or F.
+;; If no condition evaluates to a truthy value leaves NIL
 (proc  eval/apply-cond
-       :pop :!F
+:label eval-apply-cond-pairs-loop
+       :first :!NIL :eq
+         :push eval-apply-cond-none :branch
+       :first :!pair/car :!pair/car
+       :push eval/form :call
+       :push eval/falsy? :call :!not
+         :push eval-apply-cond-true :branch
+       ;; else the condition was not met
+       :!pair/cdr
+       :push eval-apply-cond-pairs-loop :jump
+
+:label eval-apply-cond-none
+       :ret
+:label eval-apply-cond-true
+       :!pair/car ;; the condition, action pair
+       :!pair/cdr :!pair/car ;; the action
+       :push eval/form :call
+       :ret
+)
+
+(proc  eval/falsy?
+       :first :!F :eq
+         :swap :!NIL :eq
+         :or
        :ret
 )
 

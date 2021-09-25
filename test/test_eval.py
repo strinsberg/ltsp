@@ -177,23 +177,26 @@ special_form_tests = [
         [pair("(cond (T (quote a)))", "a")],
     ),
     PexTest(
-        "Simple if conditional, take first case",
-        [pair("(cond ((eq? 1 1) (quote b)) (T (quote a)))", "1")],
+        "Simple conditional, take first case",
+        [pair("(cond ((eq? 1 1) (quote b)) (T (quote a)))", "b")],
     ),
     PexTest(
-        "Simple if conditional, take T case",
+        "Simple conditional, take T case",
         [pair("(cond (F (quote b)) (T (quote a)))", "a")],
     ),
     PexTest(
-        "Simple if conditional using NIL as false, take T case",
+        "Simple conditional using NIL as false, take T case",
         [pair("(cond (NIL (quote b)) (T (quote a)))", "a")],
     ),
     PexTest(
         "Conditional with a few cases, takes the third case as true",
         [pair("(cond ((eq? 2 (quote b)) (quote b))"
                   + "(F 399)"
-                  + "((eq? (car (quote a)) (quote a)) 1234)"
+                  + "((eq? (car (quote (a))) (quote a)) 1234)"
                   + "(T (quote a)))",
               "1234")],
     ),
 ]
+
+"""
+"""

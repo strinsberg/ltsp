@@ -14,7 +14,7 @@
 ;; Take an address and see if it is a symbol object
 (macro :!sym/symbol? :load-lb :push 8 :sr :push 0x02 :eq)
 
-;; Take an address of a symbol name and a symbol. Copy the first 3
+;; Take an address of a symbol name and a symbol. Copy the first 4
 ;; words from the name into the symbol's name.
 (proc  sym/set-name
        :second :load-lb
