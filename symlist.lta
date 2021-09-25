@@ -28,7 +28,8 @@
        :!symlist/head                    ;; Add address of first symbol
 
 :label has-name-loop
-       :second :second :!sym/name-ptr :streq
+       :second :second :!sym/name-ptr
+       :push sym/names-equal? :call
          :push has-name-end :branch
 
        :!sym/next
@@ -40,5 +41,6 @@
     :swap :pop                        ;; Can do for both cause next is right or nil
     :ret
 )
+
 
 )

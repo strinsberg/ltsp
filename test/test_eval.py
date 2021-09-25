@@ -112,6 +112,10 @@ builtin_tests = [
         [pair("(eq? (quote a) (quote a))", "T")],
     ),
     PexTest(
+        "Check if two long symbols are eq? T",
+        [pair("(eq? (quote abcdefgh) (quote abcdefgh))", "T")],
+    ),
+    PexTest(
         "Check if two symbols are eq? F",
         [pair("(eq? (quote a) (quote b))", "F")],
     ),

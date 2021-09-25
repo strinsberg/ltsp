@@ -14,18 +14,44 @@
 ;; Take an address and see if it is a symbol object
 (macro :!sym/symbol? :load-lb :push 8 :sr :push 0x02 :eq)
 
+
+;; Use(don't pop) an address and setup initial symbol data values
+(proc  sym/make
+       :push 0x0200 :second :!sym/set-info
+       :push 0 :second :!sym/set-next
+       :push 0 :second :!sym/name-ptr :store-lb
+       :ret
+)
+
 ;; Take an address of a symbol name and a symbol. Copy the first 4
 ;; words from the name into the symbol's name.
 (proc  sym/set-name
-       :second :load-lb
-       :second :!sym/name-ptr :store-lb
-       :second :push 1 :add :load-lb
-       :second :!sym/name-ptr :push 1 :add :store-lb
-       :second :push 2 :add :load-lb
-       :second :!sym/name-ptr :push 2 :add :store-lb
-       :swap :push 3 :add :load-lb
-       :swap :!sym/name-ptr :push 3 :add :store-lb
-       :ret)
+       :!init-rcount
+:label sym-set-name-loop
+       :second :!rcount :add :load-lb
+       :second :second :swap
+       :!sym/name-ptr :!rcount :add :store-lb
+       :unpack :rot :pop
+       :!zero? :swap :!zero? :or
+         :push sym-set-name-zero-rest :branch
+       :!inc-rcount
+       :!rcount :push 4 :lt
+         :push sym-set-name-loop :branch
+       :push sym-set-name-end :jump
+
+:label sym-set-name-zero-rest
+       :!inc-rcount
+       :!rcount :push 4 :eq
+         :push sym-set-name-end :branch
+       :push 0
+       :second :!sym/name-ptr :!rcount :add :store-lb
+       :push sym-set-name-zero-rest :jump
+      
+:label sym-set-name-end
+       :!end-rcount
+       :pop :pop
+       :ret
+)
 
 ;; Take a symbol address and print its print name
 ;; A bit cumbersome without a loop, but it is easy to reason about
@@ -33,44 +59,58 @@
 ;; Tested informally and works as expected
 (proc sym/print-name
        :!sym/name-ptr
-
-       :first :load-lb :unpack :rot :pop
+       :!init-rcount
+:label sym-print-name-loop
+       :first :!rcount :add :load-lb :unpack :rot :pop
        :first :!zero? :push print-name-done-low :branch
        :prnch
        :first :!zero? :push print-name-done :branch
        :prnch
-  
-       :first :push 1 :add :load-lb :unpack :rot :pop
-       :first :!zero? :push print-name-done-low :branch
-       :prnch
-       :first :!zero? :push print-name-done :branch
-       :prnch
-
-       :first :push 2 :add :load-lb :unpack :rot :pop
-       :first :!zero? :push print-name-done-low :branch
-       :prnch
-       :first :!zero? :push print-name-done :branch
-       :prnch
-
-       :first :push 3 :add :load-lb :unpack :rot :pop
-       :first :!zero? :push print-name-done-low :branch
-       :prnch
-       :first :!zero? :push print-name-done :branch
-       :prnch
-       :pop :ret
+       :!inc-rcount
+       :!rcount :push 4 :lt
+         :push sym-print-name-loop :branch
+       :pop
+       :!end-rcount
+       :ret
 
 :label print-name-done-low
        :pop
 :label print-name-done
        :pop :pop
-       :ret)
+       :!end-rcount
+       :ret
+)
 
-
-;; Use(don't pop) an address and setup initial symbol data values
-(proc  sym/make
-       :push 0x0200 :second :!sym/set-info
-       :push 0 :second :!sym/set-next
-       :push 0 :second :!sym/name-ptr :store-lb
-       :ret)
+;; Takes the addresses of two names (not symbols) and returns 1 if they
+;; are equal, otherwise 0.
+;; This is for print names only which are a max of 4 words long.
+;; Ends when the names have a word that does not equal, they equal but one of
+;; the bytes is zero (assumes if the first byte is 0 the second will be too),
+;; or when 4 words have been compared.
+(proc  sym/names-equal?
+       :!init-rcount
+:label sym-names-equal-loop
+       :second :!rcount :add :load-lb
+       :second :!rcount :add :load-lb
+       :second :eq :!not
+         :push sym-names-equal-false :branch
+       :unpack :rot :pop
+       :!zero? :swap :!zero? :or
+         :push sym-names-equal-end :branch
+       :!inc-rcount
+       :!rcount :push 4 :lt
+         :push sym-names-equal-loop :branch
+       ;; fall through when loop counter is 4+ 
+:label sym-names-equal-end
+       :pop :pop
+       :!end-rcount
+       :!true
+       :ret
+:label sym-names-equal-false
+       :pop :pop :pop
+       :!end-rcount
+       :!false
+       :ret
+)
 
 )
