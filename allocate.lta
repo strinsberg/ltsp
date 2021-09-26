@@ -51,8 +51,13 @@
     :push 3 :push alloc/alloc-size :call
     :ret)
 
-  ;; Allocate enough memory for most 'objects': dotted pairs, numbers, etc.
+  ;; Allocate enough memory for an env item.
   (proc alloc/new-env-item
+    :push 4 :push alloc/alloc-size :call
+    :ret)
+
+  ;; Allocate enough memory for a procedure.
+  (proc alloc/new-procedure
     :push 4 :push alloc/alloc-size :call
     :ret)
 

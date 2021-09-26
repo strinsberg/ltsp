@@ -225,6 +225,12 @@ special_form_tests = [
         "Let where bindings use previous bindings",
         [pair("(let ((a 1) (b (cons 2 a)) (c (cons 3 b))) c)", "(3 2 1)")]
     ),
+
+    # lambda
+    PexTest(
+        "Simple lambda creation, returns a procedure",
+        [pair("(lambda (a b) (cons a b))", "#((a b) (cons a b))")],
+    ),
 ]
 
 symbol_tests = [

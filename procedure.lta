@@ -1,0 +1,29 @@
+(lt64-asm-mod
+
+;; Take an address for an procedure and load its "fields"
+(macro  :!proc/info :load-lb)
+(macro  :!proc/params :push 1 :add :load-lb)
+(macro  :!proc/body :push 2 :add :load-lb)
+(macro  :!proc/env :push 3 :add :load-lb)
+
+;; Take an address for a procedure and a value below it and
+;; store the value in the specified "field"
+(macro  :!proc/set-info :store-lb)
+(macro  :!proc/set-params :push 1 :add :store-lb)
+(macro  :!proc/set-body :push 2 :add :store-lb)
+(macro  :!proc/set-env :push 3 :add :store-lb)
+
+;; Take an address and leave :!true if it is not a procedure, otherwise :!false
+(macro :!proc/procedure? :load-lb :push 8 :sr :push 0x05 :eq)
+
+;; Uses the address of a memory "object" large enough to hold a procedure.
+;; Sets the info, makes it point to NIL for params, body, and env.
+(proc  proc/make
+       :push 0x0500 :second :!proc/set-info
+       :!NIL :second :!proc/set-params
+       :!NIL :second :!proc/set-body
+       :!NIL :second :!proc/set-env
+       :ret
+)
+
+)

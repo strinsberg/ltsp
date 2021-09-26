@@ -88,7 +88,7 @@
          :push eval-apply-basic-atom? :branch
        :first :!EQ? :eq
          :push eval-apply-basic-eq? :branch
-       ;; should be unrechable if only called for basic forms
+       ;; Else it was not a basic form TODO ERROR? and crash?
        :rot :pop :pop :!NIL :swap
        :ret
 
@@ -199,6 +199,7 @@
        :first :!COND :eq
          :second :!DEFINE :eq
          :or :second :!LET :eq
+         :or :second :!LAMBDA :eq
          :or
        ;; add lambda, list, define later
        :swap :pop
@@ -216,7 +217,9 @@
          :push eval-apply-special-define :branch
        :first :!LET :eq
          :push eval-apply-special-let :branch
-       ;; add lambda later
+       :first :!LAMBDA :eq
+         :push eval-apply-special-lambda :branch
+       ;; Else it was not a special form TODO ERROR? crash?
        :rot :pop :pop :!NIL :swap
        :ret
 :label eval-apply-special-cond
@@ -228,6 +231,9 @@
        :ret
 :label eval-apply-special-let
        :pop :push eval/apply-let :call
+       :ret
+:label eval-apply-special-lambda
+       :pop :push eval/apply-lambda :call
        :ret
 )
 
@@ -276,9 +282,6 @@
        :swap :pop :!error :swap :ret
 )
 
-       ;:second :push debug-form :call
-       ;:push debug-3 :call :halt
-
 ;; Takes an env and a let form and evaluates the body with all local bindings
 ;; made. Leaves the parent env and the result.
 (proc  eval/apply-let
@@ -311,6 +314,24 @@
        :swap :pop :ret
 )
 
+;; Takes an env and a lambda form and creates a procedure with a clojure
+;; around the environment that it was declared in.
+(proc  eval/apply-lambda
+       :second :!pair/cdr :!pair/car
+       :rot :!pair/cdr :!pair/cdr :!pair/car
+       :!third ;; duplicate the env to be consumed for setting clojure env
+
+       ;; allocate memory, make it a proc
+       :push alloc/new-procedure :call
+       :push proc/make :call
+       :swap :second :!proc/set-env
+       :swap :second :!proc/set-body
+       :swap :second :!proc/set-params
+       :swap
+       :ret
+)
+
+       ;:push debug-3 :call :halt
 ;; Eval helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Take an address and check if it is atom

@@ -2,7 +2,7 @@
 
 ;; Take the address of a form on top of the stack and print it
 (proc  print/form
-       :first :!error :eq
+       :first :!error :eq  ;; TODO get rid of this when all errors use ERROR
          :push print-form-is-error :branch
        :first :!nil :eq
          :push print-form-is-nil :branch
@@ -14,6 +14,8 @@
          :push print-form-pair :branch
        :first :!pair/dotted?
          :push print-form-dotted :branch
+       :first :!proc/procedure?
+         :push print-form-procedure :branch
        ;; else symbol
        :push sym/print-name :call
        :ret
@@ -35,6 +37,9 @@
        :ret
 :label print-form-dotted
        :push print/dotted :call
+       :ret
+:label print-form-procedure
+       :push print/procedure :call
        :ret
 )
 
@@ -83,6 +88,18 @@
        :!ch-rp :prnch
        :ret
 )
-  
+
+;; Takes the address of a procedure and prints it #((params) body)
+(proc  print/procedure
+       :!ch-hash :prnch
+       :!ch-lp :prnch
+       :first :!proc/params :push print/form :call
+       :!ch-space :prnch
+       :first :!proc/body :push print/form :call
+       :!ch-rp :prnch
+       :pop
+       :ret
+)
+
 )
 
