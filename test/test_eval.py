@@ -176,6 +176,7 @@ builtin_tests = [
 ]
 
 special_form_tests = [
+    # cond
     PexTest(
         "Simple only T conditional",
         [pair("(cond (T (quote a)))", "a")],
@@ -199,6 +200,26 @@ special_form_tests = [
                   + "((eq? (car (quote (a))) (quote a)) 1234)"
                   + "(T (quote a)))",
               "1234")],
+    ),
+
+    # let
+    PexTest(
+        "Simple let with a single assignment",
+        [pair("(let ((a 1)) a)", "1"),
+         pair("a", "ERROR")],
+    ),
+    PexTest(
+        "Simple let with two assignments",
+        [pair("(let ((a 1) (b 3)) (cons a b))", "(1 . 3)"),
+         pair("a", "ERROR"), pair("b", "ERROR")],
+    ),
+    PexTest(
+        "Nested let that uses a binding from the first",
+        [pair("(let ((a 1) (b 3)) (let ((c 7)) (cons a b c)))", "(1 3 7)")]
+    ),
+    PexTest(
+        "Nested let that shadowd a binding from the first",
+        [pair("(let ((a 1) (b 3)) (let ((a 7)) (cons a b)))", "(7 . 3)")]
     ),
 ]
 
