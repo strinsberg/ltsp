@@ -9,31 +9,30 @@
 
 ;; Takes an env and then a form to evaluate
 ;; Leaves a (possibly new) env and the result of evaluating the form
-(proc eval/form
-      :second :push number/number? :call
-        :push eval-form-number :branch
-      :second :push eval/atom? :call
-        :push eval-form-symbol :branch
-      ;; else is list/function application
-      :push eval/apply :call
-      :ret
+(proc  eval/form
+       :second :push number/number? :call
+         :push eval-form-number :branch
+       :second :push eval/atom? :call
+         :push eval-form-symbol :branch
+       ;; else is list/function application
+       :push eval/apply :call
+       :ret
 :label eval-form-number
-      ;; just leave it all alone
-      :ret
+       ;; just leave it all alone
+       :ret
 :label eval-form-symbol
-      :second :second
-      :push env/find :call
-      :first :!false :eq
-        :push eval-form-symbol-undefined :branch
-      :rot :pop :swap
-      :ret
+       :second :second
+       :push env/find :call
+       :first :!false :eq
+         :push eval-form-symbol-undefined :branch
+       :rot :pop :swap
+       :ret
 :label eval-form-symbol-undefined
-      :pop
-      :push symbol-unfound-error :prnmem-lb
-      :push sym/print-name :call :!prn-nl
-      :!error :rot :pop :swap
-      :ret
-      ;; This is still unhandled in all of the other evals and possibly print
+       :pop
+       :push symbol-unfound-error :prnmem-lb
+       :swap :push sym/print-name :call :!prn-nl
+       :!error :swap :ret
+       ;; This is still unhandled in all of the other evals and possibly print
 )
 
 ;; Takes and env and  an address of a pair and applies the car
@@ -198,6 +197,8 @@
 
 (proc  eval/special-form?
        :first :!COND :eq
+         :second :!DEFINE :eq
+         :or
        ;; add lambda, list, define later
        :swap :pop
        :ret
@@ -210,12 +211,17 @@
 (proc  eval/apply-special
        :first :!COND :eq
          :push eval-apply-special-cond :branch
+       :first :!DEFINE :eq
+         :push eval-apply-special-define :branch
        ;; add lambda, list, define later
        :rot :pop :pop :!NIL :swap
        :ret
 :label eval-apply-special-cond
        :pop :swap :!pair/cdr :swap
        :push eval/apply-cond :call
+       :ret
+:label eval-apply-special-define
+       :pop :push eval/apply-define :call
        :ret
 )
 
@@ -243,6 +249,28 @@
        :ret
 )
 
+(proc  eval/apply-define
+       ;; TODO what if the first arg is not an atom?
+       ;; TODO what if the first are has already been defined?
+       :second :!pair/cdr :!pair/car
+       :first :!sym/symbol? :!not
+         :push eval-apply-define-not-symbol :branch
+       :first :!third
+       :push env/find :call :!false :eq :!not
+         :push eval-apply-define-already-here :branch
+       :swap :rot :push eval/second-arg :call
+       :rot :rot
+       :push env/add-define :call
+       :!T :swap :ret
+:label eval-apply-define-not-symbol
+       :push invalid-define-target :prnmem-lb
+       :push debug-form :call
+       :swap :pop :!error :swap :ret
+:label eval-apply-define-already-here
+       :push symbol-already-defined :prnmem-lb
+       :push sym/print-name :call :!prn-nl
+       :swap :pop :!error :swap :ret
+)
 
 ;; Eval helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -257,7 +285,8 @@
 )
 
 ;; Takes a form address for a function application, i.e. (func arg arg ...),
-;; and leave the form resulting from the evaluation of the first argument.
+;; and the current env underneath it, and leaves the form resulting
+;; from the evaluation of the first argument.
 (proc  eval/first-arg
        :!pair/cdr :!pair/car :swap
        :push eval/form :call
@@ -265,7 +294,8 @@
 )
 
 ;; Takes a form address for a function application, i.e. (func arg arg ...),
-;; and leave the form resulting from the evaluation of the second argument.
+;; and the current env underneath it, and leaves the form resulting
+;; from the evaluation of the second argument.
 (proc  eval/second-arg
        :!pair/cdr :!pair/cdr :!pair/car :swap
        :push eval/form :call

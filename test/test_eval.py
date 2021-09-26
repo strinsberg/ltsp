@@ -208,36 +208,50 @@ symbol_tests = [
         [pair("NIL")]
     ),
     PexTest(
-        "eval cons on a symbol onto NIL",
-        [pair("(cons a NIL)", "(a)")],
+        "T evaluates to T",
+        [pair("T")]
     ),
     PexTest(
-        "Eval car on simple list",
-        [pair("(car (quote (a b c)))", "a")],
+        "F evaluates to F",
+        [pair("F")]
     ),
     PexTest(
-        "eval cdr on simple list",
-        [pair("(cdr (quote (a b c)))", "(b c)")],
+        "ERROR evaluates to ERROR",
+        [pair("ERROR")]
     ),
     PexTest(
-        "A quoted symbol is an atom",
-        [pair("(atom? (quote a))", "T")],
+        "Define a symbol",
+        [pair("(define a T)", "T")]
     ),
     PexTest(
-        "A quoted list is not an atom",
-        [pair("(atom? (quote (a)))", "F")],
+        "Define a symbol again and it will fail",
+        [pair("(define a 888)", "T"),
+         pair("(define a 123)", "ERROR"),
+         pair("a", "888")]
     ),
     PexTest(
-        "Check if two symbols are eq? T",
-        [pair("(eq? (quote a) (quote a))", "T")],
+        "Define a symbol with a number as the symbol and it will fail",
+         [pair("(define 123 T)", "ERROR")]
     ),
     PexTest(
-        "Check if two ints are eq? T",
-        [pair("(eq? 1234 1234)", "T")],
+        "Define a symbol with a list as the symbol and it will fail",
+         [pair("(define (quote 123) T)", "ERROR")]
     ),
     PexTest(
-        "Check if two fixed point are eq? T",
-        [pair("(eq? 12.34 12.340)", "T")],
+        "Define a symbol, and then evaluate it",
+        [pair("(define a T)", "T"),
+         pair("a", "T")]
+    ),
+    PexTest(
+        "Define a symbol with an function result, and check the result",
+        [pair("(define a (cons (quote x) (quote y)))", "T"),
+         pair("a", "(x . y)")]
+    ),
+    PexTest(
+        "Define two symbols and then use them",
+        [pair("(define a 123)", "T"),
+         pair("(define b 456)", "T"),
+         pair("(cons a b)", "(123 . 456)")]
     ),
 ]
 
