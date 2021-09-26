@@ -10,14 +10,14 @@
 ;; Takes an env and then a form to evaluate
 ;; Leaves a (possibly new) env and the result of evaluating the form
 (proc eval/form
-      :second :!NIL :eq
-        :push eval-form-symbol :branch ;; later all symbols
+      :second :push number/number? :call
+        :push eval-form-number :branch
       :second :push eval/atom? :call
-        :push eval-form-atom :branch
-      ;; else is list (for now)
+        :push eval-form-symbol :branch
+      ;; else is list/function application
       :push eval/apply :call
       :ret
-:label eval-form-atom
+:label eval-form-number
       ;; just leave it all alone
       :ret
 :label eval-form-symbol

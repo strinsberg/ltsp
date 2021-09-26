@@ -4,24 +4,25 @@ import random as rnd
 symbol_tests = [
     PexTest(
         "Test reading a single 2 character symbol",
-        [pair("hi")],
+        [quoted("hi")],
     ),
     PexTest(
         "Test reading a single 6 character symbol",
-        [pair("hello!")],
+        [quoted("hello!")],
     ),
     PexTest(
         "Test reading a single 8 character symbol",
-        [pair("wombat!?")],
+        [quoted("wombat!?")],
     ),
     PexTest(
         "Test reading a single 8+ character symbol",
-        [pair("hello!worldthisissteve", "hello!wo")],
+        [pair("(quote hello!worldthisissteve)", "hello!wo")],
     ),
     PexTest(
         "Test consecutive identical symbols in between others",
-        [pair("hi"), pair("there"), pair("hi"), pair("hi"), pair("there"),
-         pair("what"), pair("hi"), pair("what"), pair("what")],
+        [quoted("hi"), quoted("there"), quoted("hi"), quoted("hi"),
+         quoted("there"), quoted("what"), quoted("hi"), quoted("what"),
+         quoted("what")],
     ),
 
     # white space
@@ -31,45 +32,37 @@ symbol_tests = [
     # manually, but could be sent by something else.
     PexTest(
         "Test reading a symbol surrounded by simple white space",
-        [pair(" , hello!  ,,", "hello!")],
+        [pair(" , (quote hello!)  ,,", "hello!")],
     ),
     PexTest(
         "Test reading a symbol surrounded by white space, tabs",
-        [pair(" \t, hello!\t  ,", "hello!")],
+        [pair("(quote \t, hello!\t  ,)", "hello!")],
     ),
     PexTest(
         "Test reading a symbol surrounded by white space, newlines",
-        [pair(" , \n hello! \t ,,", "hello!")],
+        [pair("(quote  , \n hello! \t ,,)", "hello!")],
     ),
     PexTest(
         "Test reading multiple symbols separated by a newline",
-        [pair("hello!\n World!", "hello!"), ("", "World!")],
+        [pair("(quote hello!)\n (quote World!)", "hello!"), ("", "World!")],
     ),
 
     # stopping chars
     PexTest(
         "Test reading a symbol ended by space",
-        [pair("hello! ", "hello!")],
+        [pair("(quote hello! )", "hello!")],
     ),
     PexTest(
         "Test reading a symbol ended by newline",
-        [pair("hello!\n", "hello!")],
+        [pair("(quote hello!\n)", "hello!")],
     ),
     PexTest(
         "Test reading a symbol ended by tab",
-        [pair("hello!\t", "hello!")],
+        [pair("(quote hello!\t)", "hello!")],
     ),
     PexTest(
         "Test reading a symbol ended by ,",
-        [pair("hello!,", "hello!")],
-    ),
-    PexTest(
-        "Test reading a symbol ended by (",
-        [pair("hello!(", "hello!")],
-    ),
-    PexTest(
-        "Test reading a symbol ended by )",
-        [pair("hello!)", "hello!")],
+        [pair("(quote hello!,)", "hello!")],
     ),
 ]
 

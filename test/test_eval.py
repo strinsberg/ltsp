@@ -17,7 +17,7 @@ builtin_tests = [
     ),
     PexTest(
         "eval car on symbol",
-        [pair("(car a)", "NIL")],
+        [pair("(car (quote a))", "NIL")],
     ),
     PexTest(
         "eval cdr on empty list",
@@ -39,7 +39,7 @@ builtin_tests = [
     ),
     PexTest(
         "eval cdr on symbol",
-        [pair("(cdr a)", "NIL")],
+        [pair("(cdr (quote a))", "NIL")],
     ),
     PexTest(
         "eval cdr on empty list",
@@ -49,7 +49,7 @@ builtin_tests = [
     # Cons
     PexTest(
         "eval cons on a symbol and list",
-        [pair("(cons a (quote (b c)))", "(a b c)")],
+        [pair("(cons (quote a) (quote (b c)))", "(a b c)")],
     ),
     PexTest(
         "eval cons on a list and list",
@@ -57,27 +57,27 @@ builtin_tests = [
     ),
     PexTest(
         "eval cons on two symbols",
-        [pair("(cons a b)", "(a . b)")],
+        [pair("(cons (quote a) (quote b))", "(a . b)")],
     ),
     PexTest(
         "eval cons symbol onto cons list",
-        [pair("(cons a (cons b (quote (c d))))", "(a b c d)")],
+        [pair("(cons (quote a) (cons (quote b) (quote (c d))))", "(a b c d)")],
     ),
     PexTest(
         "eval cons symbol onto dotted pair two symbols",
-        [pair("(cons a (cons b c))", "(a b c)")],
+        [pair("(cons(quote a)(cons (quote b)(quote  c)))", "(a b c)")],
     ),
     PexTest(
         "eval cons on a symbol onto NIL",
-        [pair("(cons a NIL)", "(a)")],
+        [pair("(cons (quote a) NIL)", "(a)")],
     ),
     PexTest(
         "eval cons on a symbol onto empty list",
-        [pair("(cons a (quote ()))", "(a)")],
+        [pair("(cons (quote a) (quote ()))", "(a)")],
     ),
     PexTest(
         "eval cons on a symbol onto unquoted empty list",
-        [pair("(cons a ())", "(a)")],
+        [pair("(cons (quote a) ())", "(a)")],
     ),
 
     # Atom?
@@ -99,11 +99,11 @@ builtin_tests = [
     ),
     PexTest(
         "A dotted pair is NOT an atom",
-        [pair("(atom? (cons a b))", "F")],
+        [pair("(atom? (cons (quote a) (quote b)))", "F")],
     ),
     PexTest(
         "A list is not an atom",
-        [pair("(atom? (cons a (quote b c)))", "F")],
+        [pair("(atom? (cons (quote a) (quote (b c))))", "F")],
     ),
 
     # Eq? Only works on symbols and ints, not lists.

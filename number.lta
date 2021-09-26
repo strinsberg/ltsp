@@ -12,6 +12,13 @@
 (macro :!number/int? :load-lb :push 8 :sr :push 0x03 :eq)
 (macro :!number/fixed? :load-lb :push 8 :sr :push 0x04 :eq)
 
+(proc  number/number?
+       :first :!number/int?
+         :swap :!number/fixed?
+         :or
+       :ret
+)
+
 ;; Currently macros with double ops seem to not work!!!!
 ;; calling this completely throws off addressing during assembly
 ;(macro :!number/scale :dpush 1000)
