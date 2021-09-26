@@ -6,6 +6,8 @@
 ;; to either handle or pass on errors when they happen.
 ;; TODO each subroutine needs some documentation to at least say what
 ;; each one expects on the stack and what each one leaves on the stack.
+;; And with the addition of ENV they all might need adjustment to their
+;; documentation.
 
 ;; Takes an env and then a form to evaluate
 ;; Leaves a (possibly new) env and the result of evaluating the form
@@ -44,8 +46,14 @@
          :push eval-apply-basic-form :branch
        :first :push eval/special-form? :call
          :push eval-apply-special-form :branch
-       :rot :pop :pop
-       :!NIL :swap ;; for now so all lists must be quoted to not be evalled
+       ;; else the car is a symbol pointing to a proc
+       ;; or a form that will eval to a proc
+       :swap :push eval/form :call
+       :second :!proc/procedure?
+         :push eval-apply-procedure :branch
+       ;; TODO return ERROR? is there more on the stack than there should be?
+       :rot :pop :rot :pop
+       :!NIL :swap
        :ret
 
 :label eval-apply-basic-form
@@ -53,6 +61,10 @@
        :ret
 :label eval-apply-special-form
        :push eval/apply-special :call
+       :ret
+:label eval-apply-procedure
+       :rot :!pair/cdr :swap  ;; get the function arguments from the pair
+       :push eval/apply-procedure :call
        :ret
 )
 
@@ -331,7 +343,66 @@
        :ret
 )
 
-       ;:push debug-3 :call :halt
+;; Apply procedures ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Takes an env and the address of a list of procedure arguments and the
+;; address of the procedure to apply to those arguments.
+;; Leaves the env and the result of the application.
+(proc  eval/apply-procedure
+       :push eval/args-list :call
+       :!third :!proc/params :rot :swap
+       :!fourth :!proc/env
+       :push eval/bind-proc-args :call
+       :!third :!proc/body :swap
+       :push eval/form :call
+       :pop :swap :rot :pop
+       :ret
+)
+
+;; Takes an env and a list of procedure arguments.
+;; Leaves the env and the list with each form replaced by the result of
+;; evaluating it. MUTATES the list, so it is expected that this list is just
+;; for procedure argument lists where the list will never be used elsewhere.
+(proc  eval/args-list
+       :second :rpush
+:label eval-args-list-loop
+       :second :!NIL :eq
+         :push eval-args-list-end :branch
+       :second :!pair/car :swap
+       :push eval/form :call
+       :!third :rot :swap
+       :!pair/set-car
+       :swap :!pair/cdr :swap
+       :push eval-args-list-loop :jump
+
+:label eval-args-list-end
+       :swap :pop :rpop :swap
+       :ret
+)
+
+;; Takes the proc env, a list of params, and a list of evaluated arguments and
+;; adds bindings to the procedures env. Leaves the updated env.
+(proc  eval/bind-proc-args
+       ;; for arg and param symbol
+       ;; eval the arg and bind the symbols
+:label eval-bind-proc-args-loop
+       :second :!NIL :eq
+         :!fourth :!NIL :eq
+         :or :push eval-bind-proc-args-end :branch
+       :second :!pair/car
+       :!fourth :!pair/car
+       :rot
+       :push env/add :call
+       :rot :!pair/cdr
+       :rot :!pair/cdr
+       :rot
+       :push eval-bind-proc-args-loop :jump
+
+:label eval-bind-proc-args-end
+       :swap :pop :swap :pop
+       :ret
+)
+
 ;; Eval helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Take an address and check if it is atom

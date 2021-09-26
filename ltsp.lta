@@ -127,6 +127,7 @@
 
   ;; helpers
   (macro :!third :push 2 :nth)
+  (macro :!fourth :push 3 :nth)
 
   ;; Debugging
   (macro :!debug-char :first :prnch :push 10 :prnch)

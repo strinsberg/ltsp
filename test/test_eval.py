@@ -231,6 +231,37 @@ special_form_tests = [
         "Simple lambda creation, returns a procedure",
         [pair("(lambda (a b) (cons a b))", "#((a b) (cons a b))")],
     ),
+    PexTest(
+        "Simple lambda creation and application",
+        [pair("(define f (lambda (a b) (cons a b)))", "T"),
+         pair("(f 1 2)", "(1 . 2)"),
+         ],
+    ),
+    PexTest(
+        "Simple lambda creation and application",
+        [pair("(define f (lambda (a b) (cons a b)))", "T"),
+         pair("(define a (f 1 2))","T"),
+         pair("a","(1 . 2)"),
+         ],
+    ),
+    PexTest(
+        "Lambda returns a lambda with a closure on its params, apply it",
+        [pair("(define f (lambda (a b) (lambda (x) (cons x (cons a b)))))", "T"),
+         pair("(define g (f 2 3))", "T"),
+         pair("(g 1)", "(1 2 3)"),
+         ],
+    ),
+    PexTest(
+        "Apply a lambda directly",
+        [pair("((lambda (a b) (cons a b)) 1 2)", "(1 . 2)")],
+    ),
+    PexTest(
+        "Apply a lambda directly, with args that need evaluation",
+        [pair("(define x 1)", "T"),
+         pair("(define y 2)", "T"),
+         pair("((lambda (a b) (cons a b)) x y)", "(1 . 2)")],
+    ),
+
 ]
 
 symbol_tests = [
