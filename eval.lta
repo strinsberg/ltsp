@@ -198,6 +198,7 @@
 (proc  eval/special-form?
        :first :!COND :eq
          :second :!DEFINE :eq
+         :or :second :!LET :eq
          :or
        ;; add lambda, list, define later
        :swap :pop
@@ -213,7 +214,9 @@
          :push eval-apply-special-cond :branch
        :first :!DEFINE :eq
          :push eval-apply-special-define :branch
-       ;; add lambda, list, define later
+       :first :!LET :eq
+         :push eval-apply-special-let :branch
+       ;; add lambda later
        :rot :pop :pop :!NIL :swap
        :ret
 :label eval-apply-special-cond
@@ -222,6 +225,9 @@
        :ret
 :label eval-apply-special-define
        :pop :push eval/apply-define :call
+       :ret
+:label eval-apply-special-let
+       :pop :push eval/apply-let :call
        :ret
 )
 
@@ -250,8 +256,6 @@
 )
 
 (proc  eval/apply-define
-       ;; TODO what if the first arg is not an atom?
-       ;; TODO what if the first are has already been defined?
        :second :!pair/cdr :!pair/car
        :first :!sym/symbol? :!not
          :push eval-apply-define-not-symbol :branch
@@ -270,6 +274,41 @@
        :push symbol-already-defined :prnmem-lb
        :push sym/print-name :call :!prn-nl
        :swap :pop :!error :swap :ret
+)
+
+       ;:second :push debug-form :call
+       ;:push debug-3 :call :halt
+
+;; Takes an env and a let form and evaluates the body with all local bindings
+;; made. Leaves the parent env and the result.
+(proc  eval/apply-let
+       :swap :second  ;; duplicate env for local use
+       :second :!pair/cdr :!pair/car
+       :swap
+       :push eval/add-let-bindings :call
+       :swap :!pair/cdr :!pair/cdr :!pair/car
+       :swap
+       :push eval/form :call
+       :pop :swap  ;; pop local env and put result under parent env
+       :ret
+)
+
+;; Takes an env and a list of bindings and leaves the updated env.
+(proc  eval/add-let-bindings
+:label eval-add-let-bindings-loop
+       :second :!NIL :eq
+         :push eval-add-let-bindings-end :branch
+       :second :!pair/car
+       :first :!pair/car
+       :swap :!pair/cdr :!pair/car
+       :rot
+       :push eval/form :call
+       :push env/add :call
+       :swap :!pair/cdr :swap
+       :push eval-add-let-bindings-loop :jump
+
+:label eval-add-let-bindings-end
+       :swap :pop :ret
 )
 
 ;; Eval helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

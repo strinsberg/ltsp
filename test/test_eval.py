@@ -215,11 +215,15 @@ special_form_tests = [
     ),
     PexTest(
         "Nested let that uses a binding from the first",
-        [pair("(let ((a 1) (b 3)) (let ((c 7)) (cons a b c)))", "(1 3 7)")]
+        [pair("(let ((a 1) (b 3)) (let ((c 7)) (cons a (cons b c))))", "(1 3 7)")]
     ),
     PexTest(
-        "Nested let that shadowd a binding from the first",
+        "Nested let that shadows a binding from the first",
         [pair("(let ((a 1) (b 3)) (let ((a 7)) (cons a b)))", "(7 . 3)")]
+    ),
+    PexTest(
+        "Let where bindings use previous bindings",
+        [pair("(let ((a 1) (b (cons 2 a)) (c (cons 3 b))) c)", "(3 2 1)")]
     ),
 ]
 
