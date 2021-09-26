@@ -122,6 +122,8 @@
   (macro :!debug-sec :second :wprn :push 10 :prnch)
   (macro :!debug-thr :push 2 :nth :wprn :push 10 :prnch)
   (macro :!debug-rs :rgrab :wprn :push 10 :prnch)
+  (proc debug-form :push print/form :call :!prn-nl :ret)
+  (proc debug-3 :!debug-fst :!debug-sec :!debug-thr :ret)
   
   ;; Includes
   (include "read.lta")

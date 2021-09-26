@@ -207,6 +207,38 @@ symbol_tests = [
         "Nil evaluates to nil",
         [pair("NIL")]
     ),
+    PexTest(
+        "eval cons on a symbol onto NIL",
+        [pair("(cons a NIL)", "(a)")],
+    ),
+    PexTest(
+        "Eval car on simple list",
+        [pair("(car (quote (a b c)))", "a")],
+    ),
+    PexTest(
+        "eval cdr on simple list",
+        [pair("(cdr (quote (a b c)))", "(b c)")],
+    ),
+    PexTest(
+        "A quoted symbol is an atom",
+        [pair("(atom? (quote a))", "T")],
+    ),
+    PexTest(
+        "A quoted list is not an atom",
+        [pair("(atom? (quote (a)))", "F")],
+    ),
+    PexTest(
+        "Check if two symbols are eq? T",
+        [pair("(eq? (quote a) (quote a))", "T")],
+    ),
+    PexTest(
+        "Check if two ints are eq? T",
+        [pair("(eq? 1234 1234)", "T")],
+    ),
+    PexTest(
+        "Check if two fixed point are eq? T",
+        [pair("(eq? 12.34 12.340)", "T")],
+    ),
 ]
 
 """

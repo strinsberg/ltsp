@@ -25,7 +25,7 @@
       :push env/find :call
       :first :!false :eq
         :push eval-form-symbol-undefined :branch
-      :rot :pop
+      :rot :pop :swap
       :ret
 :label eval-form-symbol-undefined
       :pop
@@ -116,9 +116,9 @@
 
 (proc  eval/apply-car
        :second :push eval/first-arg :call
-       :first :push eval/atom? :call
+       :second :push eval/atom? :call
          :push eval-pair-car-nil :branch
-       :rot :pop :!pair/car :swap
+       :rot :pop :swap :!pair/car :swap
        :ret
 :label eval-pair-car-nil
        :rot :pop :!NIL :swap :ret
@@ -126,20 +126,20 @@
 
 (proc  eval/apply-cdr
        :second :push eval/first-arg :call
-       :first :push eval/atom? :call
+       :second :push eval/atom? :call
          :push eval-pair-cdr-nil :branch
-       :rot :pop :!pair/cdr :swap
+       :rot :pop :swap :!pair/cdr :swap
        :ret
 :label eval-pair-cdr-nil
-       :rot :pop :!NIL :swap :ret
+       :rot :pop :swap :!NIL :swap :ret
 )
 
 (proc  eval/apply-cons
        :second :push eval/first-arg :call
        :!third :push eval/second-arg :call
-       :drot :swap :pop
+       :dswap :swap :pop :rot
        :push alloc/new-pair :call
-       :!third :push eval/atom? :call
+       :second :push eval/atom? :call
          :push eval-pair-cons-dotted :branch
        :push pair/make :call
        :push eval-pair-cons-finish :jump
@@ -148,25 +148,25 @@
        :push pair/make-dotted :call
        ;; fallthrough
 :label eval-pair-cons-finish
-       :rot :second :!pair/set-cdr
        :rot :second :!pair/set-car
+       :swap :second :!pair/set-cdr
        :swap :ret
 )
 
 (proc  eval/apply-atom?
-       :push eval/first-arg :call
-       :push eval/atom? :call
+       :second :push eval/first-arg :call
+       :rot :pop
+       :second :push eval/atom? :call
          :push eval-apply-atom?-true :branch
-       :!F :ret
+       :swap :pop :!F :swap :ret
 :label eval-apply-atom?-true
-       :!T :ret
+       :swap :pop :!T :swap :ret
 )
 
 (proc  eval/apply-eq?
        :second :push eval/first-arg :call
        :!third :push eval/second-arg :call
-       :drot :swap :pop
-       :rot :rot
+       :dswap :swap :pop :rot
        ;; checks dont remove the forms
        :push eval/both-symbols? :call
          :push eval-apply-eq-symbols :branch
@@ -184,7 +184,7 @@
        :!number/value
        :rot :!number/value
        :deq :!->word :push eval/bool-to-T-F :call
-       :ret
+       :swap :ret
 :label eval-apply-eq-numbers
        :push eval/get-number-value-as-int :call
        :rot
@@ -259,7 +259,7 @@
 ;; Takes a form address for a function application, i.e. (func arg arg ...),
 ;; and leave the form resulting from the evaluation of the first argument.
 (proc  eval/first-arg
-       :!pair/cdr :!pair/car
+       :!pair/cdr :!pair/car :swap
        :push eval/form :call
        :ret
 )
@@ -267,7 +267,7 @@
 ;; Takes a form address for a function application, i.e. (func arg arg ...),
 ;; and leave the form resulting from the evaluation of the second argument.
 (proc  eval/second-arg
-       :!pair/cdr :!pair/cdr :!pair/car
+       :!pair/cdr :!pair/cdr :!pair/car :swap
        :push eval/form :call
        :ret
 )
