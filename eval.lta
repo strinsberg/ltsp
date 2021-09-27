@@ -30,6 +30,8 @@
        :rot :pop :swap
        :ret
 :label eval-form-symbol-undefined
+       ;:second :push debug-form :call
+       ;:push debug-3 :call :halt
        :pop
        :push symbol-unfound-error :prnmem-lb
        :swap :push sym/print-name :call :!prn-nl
@@ -213,7 +215,6 @@
          :or :second :!LET :eq
          :or :second :!LAMBDA :eq
          :or
-       ;; add lambda, list, define later
        :swap :pop
        :ret
 )
@@ -273,6 +274,9 @@
        :ret
 )
 
+
+;; Takes an env and a define form. Add the binding to the front of the
+;; builtin bindings. Leaves T if succesful, otherwise :!error.
 (proc  eval/apply-define
        :second :!pair/cdr :!pair/car
        :first :!sym/symbol? :!not
@@ -281,9 +285,15 @@
        :push env/find :call :!false :eq :!not
          :push eval-apply-define-already-here :branch
        :swap :rot :push eval/second-arg :call
-       :rot :rot
+       :!third :!third
        :push env/add-define :call
-       :!T :swap :ret
+       ;:second :push debug-form :call
+       :second :!proc/procedure?
+         :push eval-apply-define-update-proc-env :branch
+       :swap :pop :swap :pop
+       :!T :swap
+       :ret
+
 :label eval-apply-define-not-symbol
        :push invalid-define-target :prnmem-lb
        :push debug-form :call
@@ -292,6 +302,12 @@
        :push symbol-already-defined :prnmem-lb
        :push sym/print-name :call :!prn-nl
        :swap :pop :!error :swap :ret
+:label eval-apply-define-update-proc-env
+       :!third :!third :first :!proc/env
+       :push env/add :call
+       :rot :!proc/set-env
+       :!T :swap
+       :ret
 )
 
 ;; Takes an env and a let form and evaluates the body with all local bindings
@@ -326,12 +342,13 @@
        :swap :pop :ret
 )
 
-;; Takes an env and a lambda form and creates a procedure with a clojure
+;; Takes an env and a lambda form and leaves a procedure with a closure
 ;; around the environment that it was declared in.
 (proc  eval/apply-lambda
+       ;:second :push debug-form :call
        :second :!pair/cdr :!pair/car
        :rot :!pair/cdr :!pair/cdr :!pair/car
-       :!third ;; duplicate the env to be consumed for setting clojure env
+       :!third ;; duplicate the env to be consumed for setting closure env
 
        ;; allocate memory, make it a proc
        :push alloc/new-procedure :call
@@ -340,6 +357,7 @@
        :swap :second :!proc/set-body
        :swap :second :!proc/set-params
        :swap
+       ;:!third :!proc/body :push debug-form :call
        :ret
 )
 
@@ -349,7 +367,10 @@
 ;; address of the procedure to apply to those arguments.
 ;; Leaves the env and the result of the application.
 (proc  eval/apply-procedure
+       :!ch-hash :prnch :!prn-nl
        :push eval/args-list :call
+       ;:second :push debug-form :call
+       ;:!third :!proc/body :push debug-form :call
        :!third :!proc/params :rot :swap
        :!fourth :!proc/env
        :push eval/bind-proc-args :call

@@ -195,7 +195,7 @@ special_form_tests = [
     ),
     PexTest(
         "Conditional with a few cases, takes the third case as true",
-        [pair("(cond ((eq? 2 (quote b)) (quote b))"
+        [pair("(cond ((eq? 2 NIL) NIL)"
                   + "(F 399)"
                   + "((eq? (car (quote (a))) (quote a)) 1234)"
                   + "(T (quote a)))",
@@ -238,7 +238,7 @@ special_form_tests = [
          ],
     ),
     PexTest(
-        "Simple lambda creation and application",
+        "Simple lambda creation and application, with result saved",
         [pair("(define f (lambda (a b) (cons a b)))", "T"),
          pair("(define a (f 1 2))","T"),
          pair("a","(1 . 2)"),
@@ -262,6 +262,37 @@ special_form_tests = [
          pair("((lambda (a b) (cons a b)) x y)", "(1 . 2)")],
     ),
 
+    # recursion
+    # There seems to be no issue with the lambda being recursive, but there
+    # is somethign that is not letting the second one run more than a few 
+    # times. I have no idea why.
+    # There could be some simple recursion tests if there were arithmetic
+    # operations, so I need to add a couple of them.
+    # Also, one removed iteration of the recursion used (quote ()) instead
+    # of NIL and inside a recursive call there was an issue with quote
+    # not being defined. This makes no sense since quote is builtin and should
+    # be caught as the car of a list to be evaluated separately.
+    #PexTest(
+        #"Recursive lambda",
+        #[pair("(define f (lambda (a) (cons 3 (f a))))", "T"),
+         #pair("(f 3)", "(1 1 1 1 1 1 1 1)")],
+    #),
+    #PexTest(
+        #"Recursive lambda",
+        #[pair("(define f (lambda (a)"
+                        #+ "(cond ((eq? a 888) T)"
+                              #+ "(T (cons 1 (f (cdr a)))))))", "T"),
+         #pair("(f (quote (9 8 7 6 5 4 3 2)))", "(1 1 1 1 1 1 1 1)")],
+    #),
+
+    # ISSUES this is a printing error
+    # For some reason having a list with a NIL in the middle will not
+    # print properly, whether it is a literal or created by the program.
+    #PexTest(
+    #    "Printing error with NIL literal in a list",
+    #    [pair("(define a 123)", "T"),
+    #     pair("(quote (cons a NIL))", "(cons a NIL)")]
+    #),
 ]
 
 symbol_tests = [
@@ -315,6 +346,7 @@ symbol_tests = [
          pair("(define b 456)", "T"),
          pair("(cons a b)", "(123 . 456)")]
     ),
+
 ]
 
 """

@@ -47,7 +47,7 @@
 (proc  print/pair
        :!ch-lp :prnch
 :label print-pair-loop
-:BREAK :first :!pair/car :push print/form :call
+       :first :!pair/car :push print/form :call
        ;:!prn-nl
        ;:first :wprn :!prn-nl
        ;:first :!pair/car :wprn :!prn-nl
