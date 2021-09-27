@@ -30,8 +30,6 @@
        :rot :pop :swap
        :ret
 :label eval-form-symbol-undefined
-       ;:second :push debug-form :call
-       ;:push debug-3 :call :halt
        :pop
        :push symbol-unfound-error :prnmem-lb
        :swap :push sym/print-name :call :!prn-nl
@@ -48,14 +46,15 @@
          :push eval-apply-basic-form :branch
        :first :push eval/special-form? :call
          :push eval-apply-special-form :branch
-       ;; else the car is a symbol pointing to a proc
-       ;; or a form that will eval to a proc
+       ;; else it should eval to a proc to be applied
        :swap :push eval/form :call
        :second :!proc/procedure?
          :push eval-apply-procedure :branch
-       ;; TODO return ERROR? is there more on the stack than there should be?
+       ;; it is not a proc and cannot be applied
+       :push cannot-apply :prnmem-lb
+       :second :push debug-form :call
        :rot :pop :rot :pop
-       :!NIL :swap
+       :!ERROR :swap
        :ret
 
 :label eval-apply-basic-form
@@ -287,7 +286,6 @@
        :swap :rot :push eval/second-arg :call
        :!third :!third
        :push env/add-define :call
-       ;:second :push debug-form :call
        :second :!proc/procedure?
          :push eval-apply-define-update-proc-env :branch
        :swap :pop :swap :pop
@@ -345,7 +343,6 @@
 ;; Takes an env and a lambda form and leaves a procedure with a closure
 ;; around the environment that it was declared in.
 (proc  eval/apply-lambda
-       ;:second :push debug-form :call
        :second :!pair/cdr :!pair/car
        :rot :!pair/cdr :!pair/cdr :!pair/car
        :!third ;; duplicate the env to be consumed for setting closure env
@@ -357,7 +354,6 @@
        :swap :second :!proc/set-body
        :swap :second :!proc/set-params
        :swap
-       ;:!third :!proc/body :push debug-form :call
        :ret
 )
 
@@ -367,11 +363,8 @@
 ;; address of the procedure to apply to those arguments.
 ;; Leaves the env and the result of the application.
 (proc  eval/apply-procedure
-       :!ch-hash :prnch :!prn-nl
-       :push eval/args-list :call
-       ;:second :push debug-form :call
-       ;:!third :!proc/body :push debug-form :call
-       :!third :!proc/params :rot :swap
+       :swap
+       :!third :!proc/params
        :!fourth :!proc/env
        :push eval/bind-proc-args :call
        :!third :!proc/body :swap
@@ -380,38 +373,20 @@
        :ret
 )
 
-;; Takes an env and a list of procedure arguments.
-;; Leaves the env and the list with each form replaced by the result of
-;; evaluating it. MUTATES the list, so it is expected that this list is just
-;; for procedure argument lists where the list will never be used elsewhere.
-(proc  eval/args-list
-       :second :rpush
-:label eval-args-list-loop
-       :second :!NIL :eq
-         :push eval-args-list-end :branch
-       :second :!pair/car :swap
-       :push eval/form :call
-       :!third :rot :swap
-       :!pair/set-car
-       :swap :!pair/cdr :swap
-       :push eval-args-list-loop :jump
-
-:label eval-args-list-end
-       :swap :pop :rpop :swap
-       :ret
-)
-
-;; Takes the proc env, a list of params, and a list of evaluated arguments and
-;; adds bindings to the procedures env. Leaves the updated env.
+;; Takes the proc env, a list of params, a list of arguments, and the parent
+;; env and adds bindings to the procedures env. Leaves the updated env and
+;; the parent env.
 (proc  eval/bind-proc-args
-       ;; for arg and param symbol
-       ;; eval the arg and bind the symbols
+       :!fourth :rpush
 :label eval-bind-proc-args-loop
        :second :!NIL :eq
          :!fourth :!NIL :eq
          :or :push eval-bind-proc-args-end :branch
+       ;; TODO what if the only one is NIL?
        :second :!pair/car
        :!fourth :!pair/car
+       :rgrab :push eval/form :call
+       :pop
        :rot
        :push env/add :call
        :rot :!pair/cdr
@@ -420,6 +395,7 @@
        :push eval-bind-proc-args-loop :jump
 
 :label eval-bind-proc-args-end
+       :rpop :pop
        :swap :pop :swap :pop
        :ret
 )

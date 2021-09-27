@@ -277,22 +277,22 @@ special_form_tests = [
         #[pair("(define f (lambda (a) (cons 3 (f a))))", "T"),
          #pair("(f 3)", "(1 1 1 1 1 1 1 1)")],
     #),
-    #PexTest(
-        #"Recursive lambda",
-        #[pair("(define f (lambda (a)"
-                        #+ "(cond ((eq? a 888) T)"
-                              #+ "(T (cons 1 (f (cdr a)))))))", "T"),
-         #pair("(f (quote (9 8 7 6 5 4 3 2)))", "(1 1 1 1 1 1 1 1)")],
-    #),
+    PexTest(
+        "Recursive lambda",
+        [pair("(define f (lambda (a)"
+                        + "(cond ((eq? a NIL) NIL)"
+                              + "(T (cons 1 (f (cdr a)))))))", "T"),
+         pair("(f (quote (9 8 7 6 5 4 3 2)))", "(1 1 1 1 1 1 1 1)")],
+    ),
 
     # ISSUES this is a printing error
     # For some reason having a list with a NIL in the middle will not
     # print properly, whether it is a literal or created by the program.
-    #PexTest(
-    #    "Printing error with NIL literal in a list",
-    #    [pair("(define a 123)", "T"),
-    #     pair("(quote (cons a NIL))", "(cons a NIL)")]
-    #),
+    PexTest(
+        "Printing error with NIL literal in a list",
+        [pair("(define a 123)", "T"),
+         pair("(quote (cons a NIL))", "(cons a NIL)")]
+    ),
 ]
 
 symbol_tests = [

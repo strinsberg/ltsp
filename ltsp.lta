@@ -54,6 +54,7 @@
     (:str symbol-unfound-error "*** Symbol has not been defined: ")
     (:str symbol-already-defined "*** Symbol has already been defined: ")
     (:str invalid-define-target "*** Invalid target for define: ")
+    (:str cannot-apply "*** Cannot apply: Not a procedure: ")
   )
     
   (main
