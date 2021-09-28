@@ -68,4 +68,46 @@ arithmetic_tests = [
         "Subtract when there is a non number in the list, fixed",
         [pair("(sub -123.46 98.765 (quote a))", "ERROR")],
     ),
+
+    # mult
+    PexTest(
+        "Multiply two integers",
+        [pair("(mult 123 987)", "121401")],
+    ),
+    PexTest(
+        "Multiply multiple integers",
+        [pair("(mult 1 2 3 4 5)", "120")],
+    ),
+    PexTest(
+        "Multiply two integers, one negative",
+        [pair("(mult -123 987)", "-121401")],
+    ),
+    PexTest(
+        "Multiply two integers, both negative",
+        [pair("(mult -123 -987)", "121401")],
+    ),
+    PexTest(
+        "Multiply two fixed point",
+        [pair("(mult 123.467 987.65)", "121942.182")],
+    ),
+    PexTest(
+        "Multiply two fixed point, one negative",
+        [pair("(mult 123.467 -987.65)", "-121942.182")],
+    ),
+    PexTest(
+        "Multiply two fixed point, both negative",
+        [pair("(mult -123.467 -987.65)", "121942.182")],
+    ),
+    PexTest(
+        "Multiply multiple integers and fixed",
+        [pair("(mult 1 2 3.12 4 5)", "124.800")],
+    ),
+    PexTest(
+        "Multiply when there is a non number in the list, integers",
+        [pair("(mult 123467 98765 (quote a))", "ERROR")],
+    ),
+    PexTest(
+        "Multiply when there is a non number in the list, fixed",
+        [pair("(mult -123.46 98.765 (quote a))", "ERROR")],
+    ),
 ]

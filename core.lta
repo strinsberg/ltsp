@@ -4,6 +4,7 @@
 (proc  core/load-all
        :push core/make-add :call
        :push core/make-sub :call
+       :push core/make-mult :call
        :ret
 )
 
@@ -197,5 +198,79 @@
        :push number/make-int :call
        :ret
 )
+
+;; Mutiplication function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates the mult function symbol, subroutine, and adds them as a define
+;; in the builtin environment.
+(proc  core/make-mult
+       :push 0x756d :push 0 :bufstore :push 0x746c :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/create-symbol :call
+       :push core/mult :push core/create-subroutine :call
+       :push env/add-define :call
+       :ret
+)
+
+;; Takes an env and a list of arguments and returns the result of multiplying
+;; the arguments together.
+(proc  core/mult
+       :dpush 1 :drpush
+       :swap
+:label core-mult-int-loop
+       :first :!NIL :eq
+         :push core-mult-int-end :branch
+       :first :!pair/car
+       :!third :push eval/form :call
+       :pop ;; the copied env
+       :first :push number/number? :call :!not
+         :push core-mult-not-number :branch
+       :first :!number/fixed?
+         :push core-mult-fixed-start :branch
+       :!number/value :drpop :dmult :drpush
+       :!pair/cdr
+       :push core-mult-int-loop :jump
+
+:label core-mult-int-end
+       :pop :drpop
+       :push alloc/new-pair :call
+       :push number/make-int :call
+       :swap :ret
+
+;; If a single value in the list is a fixed point number then
+;; all numbers must be treated as such
+:label core-mult-fixed-start
+       :!number/value
+       :drpop :dpush 1000 :dmult :fmult :drpush
+       :!pair/cdr
+:label core-mult-fixed-loop
+       :first :!NIL :eq
+         :push core-mult-fixed-end :branch
+       :first :!pair/car
+       :!third :push eval/form :call
+       :pop ;; the copied env
+       :first :push number/number? :call :!not
+         :push core-mult-not-number :branch
+       :push eval/get-number-value-as-fixed :call
+       :drpop :fmult :drpush
+       :!pair/cdr
+       :push core-mult-fixed-loop :jump
+
+:label core-mult-fixed-end
+       :pop :drpop
+       :push alloc/new-pair :call
+       :push number/make-fixed :call
+       :swap :ret
+
+:label core-mult-not-number
+       :drpop :dpop
+       :push not-a-number-error :prnmem-lb
+       :push debug-form :call
+       :pop
+       :!error :swap :ret
+)
+
+
+
 
 )
