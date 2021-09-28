@@ -105,8 +105,12 @@
 
 ;; takes the address of a procedure and prints some details
 (proc  print/subroutine
-       :!ch-dollar :prnch
+       :!ch-hash :prnch
+       :first :!sub/symbol
+       :push print/form :call
+       :!ch-lbr :prnch
        :!sub/label :wprn
+       :!ch-rbr :prnch
        :ret
 )
 

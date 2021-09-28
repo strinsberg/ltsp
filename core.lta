@@ -11,6 +11,17 @@
 
 ;; Helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Takes a subroutine label and expects a symbol name in the buffer.
+;; Creates all objects necessary to add the subroutine to the the buitin
+;; list of definitions.
+(proc  core/create
+       :push core/create-symbol :call
+       :swap :second
+       :push core/create-subroutine :call
+       :push env/add-define :call
+       :ret
+)
+
 ;; Creates a new symbol from the name in the buffer at :bfp.
 ;; Takes nothing and leaves the new symbol address.
 (proc  core/create-symbol
@@ -21,18 +32,21 @@
        :ret
 )
 
-;; Takes a label off of the stack and creates a subroutine element.
-;; Leaves the address of the new element.
+;; Takes a symbol address and a label off of the stack and creates a
+;; subroutine element. Leaves the address of the new element.
 (proc  core/create-subroutine
        :push alloc/new-subroutine :call
        :push 0x0600 :second :!sub/set-info
+       :swap :second :!sub/set-symbol
        :swap :second :!sub/set-label
        :ret
 )
 (macro :!sub/info :load-lb)
 (macro :!sub/label :push 1 :add :load-lb)
+(macro :!sub/symbol :push 2 :add :load-lb)
 (macro :!sub/set-info :store-lb)
 (macro :!sub/set-label :push 1 :add :store-lb)
+(macro :!sub/set-symbol :push 2 :add :store-lb)
 (macro :!sub/subroutine? :load-lb :push 8 :sr :push 0x06 :eq)
 
 
@@ -41,10 +55,10 @@
 ;; Creates the add function symbol, subroutine, and adds them as a define
 ;; in the builtin environment.
 (proc  core/make-add
-       :push 0x6461 :push 0 :bufstore :push 0x0064 :push 1 :bufstore
-       :push core/create-symbol :call
-       :push core/add :push core/create-subroutine :call
-       :push env/add-define :call
+       :push 0x6461 :push 0 :bufstore
+       :push 0x0064 :push 1 :bufstore
+       :push core/add
+       :push core/create :call
        :ret
 )
 
@@ -110,10 +124,10 @@
 
 ;; Creates sub symbol, subroutine, and adds them as a builtin env-item.
 (proc  core/make-sub
-       :push 0x7573 :push 0 :bufstore :push 0x0062 :push 1 :bufstore
-       :push core/create-symbol :call
-       :push core/sub :push core/create-subroutine :call
-       :push env/add-define :call
+       :push 0x7573 :push 0 :bufstore
+       :push 0x0062 :push 1 :bufstore
+       :push core/sub
+       :push core/create :call
        :ret
 )
 
@@ -192,24 +206,16 @@
 )
 
 
-;; Takes an integer value (double word) and stores it in the appropriate memory.
-;; Leaves the address of the created memory.
-(proc  core/create-int
-       :push alloc/new-pair :call
-       :push number/make-int :call
-       :ret
-)
-
 ;; Mutiplication function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Creates the mult function symbol, subroutine, and adds them as a define
 ;; in the builtin environment.
 (proc  core/make-mult
-       :push 0x756d :push 0 :bufstore :push 0x746c :push 1 :bufstore
+       :push 0x756d :push 0 :bufstore
+       :push 0x746c :push 1 :bufstore
        :push 0x0000 :push 2 :bufstore
-       :push core/create-symbol :call
-       :push core/mult :push core/create-subroutine :call
-       :push env/add-define :call
+       :push core/mult
+       :push core/create :call
        :ret
 )
 
@@ -275,10 +281,10 @@
 
 ;; Creates sub symbol, subroutine, and adds them as a builtin env-item.
 (proc  core/make-div
-       :push 0x6964 :push 0 :bufstore :push 0x0076 :push 1 :bufstore
-       :push core/create-symbol :call
-       :push core/div :push core/create-subroutine :call
-       :push env/add-define :call
+       :push 0x6964 :push 0 :bufstore
+       :push 0x0076 :push 1 :bufstore
+       :push core/div
+       :push core/create :call
        :ret
 )
 
@@ -358,6 +364,19 @@
 
 
 
+;; Elementary Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(proc  core/make-cons
+       :push 0x6f63 :push 0 :bufload
+       :push 0x736e :push 1 :bufload
+       :push 0x0061 :push 2 :bufload
+       :push core/cons
+       :push core/create :call
+       :ret
+)
+
+(proc  core/cons
+       :ret
+)
 
 )
