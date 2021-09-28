@@ -35,4 +35,37 @@ arithmetic_tests = [
         [pair("(add -123.46 98.765 (quote a))", "ERROR")],
     ),
 
+    # sub
+    PexTest(
+        "Subtract two integers",
+        [pair("(sub 123467 98765)", "24702")],
+    ),
+    PexTest(
+        "Subtract multiple integers",
+        [pair("(sub 1 2 3 4 5)", "-13")],
+    ),
+    PexTest(
+        "Subtract two integers, negative",
+        [pair("(sub -123467 -98765)", "-24702")],
+    ),
+    PexTest(
+        "Subtract two fixed point",
+        [pair("(sub 123.467 987.65)", "-864.183")],
+    ),
+    PexTest(
+        "Subtract two fixed point, negative",
+        [pair("(sub -123.467 -987.65)", "864.183")],
+    ),
+    PexTest(
+        "Subtract multiple integers and fixed",
+        [pair("(sub 1 2 3.1 4 5)", "-13.100")],
+    ),
+    PexTest(
+        "Subtract when there is a non number in the list, integers",
+        [pair("(sub 123467 98765 (quote a))", "ERROR")],
+    ),
+    PexTest(
+        "Subtract when there is a non number in the list, fixed",
+        [pair("(sub -123.46 98.765 (quote a))", "ERROR")],
+    ),
 ]
