@@ -46,5 +46,21 @@
        :ret
 )
 
+;; Takes an address for the cdr, and an address for the
+;; car and creates a new pair. Leaves the address of the new pair.
+(proc  pair/create
+       :push alloc/new-pair :call
+       :second :push eval/atom? :call
+         :push pair-create-dotted :branch
+       :push 0x0000 :second :!pair/set-info
+:label pair-create-set-values
+       :swap :second :!pair/set-cdr
+       :swap :second :!pair/set-car
+       :ret
+:label pair-create-dotted
+       :push 0x0100 :second :!pair/set-info
+       :push pair-create-set-values :jump
+)
+
 
 )
