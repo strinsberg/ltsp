@@ -110,4 +110,50 @@ arithmetic_tests = [
         "Multiply when there is a non number in the list, fixed",
         [pair("(mult -123.46 98.765 (quote a))", "ERROR")],
     ),
+
+    # div
+    PexTest(
+        "Divide two integers",
+        [pair("(div 300000 300)", "1000")],
+    ),
+    PexTest(
+        "Divide multiple integers",
+        [pair("(div 16 2 2 2 2)", "1")],
+    ),
+    PexTest(
+        "Divide two integers, one negative",
+        [pair("(div -300000 300)", "-1000")],
+    ),
+    PexTest(
+        "Divide two integers, both negative",
+        [pair("(div -300000 -300)", "1000")],
+    ),
+    PexTest(
+        "Divide two integers, with truncated remainder",
+        [pair("(div 15 4)", "3")],
+    ),
+    PexTest(
+        "Divide two fixed point",
+        [pair("(div 15.0 4.0)", "3.750")],
+    ),
+    PexTest(
+        "Divide two fixed point, one negative",
+        [pair("(div 16.793 -3.123)", "-5.377")],
+    ),
+    PexTest(
+        "Divide two fixed point, both negative",
+        [pair("(div -16.793 -3.123)", "5.377")],
+    ),
+    PexTest(
+        "Divide multiple integers and fixed",
+        [pair("(div 16 2.1 2 2)", "1.904")],
+    ),
+    PexTest(
+        "Divide when there is a non number in the list, integers",
+        [pair("(div 123467 98765 (quote a))", "ERROR")],
+    ),
+    PexTest(
+        "Divide when there is a non number in the list, fixed",
+        [pair("(div -123.46 98.765 (quote a))", "ERROR")],
+    ),
 ]
