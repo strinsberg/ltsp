@@ -1,5 +1,4 @@
 from ltsp_test import *
-import random as rnd
 
 builtin_tests = [
     # Car

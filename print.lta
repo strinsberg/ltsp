@@ -14,6 +14,8 @@
          :push print-form-dotted :branch
        :first :!proc/procedure?
          :push print-form-procedure :branch
+       :first :!sub/subroutine?
+         :push print-form-subroutine :branch
        ;; else symbol
        :push sym/print-name :call
        :ret
@@ -35,6 +37,9 @@
        :ret
 :label print-form-procedure
        :push print/procedure :call
+       :ret
+:label print-form-subroutine
+       :push print/subroutine :call
        :ret
 )
 
@@ -86,7 +91,7 @@
        :ret
 )
 
-;; Takes the address of a procedure and prints it #((params) body)
+;; takes the address of a procedure and prints it #((params) body)
 (proc  print/procedure
        :!ch-hash :prnch
        :!ch-lp :prnch
@@ -95,6 +100,13 @@
        :first :!proc/body :push print/form :call
        :!ch-rp :prnch
        :pop
+       :ret
+)
+
+;; takes the address of a procedure and prints some details
+(proc  print/subroutine
+       :!ch-dollar :prnch
+       :!sub/label :wprn
        :ret
 )
 

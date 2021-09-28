@@ -55,11 +55,13 @@
     (:str symbol-already-defined "*** Symbol has already been defined: ")
     (:str invalid-define-target "*** Invalid target for define: ")
     (:str cannot-apply "*** Cannot apply: Not a procedure: ")
+    (:str not-a-number-error "*** Cannot do arithmetic: Not a number: ")
   )
     
   (main
-    ;; Setup the free memory for our dotted pair memory heap
+    ;; Setup the free memory and core function library
     :push alloc/setup-fm :call
+    :push core/load-all :call
 
     ;; Start REPL
     :label main-loop
@@ -111,6 +113,7 @@
   (macro :!ch-space :push 0x20)
   (macro :!ch-dquote :push 0x22)
   (macro :!ch-hash :push 0x23)
+  (macro :!ch-dollar :push 0x24)
   (macro :!ch-quote :push 0x27)
   (macro :!ch-lp :push 0x28)
   (macro :!ch-rp :push 0x29)
@@ -150,5 +153,6 @@
   (include "number.lta")
   (include "pair.lta")
   (include "procedure.lta")
+  (include "core.lta")
   (include "stdlib" odd?)
 )

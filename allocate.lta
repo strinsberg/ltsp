@@ -46,6 +46,11 @@
     :!alloc/set-next-open
     :ret)
 
+  ;; Allocate enough memory for subroutines.
+  (proc alloc/new-subroutine
+    :push 2 :push alloc/alloc-size :call
+    :ret)
+
   ;; Allocate enough memory for most 'objects': dotted pairs, numbers, etc.
   (proc alloc/new-pair
     :push 3 :push alloc/alloc-size :call

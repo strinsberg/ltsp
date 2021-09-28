@@ -1,23 +1,24 @@
 (lt64-asm-mod
-  ;; For the symbol list that will track all allocated symbols
-  ;; The use of this is to be able to reuse symbols if we see it a second
-  ;; time. It also makes EQ easy as any symbols will be the same if their
-  ;; addresses are the same. A separate symbol table will keep track of the
-  ;; actual symbols that are in the environment and point to the symbol itself
-  ;; in the list. For GC the symbol table will be traversed (after reads) and
-  ;; set all in scope symbols as ok and then the GC can traverse the symlist
-  ;; and remove (in linked list fashion) the symbols that are no longer in
-  ;; use.
+;; For the symbol list that will track all allocated symbols
+;; The use of this is to be able to reuse symbols if we see it a second
+;; time. It also makes EQ easy as any symbols will be the same if their
+;; addresses are the same. A separate symbol table will keep track of the
+;; actual symbols that are in the environment and point to the symbol itself
+;; in the list. For GC the symbol table will be traversed (after reads) and
+;; set all in scope symbols as ok and then the GC can traverse the symlist
+;; and remove (in linked list fashion) the symbols that are no longer in
+;; use.
 
-  ;; Take a symbol address on the top of the stack insert that symbol between
-  ;; symlist head and the first symbol in the list (or nil).
-  (proc symlist/add
-    ;:first :wprn :!prn-nl
-    ;:first :push sym/print-name :call :!prn-nl
-    ;:first :!sym/next :wprn :!prn-nl
-    :!alloc/symlist-head :second :!sym/set-next
-    :!alloc/set-symlist-head
-    :ret)
+;; Take a symbol address on the top of the stack insert that symbol between
+;; symlist head and the first symbol in the list (or nil).
+(proc  symlist/add
+       ;:first :wprn :!prn-nl
+       ;:first :push sym/print-name :call :!prn-nl
+       ;:first :!sym/next :wprn :!prn-nl
+       :!alloc/symlist-head :second :!sym/set-next
+       :!alloc/set-symlist-head
+       :ret
+)
   
 ;; Takes the address of a symbol name check if it equals any of the
 ;; stored symbol names. Put the address of the found symbol or nil (0)

@@ -50,6 +50,8 @@
        :swap :push eval/form :call
        :second :!proc/procedure?
          :push eval-apply-procedure :branch
+       :second :!sub/subroutine?
+         :push eval-apply-subroutine :branch
        ;; it is not a proc and cannot be applied
        :push cannot-apply :prnmem-lb
        :second :push debug-form :call
@@ -66,6 +68,13 @@
 :label eval-apply-procedure
        :rot :!pair/cdr :swap  ;; get the function arguments from the pair
        :push eval/apply-procedure :call
+       :ret
+:label eval-apply-subroutine
+       :rot :!pair/cdr :swap
+       ;; The address left from the eval should be the label
+       ;; of the subroutine in program memory so we just call it
+       ;; on the env and arg list
+       :rot :!sub/label :call
        :ret
 )
 
@@ -483,6 +492,19 @@
        :!number/value :dpush 1000 :ddiv
        :ret
 :label eval-get-number-value-as-int-is-int
+       :!number/value :ret
+)
+
+;; Takes the address of a number and returns the value as fixed.
+;; If the number is alredy fixed just return the value, and if it is an int then
+;; scale it up and return that value.
+(proc  eval/get-number-value-as-fixed
+       :first :!number/fixed?
+         :push eval-get-number-value-as-fixed-is-fixed :branch
+       ;; else number is fixed point
+       :!number/value :dpush 1000 :dmult
+       :ret
+:label eval-get-number-value-as-fixed-is-fixed
        :!number/value :ret
 )
 
