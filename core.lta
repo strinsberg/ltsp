@@ -7,6 +7,7 @@
        :push core/make-car :call
        :push core/make-cdr :call
        :push core/make-eq? :call
+       :push core/make-atom? :call
 
        ;; Arithmetic
        :push core/make-add :call
@@ -475,27 +476,48 @@
          :push core-eq-fixed :branch
        :push eval/both-numbers? :call
          :push core-eq-numbers :branch
-       :pop :pop :swap :pop ;; change when env is not on top
+       :pop :pop :pop
        :!F :swap :ret
 
 :label core-eq-symbols
        :eq :push eval/bool-to-T-F :call
-       :rot :pop ;; get rid of list change when env is not on top
+       :swap :pop
        :swap :ret
 :label core-eq-fixed
        :!number/value
        :rot :!number/value
        :deq :!->word :push eval/bool-to-T-F :call
-       :rot :pop ;; get rid of list change when env is not on top
+       :swap :pop
        :swap :ret
 :label core-eq-numbers
        :push eval/get-number-value-as-int :call
        :rot
        :push eval/get-number-value-as-int :call
        :deq :!->word :push eval/bool-to-T-F :call
-       :rot :pop ;; get rid of list change when env is not on top
+       :swap :pop
        :swap :ret
 )
 
+;; Define the atom? subroutine. Takes nothing, Leaves Nothing.
+(proc  core/make-atom?
+       :push 0x7461 :push 0 :bufstore
+       :push 0x6d6f :push 1 :bufstore
+       :push 0x003f :push 2 :bufstore
+       :push core/atom?
+       :push core/create :call
+       :ret
+)
+
+;; Takes a list of evalled arguments and checks to see if the car is an atom.
+;; Leaves T if it is an atom, otherwise F.
+(proc  core/atom?
+       :push eval/list :call  ;; while it is not on the outside
+       :swap ;; put env on bottom
+       :!pair/car :push eval/atom? :call
+         :push core-atom?-true :branch
+       :!F :swap :ret
+:label core-atom?-true
+       :!T :swap :ret
+)
 
 )

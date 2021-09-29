@@ -260,22 +260,6 @@ special_form_tests = [
          pair("(define y 2)", "T"),
          pair("((lambda (a b) (cons a b)) x y)", "(1 . 2)")],
     ),
-
-    # recursion
-    # There seems to be no issue with the lambda being recursive, but there
-    # is somethign that is not letting the second one run more than a few 
-    # times. I have no idea why.
-    # There could be some simple recursion tests if there were arithmetic
-    # operations, so I need to add a couple of them.
-    # Also, one removed iteration of the recursion used (quote ()) instead
-    # of NIL and inside a recursive call there was an issue with quote
-    # not being defined. This makes no sense since quote is builtin and should
-    # be caught as the car of a list to be evaluated separately.
-    #PexTest(
-        #"Recursive lambda",
-        #[pair("(define f (lambda (a) (cons 3 (f a))))", "T"),
-         #pair("(f 3)", "(1 1 1 1 1 1 1 1)")],
-    #),
     PexTest(
         "Recursive lambda",
         [pair("(define f (lambda (a)"
@@ -284,9 +268,8 @@ special_form_tests = [
          pair("(f (quote (9 8 7 6 5 4 3 2)))", "(1 1 1 1 1 1 1 1)")],
     ),
 
-    # ISSUES this is a printing error
-    # For some reason having a list with a NIL in the middle will not
-    # print properly, whether it is a literal or created by the program.
+    # This was a printing error
+    # NIL was not being printed properly in lists
     PexTest(
         "Printing error with NIL literal in a list",
         [pair("(define a 123)", "T"),

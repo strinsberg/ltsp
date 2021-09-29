@@ -42,11 +42,11 @@
 ;; result's address.
 (proc  eval/apply
        :second :!pair/car
-       :first :push eval/basic-form? :call
-         :push eval-apply-basic-form :branch
        :first :push eval/special-form? :call
          :push eval-apply-special-form :branch
        ;; else it should eval to a proc to be applied
+       ;; Change this a bit to work better with subroutines
+       ;; I.e. eval the list of args first
        :swap :push eval/form :call
        :second :!proc/procedure?
          :push eval-apply-procedure :branch
@@ -59,9 +59,6 @@
        :!ERROR :swap
        :ret
 
-:label eval-apply-basic-form
-       :push eval/apply-basic :call
-       :ret
 :label eval-apply-special-form
        :push eval/apply-special :call
        :ret
@@ -110,118 +107,6 @@
 )
 
 
-;; Basic Forms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(proc  eval/basic-form?
-      :first :!QUOTE :eq
-        :second :!ATOM? :eq
-        :or
-      :swap :pop
-      :ret
-)
-
-;; Takes a the address of a basic function symbol and the
-;; pair for the function application of that symbol and applies the
-;; appropriate function to the arguments.
-;; Leaves the result's address.
-(proc  eval/apply-basic
-       :first :!QUOTE :eq
-         :push eval-apply-basic-quote :branch
-       :first :!ATOM? :eq
-         :push eval-apply-basic-atom? :branch
-       ;; Else it was not a basic form TODO ERROR? and crash?
-       :rot :pop :pop :!NIL :swap
-       :ret
-
-:label eval-apply-basic-quote
-       :pop :swap :!pair/cdr :!pair/car
-       :swap
-       :ret
-:label eval-apply-basic-atom?
-       :pop :push eval/apply-atom? :call
-       :ret
-)
-
-(proc  eval/apply-car
-       :second :push eval/first-arg :call
-       :second :push eval/atom? :call
-         :push eval-pair-car-nil :branch
-       :rot :pop :swap :!pair/car :swap
-       :ret
-:label eval-pair-car-nil
-       :rot :pop :!NIL :swap :ret
-)
-
-(proc  eval/apply-cdr
-       :second :push eval/first-arg :call
-       :second :push eval/atom? :call
-         :push eval-pair-cdr-nil :branch
-       :rot :pop :swap :!pair/cdr :swap
-       :ret
-:label eval-pair-cdr-nil
-       :rot :pop :swap :!NIL :swap :ret
-)
-
-(proc  eval/apply-cons
-       :second :push eval/first-arg :call
-       :!third :push eval/second-arg :call
-       :dswap :swap :pop :rot
-       :push alloc/new-pair :call
-       :second :push eval/atom? :call
-         :push eval-pair-cons-dotted :branch
-       :push pair/make :call
-       :push eval-pair-cons-finish :jump
-
-:label eval-pair-cons-dotted
-       :push pair/make-dotted :call
-       ;; fallthrough
-:label eval-pair-cons-finish
-       :rot :second :!pair/set-car
-       :swap :second :!pair/set-cdr
-       :swap :ret
-)
-
-(proc  eval/apply-atom?
-       :second :push eval/first-arg :call
-       :rot :pop
-       :second :push eval/atom? :call
-         :push eval-apply-atom?-true :branch
-       :swap :pop :!F :swap :ret
-:label eval-apply-atom?-true
-       :swap :pop :!T :swap :ret
-)
-
-(proc  eval/apply-eq?
-       :second :push eval/first-arg :call
-       :!third :push eval/second-arg :call
-       :dswap :swap :pop :rot
-       ;; checks dont remove the forms
-       :push eval/both-symbols? :call
-         :push eval-apply-eq-symbols :branch
-       :push eval/both-fixed? :call
-         :push eval-apply-eq-fixed :branch
-       :push eval/both-numbers? :call
-         :push eval-apply-eq-numbers :branch
-       :pop :pop
-       :!F :swap :ret
-
-:label eval-apply-eq-symbols
-       :eq :push eval/bool-to-T-F :call
-       :swap :ret
-:label eval-apply-eq-fixed
-       :!number/value
-       :rot :!number/value
-       :deq :!->word :push eval/bool-to-T-F :call
-       :swap :ret
-:label eval-apply-eq-numbers
-       :push eval/get-number-value-as-int :call
-       :rot
-       :push eval/get-number-value-as-int :call
-       :deq :!->word :push eval/bool-to-T-F :call
-       :swap :ret
-)
-
-
 ;; Special forms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (proc  eval/special-form?
@@ -229,6 +114,7 @@
          :second :!DEFINE :eq
          :or :second :!LET :eq
          :or :second :!LAMBDA :eq
+         :or :second :!QUOTE :eq
          :or
        :swap :pop
        :ret
@@ -239,6 +125,8 @@
 ;; appropriate function to the arguments.
 ;; Leaves the result's address.
 (proc  eval/apply-special
+       :first :!QUOTE :eq
+         :push eval-apply-basic-quote :branch
        :first :!COND :eq
          :push eval-apply-special-cond :branch
        :first :!DEFINE :eq
@@ -249,6 +137,11 @@
          :push eval-apply-special-lambda :branch
        ;; Else it was not a special form TODO ERROR? crash?
        :rot :pop :pop :!NIL :swap
+       :ret
+
+:label eval-apply-basic-quote
+       :pop :swap :!pair/cdr :!pair/car
+       :swap
        :ret
 :label eval-apply-special-cond
        :pop :swap :!pair/cdr :swap
