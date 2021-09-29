@@ -377,7 +377,7 @@
 (proc  core/make-cons
        :push 0x6f63 :push 0 :bufstore
        :push 0x736e :push 1 :bufstore
-       :push 0x0061 :push 2 :bufstore
+       :push 0x0000 :push 2 :bufstore
        :push core/cons
        :push core/create :call
        :ret
@@ -387,6 +387,7 @@
 ;; Takes a list of evaluated arguments and conses the first onto the second.
 ;; Leaves the new pair that was created.
 (proc  core/cons
+       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :first :!pair/car
        :swap :!pair/cdr :!pair/car
@@ -398,7 +399,7 @@
 ;; Define the car subroutine. Takes nothing, Leaves Nothing.
 (proc  core/make-car
        :push 0x6163 :push 0 :bufstore
-       :push 0x0061 :push 1 :bufstore
+       :push 0x0072 :push 1 :bufstore
        :push core/car
        :push core/create :call
        :ret
@@ -408,6 +409,7 @@
 ;; Takes a list of evaluated arguments and leaves the car of the first
 ;; argument if it is a pair, otherwise leaves NIL.
 (proc  core/car
+       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :!pair/car
        :first :!pair/pair?
@@ -426,7 +428,7 @@
 ;; Define the cdr subroutine. Takes nothing, Leaves Nothing.
 (proc  core/make-cdr
        :push 0x6463 :push 0 :bufstore
-       :push 0x0061 :push 1 :bufstore
+       :push 0x0072 :push 1 :bufstore
        :push core/cdr
        :push core/create :call
        :ret
@@ -436,6 +438,7 @@
 ;; Takes a list of evaluated arguments and leaves the cdr of the first
 ;; argument if it is a pair, otherwise leaves NIL.
 (proc  core/cdr
+       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :!pair/car
        :first :!pair/pair?

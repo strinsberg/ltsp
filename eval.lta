@@ -78,15 +78,43 @@
        :ret
 )
 
+;; Takes an env and a list of forms and leaves the env and a new list with
+;; all the evaluated forms. Basically (map eval args).
+(proc  eval/list
+       :push 0  ;; sentinal stopping value
+       :rot :rot
+       ;; Eval each list element and put result under env and list
+:label eval-list-eval
+       :second :!NIL :eq
+         :push eval-list-eval-end :branch
+       :second :!pair/car :swap
+       :push eval/form :call
+       :rot :!pair/cdr :swap
+       :push eval-list-eval :jump
+
+:label eval-list-eval-end
+       :swap  ;; bring the NIL to top
+       ;; Pull up next evalled item and create pair with the item as car
+       ;; and the existing top as cdr
+:label eval-list-new-list
+       :!third :!zero?
+         :push eval-list-end :branch
+       :rot :swap
+       :push pair/create :call
+       :push eval-list-new-list :jump
+
+:label eval-list-end
+       :rot :pop  ;; remove 0
+       :swap
+       :ret
+)
+
 
 ;; Basic Forms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (proc  eval/basic-form?
       :first :!QUOTE :eq
-        :second :!CAR :eq
-        :or :second :!CDR :eq
-        :or :second :!CONS :eq
-        :or :second :!ATOM? :eq
+        :second :!ATOM? :eq
         :or :second :!EQ? :eq
         :or
       :swap :pop
@@ -100,12 +128,6 @@
 (proc  eval/apply-basic
        :first :!QUOTE :eq
          :push eval-apply-basic-quote :branch
-       :first :!CAR :eq
-         :push eval-apply-basic-car :branch
-       :first :!CDR :eq
-         :push eval-apply-basic-cdr :branch
-       :first :!CONS :eq
-         :push eval-apply-basic-cons :branch
        :first :!ATOM? :eq
          :push eval-apply-basic-atom? :branch
        :first :!EQ? :eq
@@ -117,15 +139,6 @@
 :label eval-apply-basic-quote
        :pop :swap :!pair/cdr :!pair/car
        :swap
-       :ret
-:label eval-apply-basic-car
-       :pop :push eval/apply-car :call
-       :ret
-:label eval-apply-basic-cdr
-       :pop :push eval/apply-cdr :call
-       :ret
-:label eval-apply-basic-cons
-       :pop :push eval/apply-cons :call
        :ret
 :label eval-apply-basic-atom?
        :pop :push eval/apply-atom? :call
