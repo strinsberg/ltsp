@@ -12,10 +12,33 @@
 (macro :!number/int? :load-lb :push 8 :sr :push 0x03 :eq)
 (macro :!number/fixed? :load-lb :push 8 :sr :push 0x04 :eq)
 
+;; Takes and address and leaves 1 if it is a fixed or int, 0 otherwise.
 (proc  number/number?
        :first :!number/int?
          :swap :!number/fixed?
          :or
+       :ret
+)
+
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both fixed point numbers and 0 otherwise.
+(proc  number/both-fixed?
+       :second :!number/fixed?
+         :second :!number/fixed?
+         :and
+       :ret
+)
+
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both numbers (fixed or int) and 0 otherwise.
+(proc  number/both-numbers?
+       :first :!number/int?
+         :second :!number/fixed?
+         :or
+         :push 2 :nth :!number/int?
+           :push 3 :nth :!number/fixed?
+           :or
+         :and
        :ret
 )
 
@@ -40,6 +63,32 @@
        :push 0x0400 :second :!number/set-info
        :rot :rot :push 2 :nth :!number/set-value
        :ret
+)
+
+;; Takes the address of a number and returns the value as an int.
+;; If the number is an int just return the value, and if it is fixed then
+;; scale it down and return that value.
+(proc  number/get-value-as-int
+       :first :!number/int?
+         :push number-get-value-as-int-is-int :branch
+       ;; else number is fixed point
+       :!number/value :dpush 1000 :ddiv
+       :ret
+:label number-get-value-as-int-is-int
+       :!number/value :ret
+)
+
+;; Takes the address of a number and returns the value as fixed.
+;; If the number is alredy fixed just return the value, and if it is an int then
+;; scale it up and return that value.
+(proc  number/get-value-as-fixed
+       :first :!number/fixed?
+         :push number-get-value-as-fixed-is-fixed :branch
+       ;; else number is fixed point
+       :!number/value :dpush 1000 :dmult
+       :ret
+:label number-get-value-as-fixed-is-fixed
+       :!number/value :ret
 )
 
 

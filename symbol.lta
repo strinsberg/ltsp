@@ -14,6 +14,34 @@
 ;; Take an address and see if it is a symbol object
 (macro :!sym/symbol? :load-lb :push 8 :sr :push 0x02 :eq)
 
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both symbols and 0 otherwise.
+(proc  sym/both-symbols?
+       :second :!sym/symbol?
+         :second :!sym/symbol?
+         :and
+       :ret
+)
+
+;; Take the top value and return F if it is :!false (0), otherwise T.
+;; For use when some VM check returns 0 or 1 and the subroutine uses this
+;; to return T or F.
+;; **NOT** for use to check for falsy values when expecting T, F, or NIL.
+(proc  core/bool-to-T-F
+       :!false :eq
+         :push core-bool-to-T-F-false :branch
+       :!T :ret
+:label core-bool-to-T-F-false
+       :!F :ret
+)
+
+;; Takes a symbol address and leaves 1 if it is a false value, 0 otherwise.
+(proc  sym/falsy?
+       :first :!F :eq
+         :swap :!NIL :eq
+         :or
+       :ret
+)
 
 ;; Use(don't pop) an address and setup initial symbol data values
 (proc  sym/make
@@ -111,6 +139,18 @@
        :!end-rcount
        :!false
        :ret
+)
+
+;; Take the top value and return F if it is :!false (0), otherwise T.
+;; For use when some VM check returns 0 or 1 and the subroutine uses this
+;; to return T or F.
+;; **NOT** for use to check for falsy values when expecting T, F, or NIL.
+(proc  sym/bool-to-T-F
+       :!false :eq
+         :push sym-bool-to-T-F-false :branch
+       :!T :ret
+:label sym-bool-to-T-F-false
+       :!F :ret
 )
 
 )

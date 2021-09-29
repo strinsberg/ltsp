@@ -214,30 +214,30 @@
        :swap ;; put env on bottom
        :first :!pair/car
        :second :!pair/cdr :!pair/car
-       :push eval/both-symbols? :call
+       :push sym/both-symbols? :call
          :push core-eq-symbols :branch
-       :push eval/both-fixed? :call
+       :push number/both-fixed? :call
          :push core-eq-fixed :branch
-       :push eval/both-numbers? :call
+       :push number/both-numbers? :call
          :push core-eq-numbers :branch
        :pop :pop :pop
        :!F :swap :ret
 
 :label core-eq-symbols
-       :eq :push eval/bool-to-T-F :call
+       :eq :push sym/bool-to-T-F :call
        :swap :pop
        :swap :ret
 :label core-eq-fixed
        :!number/value
        :rot :!number/value
-       :deq :!->word :push eval/bool-to-T-F :call
+       :deq :!->word :push sym/bool-to-T-F :call
        :swap :pop
        :swap :ret
 :label core-eq-numbers
-       :push eval/get-number-value-as-int :call
+       :push number/get-value-as-int :call
        :rot
-       :push eval/get-number-value-as-int :call
-       :deq :!->word :push eval/bool-to-T-F :call
+       :push number/get-value-as-int :call
+       :deq :!->word :push sym/bool-to-T-F :call
        :swap :pop
        :swap :ret
 )
@@ -298,7 +298,7 @@
 ;; converted to a fixed point number.
 ;; Leaves the double word result.
 (proc  core/add-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :dadd
+       :rot :push number/get-value-as-fixed :call :dadd
        :ret
 )
 
@@ -335,7 +335,7 @@
 ;; converted to a fixed point number.
 ;; Leaves the double word result.
 (proc  core/mult-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :fmult
+       :rot :push number/get-value-as-fixed :call :fmult
        :ret
 )
 
@@ -391,7 +391,7 @@
 ;; converted to a fixed point number.
 ;; Leaves the double word result.
 (proc  core/sub-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :dsub
+       :rot :push number/get-value-as-fixed :call :dsub
        :ret
 )
 
@@ -447,7 +447,7 @@
 ;; converted to a fixed point number.
 ;; Leaves the double word result.
 (proc  core/div-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :fdiv
+       :rot :push number/get-value-as-fixed :call :fdiv
        :ret
 )
 

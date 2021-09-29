@@ -165,7 +165,7 @@
          :push eval-apply-cond-none :branch
        :second :!pair/car :!pair/car :swap
        :push eval/form :call
-       :swap :push eval/falsy? :call :!not
+       :swap :push sym/falsy? :call :!not
          :push eval-apply-cond-true :branch
        ;; else the condition was not met
        :swap :!pair/cdr :swap
@@ -331,83 +331,6 @@
        :push eval/form :call
        :ret
 )
-
-;; Uses top two form addresses (does not pop them) and returns 1 if they are
-;; both symbols and 0 otherwise.
-(proc  eval/both-symbols?
-       :second :!sym/symbol?
-         :second :!sym/symbol?
-         :and
-       :ret
-)
-
-;; Uses top two form addresses (does not pop them) and returns 1 if they are
-;; both fixed point numbers and 0 otherwise.
-(proc  eval/both-fixed?
-       :second :!number/fixed?
-         :second :!number/fixed?
-         :and
-       :ret
-)
-
-;; Uses top two form addresses (does not pop them) and returns 1 if they are
-;; both numbers (fixed or int) and 0 otherwise.
-(proc  eval/both-numbers?
-       :first :!number/int?
-         :second :!number/fixed?
-         :or
-         :push 2 :nth :!number/int?
-           :push 3 :nth :!number/fixed?
-           :or
-         :and
-       :ret
-)
-
-;; Take the top value and return F if it is :!false (0), otherwise T.
-;; For use when some VM check returns 0 or 1 and the subroutine uses this
-;; to return T or F.
-;; **NOT** for use to check for falsy values when expecting T, F, or NIL.
-(proc  eval/bool-to-T-F
-       :!false :eq
-         :push eval-bool-to-T-F-false :branch
-       :!T :ret
-:label eval-bool-to-T-F-false
-       :!F :ret
-)
-
-;; Takes the address of a number and returns the value as an int.
-;; If the number is an int just return the value, and if it is fixed then
-;; scale it down and return that value.
-(proc  eval/get-number-value-as-int
-       :first :!number/int?
-         :push eval-get-number-value-as-int-is-int :branch
-       ;; else number is fixed point
-       :!number/value :dpush 1000 :ddiv
-       :ret
-:label eval-get-number-value-as-int-is-int
-       :!number/value :ret
-)
-
-;; Takes the address of a number and returns the value as fixed.
-;; If the number is alredy fixed just return the value, and if it is an int then
-;; scale it up and return that value.
-(proc  eval/get-number-value-as-fixed
-       :first :!number/fixed?
-         :push eval-get-number-value-as-fixed-is-fixed :branch
-       ;; else number is fixed point
-       :!number/value :dpush 1000 :dmult
-       :ret
-:label eval-get-number-value-as-fixed-is-fixed
-       :!number/value :ret
-)
-
-(proc  eval/falsy?
-       :first :!F :eq
-         :swap :!NIL :eq
-         :or
-       :ret
-)
-
 
 )
 
