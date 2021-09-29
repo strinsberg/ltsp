@@ -62,15 +62,13 @@
        :ret
 :label eval-apply-procedure
        :rot :!pair/cdr :swap  ;; get the function arguments from the pair
+       :push eval/list :call
        :push eval/apply-procedure :call
        :ret
 :label eval-apply-subroutine
        :rot :!pair/cdr :swap
-       ;:push eval/list :call :swap
-       ;; The address left from the eval should be the label
-       ;; of the subroutine in program memory so we just call it
-       ;; on the env and arg list
        :push eval/list :call
+       ;; subroutines store the address of their proc label, so call it
        :rot :!sub/label :call
        :ret
 )
@@ -268,8 +266,8 @@
 
 ;; Apply procedures ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Takes an env and the address of a list of procedure arguments and the
-;; address of the procedure to apply to those arguments.
+;; Takes an env and the address of a list of evaluated procedure arguments and
+;; the address of the procedure to apply to those arguments.
 ;; Leaves the env and the result of the application.
 (proc  eval/apply-procedure
        :swap
@@ -282,20 +280,16 @@
        :ret
 )
 
-;; Takes the proc env, a list of params, a list of arguments, and the parent
-;; env and adds bindings to the procedures env. Leaves the updated env and
-;; the parent env.
+;; Takes the proc env, a list of params, a list of evaluated arguments,
+;; and the parent env and adds bindings to the procedures env. Leaves the
+;; updated env and the parent env.
 (proc  eval/bind-proc-args
-       :!fourth :rpush
 :label eval-bind-proc-args-loop
        :second :!NIL :eq
          :!fourth :!NIL :eq
          :or :push eval-bind-proc-args-end :branch
-       ;; TODO what if the only one is NIL?
        :second :!pair/car
        :!fourth :!pair/car
-       :rgrab :push eval/form :call
-       :pop
        :rot
        :push env/add :call
        :rot :!pair/cdr
@@ -304,7 +298,6 @@
        :push eval-bind-proc-args-loop :jump
 
 :label eval-bind-proc-args-end
-       :rpop :pop
        :swap :pop :swap :pop
        :ret
 )
