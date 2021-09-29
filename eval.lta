@@ -115,7 +115,6 @@
 (proc  eval/basic-form?
       :first :!QUOTE :eq
         :second :!ATOM? :eq
-        :or :second :!EQ? :eq
         :or
       :swap :pop
       :ret
@@ -130,8 +129,6 @@
          :push eval-apply-basic-quote :branch
        :first :!ATOM? :eq
          :push eval-apply-basic-atom? :branch
-       :first :!EQ? :eq
-         :push eval-apply-basic-eq? :branch
        ;; Else it was not a basic form TODO ERROR? and crash?
        :rot :pop :pop :!NIL :swap
        :ret
@@ -142,9 +139,6 @@
        :ret
 :label eval-apply-basic-atom?
        :pop :push eval/apply-atom? :call
-       :ret
-:label eval-apply-basic-eq?
-       :pop :push eval/apply-eq? :call
        :ret
 )
 

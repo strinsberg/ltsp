@@ -6,6 +6,7 @@
        :push core/make-cons :call
        :push core/make-car :call
        :push core/make-cdr :call
+       :push core/make-eq? :call
 
        ;; Arithmetic
        :push core/make-add :call
@@ -453,5 +454,48 @@
        :swap ;; put env back on top
        :ret
 )
+
+;; Define the eq subroutine. Takes nothing, Leaves Nothing.
+(proc  core/make-eq?
+       :push 0x7165 :push 0 :bufstore
+       :push 0x003f :push 1 :bufstore
+       :push core/eq?
+       :push core/create :call
+       :ret
+)
+
+(proc  core/eq?
+       :push eval/list :call  ;; while it is not on the outside
+       :swap ;; put env on bottom
+       :first :!pair/car
+       :second :!pair/cdr :!pair/car
+       :push eval/both-symbols? :call
+         :push core-eq-symbols :branch
+       :push eval/both-fixed? :call
+         :push core-eq-fixed :branch
+       :push eval/both-numbers? :call
+         :push core-eq-numbers :branch
+       :pop :pop :swap :pop ;; change when env is not on top
+       :!F :swap :ret
+
+:label core-eq-symbols
+       :eq :push eval/bool-to-T-F :call
+       :rot :pop ;; get rid of list change when env is not on top
+       :swap :ret
+:label core-eq-fixed
+       :!number/value
+       :rot :!number/value
+       :deq :!->word :push eval/bool-to-T-F :call
+       :rot :pop ;; get rid of list change when env is not on top
+       :swap :ret
+:label core-eq-numbers
+       :push eval/get-number-value-as-int :call
+       :rot
+       :push eval/get-number-value-as-int :call
+       :deq :!->word :push eval/bool-to-T-F :call
+       :rot :pop ;; get rid of list change when env is not on top
+       :swap :ret
+)
+
 
 )
