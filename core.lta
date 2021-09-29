@@ -74,13 +74,12 @@
 ;; arguments together.
 (proc  core/add
        :dpush 0 :drpush
+       :push eval/list :call  ;; while it is not on the outside
        :swap
 :label core-add-int-loop
        :first :!NIL :eq
          :push core-add-int-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-add-not-number :branch
        :first :!number/fixed?
@@ -105,8 +104,6 @@
        :first :!NIL :eq
          :push core-add-fixed-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-add-not-number :branch
        :push eval/get-number-value-as-fixed :call
@@ -119,7 +116,6 @@
        :push alloc/new-pair :call
        :push number/make-fixed :call
        :swap :ret
-       :push env/add-define :call
 
 :label core-add-not-number
        :drpop :dpop
@@ -144,12 +140,11 @@
 ;; all arguments from the first.
 (proc  core/sub
        ;; All this is because we keep the first number positive
+       :push eval/list :call  ;; while it is not on the outside
        :swap
        :first :!NIL :eq
          :push core-sub-int-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-sub-not-number :branch
        :first :!number/fixed?
@@ -160,8 +155,6 @@
        :first :!NIL :eq
          :push core-sub-int-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-sub-not-number :branch
        :first :!number/fixed?
@@ -191,8 +184,6 @@
        :first :!NIL :eq
          :push core-sub-fixed-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-sub-not-number :branch
        :push eval/get-number-value-as-fixed :call
@@ -232,13 +223,12 @@
 ;; the arguments together.
 (proc  core/mult
        :dpush 1 :drpush
+       :push eval/list :call  ;; while it is not on the outside
        :swap
 :label core-mult-int-loop
        :first :!NIL :eq
          :push core-mult-int-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-mult-not-number :branch
        :first :!number/fixed?
@@ -263,8 +253,6 @@
        :first :!NIL :eq
          :push core-mult-fixed-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-mult-not-number :branch
        :push eval/get-number-value-as-fixed :call
@@ -301,12 +289,11 @@
 ;; the first by all other arguments.
 (proc  core/div
        ;; All this is because we keep the first number positive
+       :push eval/list :call  ;; while it is not on the outside
        :swap
        :first :!NIL :eq
          :push core-div-int-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-div-not-number :branch
        :first :!number/fixed?
@@ -317,8 +304,6 @@
        :first :!NIL :eq
          :push core-div-int-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-div-not-number :branch
        :first :!number/fixed?
@@ -348,8 +333,6 @@
        :first :!NIL :eq
          :push core-div-fixed-end :branch
        :first :!pair/car
-       :!third :push eval/form :call
-       :pop ;; the copied env
        :first :push number/number? :call :!not
          :push core-div-not-number :branch
        :push eval/get-number-value-as-fixed :call

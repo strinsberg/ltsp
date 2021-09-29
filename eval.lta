@@ -44,15 +44,13 @@
        :second :!pair/car
        :first :push eval/special-form? :call
          :push eval-apply-special-form :branch
-       ;; else it should eval to a proc to be applied
-       ;; Change this a bit to work better with subroutines
-       ;; I.e. eval the list of args first
+       ;; else it should eval to a proc or subroutine to be applied
        :swap :push eval/form :call
        :second :!proc/procedure?
          :push eval-apply-procedure :branch
        :second :!sub/subroutine?
          :push eval-apply-subroutine :branch
-       ;; it is not a proc and cannot be applied
+       ;; it is not a proc/subroutine and cannot be applied
        :push cannot-apply :prnmem-lb
        :second :push debug-form :call
        :rot :pop :rot :pop
@@ -68,6 +66,7 @@
        :ret
 :label eval-apply-subroutine
        :rot :!pair/cdr :swap
+       ;:push eval/list :call :swap
        ;; The address left from the eval should be the label
        ;; of the subroutine in program memory so we just call it
        ;; on the env and arg list
