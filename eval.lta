@@ -70,6 +70,7 @@
        ;; The address left from the eval should be the label
        ;; of the subroutine in program memory so we just call it
        ;; on the env and arg list
+       :push eval/list :call
        :rot :!sub/label :call
        :ret
 )

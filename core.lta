@@ -137,7 +137,6 @@
 ;; Takes a list of evaluated arguments and conses the first onto the second.
 ;; Leaves the new pair that was created.
 (proc  core/cons
-       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :first :!pair/car
        :swap :!pair/cdr :!pair/car
@@ -159,7 +158,6 @@
 ;; Takes a list of evaluated arguments and leaves the car of the first
 ;; argument if it is a pair, otherwise leaves NIL.
 (proc  core/car
-       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :!pair/car
        :first :!pair/pair?
@@ -188,7 +186,6 @@
 ;; Takes a list of evaluated arguments and leaves the cdr of the first
 ;; argument if it is a pair, otherwise leaves NIL.
 (proc  core/cdr
-       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :!pair/car
        :first :!pair/pair?
@@ -214,7 +211,6 @@
 )
 
 (proc  core/eq?
-       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :first :!pair/car
        :second :!pair/cdr :!pair/car
@@ -259,7 +255,6 @@
 ;; Takes a list of evalled arguments and checks to see if the car is an atom.
 ;; Leaves T if it is an atom, otherwise F.
 (proc  core/atom?
-       :push eval/list :call  ;; while it is not on the outside
        :swap ;; put env on bottom
        :!pair/car :push eval/atom? :call
          :push core-atom?-true :branch
@@ -286,7 +281,6 @@
        :push core/add-fixed-func
        :push core/add-int-func
        :dswap
-       :push eval/list :call  ;; while it is not on the outside
        :dpush 0  ;; setup initial value
        :push core/binary-op-on-list :call
        :ret
@@ -324,7 +318,6 @@
        :push core/mult-fixed-func
        :push core/mult-int-func
        :dswap
-       :push eval/list :call  ;; while it is not on the outside
        :dpush 1  ;; setup initial value
        :push core/binary-op-on-list :call
        :ret
@@ -361,7 +354,6 @@
        :push core/sub-fixed-func
        :push core/sub-int-func
        :dswap
-       :push eval/list :call  ;; while it is not on the outside
        ;; Setup first number
        :swap
        :first :!NIL :eq
@@ -418,7 +410,6 @@
        :push core/div-fixed-func
        :push core/div-int-func
        :dswap
-       :push eval/list :call  ;; while it is not on the outside
        ;; Setup first number
        :swap
        :first :!NIL :eq
