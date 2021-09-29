@@ -57,85 +57,6 @@
 (macro :!sub/set-symbol :push 2 :add :store-lb)
 (macro :!sub/subroutine? :load-lb :push 8 :sr :push 0x06 :eq)
 
-
-;; Addition function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Creates the add function symbol, subroutine, and adds them as a define
-;; in the builtin environment.
-(proc  core/make-add
-       :push 0x6461 :push 0 :bufstore
-       :push 0x0064 :push 1 :bufstore
-       :push core/add
-       :push core/create :call
-       :ret
-)
-
-;; Takes an env and a list of arguments and returns the result of adding the
-;; arguments together.
-(proc  core/add
-       :push core/add-fixed-func
-       :push core/add-int-func
-       :dswap
-       :push eval/list :call  ;; while it is not on the outside
-       :dpush 0  ;; setup initial value
-       :push core/binary-op-on-list :call
-       :ret
-)
-
-;; Takes a double word and the address of a number on the stack.
-;; Adds the value of the number to the rstack value and leaves it on the
-;; rstack.
-(proc  core/add-int-func
-       :rot :!number/value :dadd
-       :ret
-)
-
-;; Takes a number address and expects a double word fixed on the rstack.
-;; Adds the value of the number to the rstack value and leaves it on the
-;; rstack.
-(proc  core/add-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :dadd
-       :ret
-)
-
-;; Creates the mult function symbol, subroutine, and adds them as a define
-;; in the builtin environment.
-(proc  core/make-mult
-       :push 0x756d :push 0 :bufstore
-       :push 0x746c :push 1 :bufstore
-       :push 0x0000 :push 2 :bufstore
-       :push core/mult
-       :push core/create :call
-       :ret
-)
-
-;; arguments together.
-(proc  core/mult
-       :push core/mult-fixed-func
-       :push core/mult-int-func
-       :dswap
-       :push eval/list :call  ;; while it is not on the outside
-       :dpush 1  ;; setup initial value
-       :push core/binary-op-on-list :call
-       :ret
-)
-
-;; Takes a double word and the address of a number on the stack.
-;; Multiplies the value of the number to the rstack value and leaves it on the
-;; rstack.
-(proc  core/mult-int-func
-       :rot :!number/value :dmult
-       :ret
-)
-
-;; Takes a number address and expects a double word fixed on the rstack.
-;; Multiplies the value of the number to the rstack value and leaves it on the
-;; rstack.
-(proc  core/mult-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :fmult
-       :ret
-)
-
 ;; Takes a double word as initial value for the accumulator, the env, the
 ;; list of arguments, and 2 labels for functions to call to reduce the car of
 ;; the args list and the accumulator value. The first label is for ints and the
@@ -199,147 +120,6 @@
        :pop :swap :pop :swap :pop
        :!error :swap :ret
 )
-
-;; Subtraction function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Creates sub symbol, subroutine, and adds them as a builtin env-item.
-(proc  core/make-sub
-       :push 0x7573 :push 0 :bufstore
-       :push 0x0062 :push 1 :bufstore
-       :push core/sub
-       :push core/create :call
-       :ret
-)
-
-;; Takes an env and a list of arguments and returns the result of adding the
-;; arguments together.
-(proc  core/sub
-       :push core/sub-fixed-func
-       :push core/sub-int-func
-       :dswap
-       :push eval/list :call  ;; while it is not on the outside
-       ;; Setup first number
-       :swap
-       :first :!NIL :eq
-         :push core-sub-first-arg-zero :branch
-       :first :!pair/car
-       :first :push number/number? :call :!not
-         :push core-sub-first-arg-zero :branch
-       :first :!number/fixed?
-         :push core-sub-fixed-first :branch
-       :!number/value
-       :dswap :!pair/cdr :swap :dswap
-       ;; call accumulator
-       :push core/binary-op-on-list :call
-       :ret
-
-:label core-sub-fixed-first
-       :!number/value
-       :push core/binary-op-on-list-fixed :call
-       :ret
-:label core-sub-first-arg-zero
-       :dpush 0
-       :push core/binary-op-on-list :call
-       :ret
-)
-
-;; Takes a double word and the address of a number on the stack.
-;; Subtracts the value of the number to the rstack value and leaves it on the
-;; rstack.
-(proc  core/sub-int-func
-       :rot :!number/value :dsub
-       :ret
-)
-
-;; Takes a number address and expects a double word fixed on the rstack.
-;; Subtracts the value of the number to the rstack value and leaves it on the
-;; rstack.
-(proc  core/sub-fixed-func
-       :rot :push eval/get-number-value-as-fixed :call :dsub
-       :ret
-)
-
-;; Division function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Creates sub symbol, subroutine, and adds them as a builtin env-item.
-(proc  core/make-div
-       :push 0x6964 :push 0 :bufstore
-       :push 0x0076 :push 1 :bufstore
-       :push core/div
-       :push core/create :call
-       :ret
-)
-
-;; Takes an env and a list of arguments and returns the result of dividing
-;; the first by all other arguments.
-(proc  core/div
-       ;; All this is because we keep the first number positive
-       :push eval/list :call  ;; while it is not on the outside
-       :swap
-       :first :!NIL :eq
-         :push core-div-int-end :branch
-       :first :!pair/car
-       :first :push number/number? :call :!not
-         :push core-div-not-number :branch
-       :first :!number/fixed?
-         :push core-div-fixed-first :branch
-       :!number/value :drpush
-       :!pair/cdr
-:label core-div-int-loop
-       :first :!NIL :eq
-         :push core-div-int-end :branch
-       :first :!pair/car
-       :first :push number/number? :call :!not
-         :push core-div-not-number :branch
-       :first :!number/fixed?
-         :push core-div-fixed-start :branch
-       :!number/value :drpop :dswap :ddiv :drpush
-       :!pair/cdr
-       :push core-div-int-loop :jump
-
-:label core-div-int-end
-       :pop :drpop
-       :push alloc/new-pair :call
-       :push number/make-int :call
-       :swap :ret
-
-;; If a single value in the list is a fixed point number then
-;; all numbers must be treated as such
-:label core-div-fixed-first
-       :!number/value :drpush
-       :!pair/cdr
-       :push core-div-fixed-loop :jump
-:label core-div-fixed-start
-       :!number/value
-       :drpop :dpush 1000 :dmult
-       :dswap :fdiv :drpush
-       :!pair/cdr
-:label core-div-fixed-loop
-       :first :!NIL :eq
-         :push core-div-fixed-end :branch
-       :first :!pair/car
-       :first :push number/number? :call :!not
-         :push core-div-not-number :branch
-       :push eval/get-number-value-as-fixed :call
-       :drpop :dswap :fdiv :drpush
-       :!pair/cdr
-       :push core-div-fixed-loop :jump
-
-:label core-div-fixed-end
-       :pop :drpop
-       :push alloc/new-pair :call
-       :push number/make-fixed :call
-       :swap :ret
-
-:label core-div-not-number
-       :drpop :dpop
-       :push not-a-number-error :prnmem-lb
-       :push debug-form :call
-       :pop
-       :!error :swap :ret
-)
-
-
 
 ;; Elementary Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -486,6 +266,198 @@
        :!F :swap :ret
 :label core-atom?-true
        :!T :swap :ret
+)
+
+;; Arithmetic ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates the add function symbol, subroutine, and adds them as a define
+;; in the builtin environment.
+(proc  core/make-add
+       :push 0x6461 :push 0 :bufstore
+       :push 0x0064 :push 1 :bufstore
+       :push core/add
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments and returns the result of adding the
+;; arguments together.
+(proc  core/add
+       :push core/add-fixed-func
+       :push core/add-int-func
+       :dswap
+       :push eval/list :call  ;; while it is not on the outside
+       :dpush 0  ;; setup initial value
+       :push core/binary-op-on-list :call
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Leaves the double word result.
+(proc  core/add-int-func
+       :rot :!number/value :dadd
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Treats the number as a fixed point number, so if it is an int it will be
+;; converted to a fixed point number.
+;; Leaves the double word result.
+(proc  core/add-fixed-func
+       :rot :push eval/get-number-value-as-fixed :call :dadd
+       :ret
+)
+
+;; Creates the mult function symbol, subroutine, and adds them as a define
+;; in the builtin environment.
+(proc  core/make-mult
+       :push 0x756d :push 0 :bufstore
+       :push 0x746c :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/mult
+       :push core/create :call
+       :ret
+)
+
+;; arguments together.
+(proc  core/mult
+       :push core/mult-fixed-func
+       :push core/mult-int-func
+       :dswap
+       :push eval/list :call  ;; while it is not on the outside
+       :dpush 1  ;; setup initial value
+       :push core/binary-op-on-list :call
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Leaves the double word result.
+(proc  core/mult-int-func
+       :rot :!number/value :dmult
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Treats the number as a fixed point number, so if it is an int it will be
+;; converted to a fixed point number.
+;; Leaves the double word result.
+(proc  core/mult-fixed-func
+       :rot :push eval/get-number-value-as-fixed :call :fmult
+       :ret
+)
+
+;; Creates sub symbol, subroutine, and adds them as a builtin env-item.
+(proc  core/make-sub
+       :push 0x7573 :push 0 :bufstore
+       :push 0x0062 :push 1 :bufstore
+       :push core/sub
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments and returns the result of subtracting
+;; the arguments together.
+(proc  core/sub
+       :push core/sub-fixed-func
+       :push core/sub-int-func
+       :dswap
+       :push eval/list :call  ;; while it is not on the outside
+       ;; Setup first number
+       :swap
+       :first :!NIL :eq
+         :push core-sub-first-arg-zero :branch
+       :first :!pair/car
+       :first :push number/number? :call :!not
+         :push core-sub-first-arg-zero :branch
+       :first :!number/fixed?
+         :push core-sub-fixed-first :branch
+       :!number/value
+       :dswap :!pair/cdr :swap :dswap
+       ;; call accumulator
+       :push core/binary-op-on-list :call
+       :ret
+
+:label core-sub-fixed-first
+       :!number/value
+       :push core/binary-op-on-list-fixed :call
+       :ret
+:label core-sub-first-arg-zero
+       :dpush 0
+       :push core/binary-op-on-list :call
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Leaves the double word result.
+(proc  core/sub-int-func
+       :rot :!number/value :dsub
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Treats the number as a fixed point number, so if it is an int it will be
+;; converted to a fixed point number.
+;; Leaves the double word result.
+(proc  core/sub-fixed-func
+       :rot :push eval/get-number-value-as-fixed :call :dsub
+       :ret
+)
+
+;; Creates sub symbol, subroutine, and adds them as a builtin env-item.
+(proc  core/make-div
+       :push 0x6964 :push 0 :bufstore
+       :push 0x0076 :push 1 :bufstore
+       :push core/div
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments and returns the result of dividing the
+;; arguments together.
+(proc  core/div
+       :push core/div-fixed-func
+       :push core/div-int-func
+       :dswap
+       :push eval/list :call  ;; while it is not on the outside
+       ;; Setup first number
+       :swap
+       :first :!NIL :eq
+         :push core-div-first-arg-zero :branch
+       :first :!pair/car
+       :first :push number/number? :call :!not
+         :push core-div-first-arg-zero :branch
+       :first :!number/fixed?
+         :push core-div-fixed-first :branch
+       :!number/value
+       :dswap :!pair/cdr :swap :dswap
+       ;; call accumulator
+       :push core/binary-op-on-list :call
+       :ret
+
+:label core-div-fixed-first
+       :!number/value
+       :push core/binary-op-on-list-fixed :call
+       :ret
+:label core-div-first-arg-zero
+       :dpush 0
+       :push core/binary-op-on-list :call
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Leaves the double word result.
+(proc  core/div-int-func
+       :rot :!number/value :ddiv
+       :ret
+)
+
+;; Takes a double word and the address of a number on the stack.
+;; Treats the number as a fixed point number, so if it is an int it will be
+;; converted to a fixed point number.
+;; Leaves the double word result.
+(proc  core/div-fixed-func
+       :rot :push eval/get-number-value-as-fixed :call :fdiv
+       :ret
 )
 
 )
