@@ -391,3 +391,31 @@ functional_tests = [
               "(5 4 3 2 1)")]
     ),
 ]
+
+other_tests = [
+    # list
+    PexTest(
+        "Create a list form a vaiable number of arguments",
+        [pair("(list (lambda (a) (add a 1)) 2 3 4 5)",
+              "(#((a) (add a 1)) 2 3 4 5)")]
+    ),
+
+    # eval
+    PexTest(
+        "Evaluate a quoted form",
+        [pair("(eval (quote (cons 1 3)))", "(1 . 3)")]
+    ),
+    PexTest(
+        "Create a list with for a function application and evaluate it",
+        [pair("(eval (list (lambda (a) (add a 1)) 2))",
+              "3")]
+    ),
+
+    # apply
+    PexTest(
+        "Apply a subroutine to a list of arguments",
+        [pair("(apply add (list 1 2 3 4 5))",
+              "15")]
+    ),
+
+]

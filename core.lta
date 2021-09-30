@@ -19,6 +19,11 @@
        :push core/make-map :call
        :push core/make-filter :call
        :push core/make-reduce :call
+
+       ;; Eval, apply, list
+       :push core/make-eval :call
+       :push core/make-list :call
+       :push core/make-apply :call
        :ret
 )
 
@@ -616,5 +621,66 @@
        :pop :!ERROR :swap :ret
 )
 
+
+;; Eval, Apply, List ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates a  symbol for a function that evaluates a form.
+(proc  core/make-eval
+       :push 0x7665 :push 0 :bufstore
+       :push 0x6c61 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/eval
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments. Leaves the env and the evaluation
+;; of the first argument.
+(proc  core/eval
+       :swap :!pair/car :swap
+       :push eval/form :call
+       :ret
+)
+
+;; Creates a  symbol for a function that creates a list from its arguments.
+(proc  core/make-list
+       :push 0x696c :push 0 :bufstore
+       :push 0x7473 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/list
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments. Leaves the env and the list of
+;; arguments.
+(proc  core/list
+       ;; Does not have to do anything because eval/list already
+       ;; created a list of the arguments.
+       :ret
+)
+
+;; Creates a symbol for a function that applies sub/proc to a list as if the
+;; list elements were arguments to the function. I.e. (apply add (2 3 4)) is
+;; equivilent to (add 2 3 4).
+(proc  core/make-apply
+       :push 0x7061 :push 0 :bufstore
+       :push 0x6c70 :push 1 :bufstore
+       :push 0x0079 :push 2 :bufstore
+       :push core/apply
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments. The first argument is a procedure
+;; and the second argument is the list of arguments to the procedure. Leaves
+;; the env and the application of the procedure to its list of arguments.
+(proc  core/apply
+       :second :!pair/car
+       :rot :!pair/cdr :!pair/car
+       :rot
+       :push eval/apply-sub-or-proc :call
+       :ret
+)
 
 )
