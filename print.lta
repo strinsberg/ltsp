@@ -2,8 +2,6 @@
 
 ;; Take the address of a form on top of the stack and print it
 (proc  print/form
-       :first :!error :eq  ;; TODO get rid of this when all errors use ERROR
-         :push print-form-is-error :branch
        :first :!number/int?
          :push print-form-int :branch
        :first :!number/fixed?
@@ -20,9 +18,6 @@
        :push sym/print-name :call
        :ret
 
-:label print-form-is-error
-       :push error-sym :prnmem-lb
-       :ret
 :label print-form-int
        :!number/value
        :dprn :ret

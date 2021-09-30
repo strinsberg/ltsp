@@ -93,7 +93,7 @@
        :push not-a-number-error :prnmem-lb
        :push debug-form :call
        :pop :swap :pop :swap :pop
-       :!error :swap :ret
+       :!ERROR :swap :ret
 )
 
 (proc  core/binary-op-on-list-fixed
@@ -118,7 +118,7 @@
        :push not-a-number-error :prnmem-lb
        :push debug-form :call
        :pop :swap :pop :swap :pop
-       :!error :swap :ret
+       :!ERROR :swap :ret
 )
 
 ;; Elementary Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -138,11 +138,18 @@
 ;; Leaves the new pair that was created.
 (proc  core/cons
        :swap ;; put env on bottom
+       :first :!NIL :eq
+         :second :!pair/cdr :!NIL :eq
+         :or :push core-cons-error :branch
        :first :!pair/car
        :swap :!pair/cdr :!pair/car
        :push pair/create :call
        :swap ;; put env back on top
        :ret
+:label core-cons-error
+       :push cons-args-error :prnmem-lb
+       :swap :pop
+       :!ERROR :swap :ret
 )
 
 ;; Define the car subroutine. Takes nothing, Leaves Nothing.
@@ -159,6 +166,8 @@
 ;; argument if it is a pair, otherwise leaves NIL.
 (proc  core/car
        :swap ;; put env on bottom
+       :first :!NIL :eq
+         :push core-car-nil :branch
        :!pair/car
        :first :!pair/pair?
          :second :!pair/dotted?
@@ -182,11 +191,12 @@
        :ret
 )
 
-;; Currently takes the ENV on top
 ;; Takes a list of evaluated arguments and leaves the cdr of the first
 ;; argument if it is a pair, otherwise leaves NIL.
 (proc  core/cdr
        :swap ;; put env on bottom
+       :first :!NIL :eq
+         :push core-car-nil :branch
        :!pair/car
        :first :!pair/pair?
          :second :!pair/dotted?
@@ -374,7 +384,7 @@
        :push core/binary-op-on-list-fixed :call
        :ret
 :label core-sub-first-arg-zero
-       :dpush 0
+       :swap :dpush 0
        :push core/binary-op-on-list :call
        :ret
 )
@@ -430,7 +440,7 @@
        :push core/binary-op-on-list-fixed :call
        :ret
 :label core-div-first-arg-zero
-       :dpush 0
+       :swap :dpush 0
        :push core/binary-op-on-list :call
        :ret
 )
