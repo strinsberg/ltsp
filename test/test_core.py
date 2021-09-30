@@ -333,10 +333,11 @@ arithmetic_tests = [
 ]
 
 functional_tests = [
+    # map
     PexTest(
         "Map a builtin subroutine over a list",
-        [pair("(map atom? (quote (1 2 3 4 5 6)))",
-              "(T T T T T T)")]
+        [pair("(map atom? (quote (1 2 3 (4) 5 6)))",
+              "(T T T F T T)")]
     ),
     PexTest(
         "Map a lambda over a list",
@@ -348,5 +349,33 @@ functional_tests = [
         [pair("(define sub1 (lambda (a) (sub a 1)))", "T"),
          pair("(map sub1 (quote (1 2 3 4 5 6)))",
               "(0 1 2 3 4 5)")]
+    ),
+
+    # filter
+    PexTest(
+        "Filter a list with a builtin subroutine",
+        [pair("(filter atom? (quote (1 2 (3) 4 (5 6))))",
+              "(1 2 4)")]
+    ),
+    PexTest(
+        "Filter a list with a builtin subroutine, no matches",
+        [pair("(filter atom? (quote ((3) (5 6))))",
+              "NIL")]
+    ),
+    PexTest(
+        "Filter a list with a builtin subroutine, empty list",
+        [pair("(filter atom? (quote ()))",
+              "NIL")]
+    ),
+    PexTest(
+        "Filter a list with a lambda",
+        [pair("(filter (lambda (a) (eq? a 4)) (quote (1 2 3 4 5 6)))",
+              "(4)")]
+    ),
+    PexTest(
+        "Filter a list with a defined lambda",
+        [pair("(define is2 (lambda (a) (eq? a 2)))", "T"),
+         pair("(filter is2 (quote (1 2 3 4 2 6)))",
+              "(2 2)")]
     ),
 ]

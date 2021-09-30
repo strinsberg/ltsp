@@ -17,6 +17,7 @@
 
        ;; Functional
        :push core/make-map :call
+       :push core/make-filter :call
        :ret
 )
 
@@ -490,11 +491,7 @@
 :label core-map-apply-loop
        :second :!NIL :eq
          :push core-map-assemble :branch
-       :!third  ;; get proc
-       :!third :!pair/car  ;; get first item
-       :!NIL ;; so it isn't dotted
-       :push pair/create :call
-       :push pair/create :call
+       :push core/mfr-create-func :call
        :swap :push eval/form :call
        :dswap :!pair/cdr :rot
        :push core-map-apply-loop :jump
@@ -515,5 +512,73 @@
        :pop :!ERROR :swap :ret
 )
 
+;; Creates a filter symbol for a function that filters a list of
+;; arguments using a predicate.
+(proc  core/make-filter
+       :push 0x6966 :push 0 :bufstore
+       :push 0x746c :push 1 :bufstore
+       :push 0x7265 :push 2 :bufstore
+       :push 0x0000 :push 3 :bufstore
+       :push core/filter
+       :push core/create :call
+       :ret
+)
+
+;; Expects an env and an evaluated argument list that starts with a subroutine
+;; or a procedure and then a list of arguments to filter with that procedure.
+;; Leaves the env and the new list.
+(proc  core/filter
+       :push 0 :swap :rot
+       :first :!NIL :eq
+         :second :!pair/cdr :!NIL :eq
+         :or :push core-filter-args-error :branch
+       :first :!pair/car ;; proc
+       :swap :!pair/cdr :!pair/car ;; list
+       :rot
+:label core-filter-apply-loop
+       :second :push debug-form :call
+       :second :!NIL :eq
+         :push core-filter-assemble :branch
+       :push core/mfr-create-func :call
+       :swap :push eval/form :call
+       :second :push sym/falsy? :call
+         :push core-filter-apply-discard :branch
+       :swap :pop ;; remove bool
+       :second :!pair/car :swap
+       :dswap :!pair/cdr :rot
+       :push core-filter-apply-loop :jump
+:label core-filter-apply-discard
+       :swap :pop :swap :!pair/cdr :swap
+       :push core-filter-apply-loop :jump
+
+:label core-filter-assemble
+       :rot :pop :swap
+:label core-filter-assemble-loop
+       :!third :!zero?
+         :push core-filter-end :branch
+       :rot :swap
+       :push pair/create :call
+       :push core-filter-assemble-loop :jump
+
+:label core-filter-end
+       :rot :pop :swap :ret
+:label core-filter-args-error
+       :push filter-args-error :prnmem-lb
+       :pop :!ERROR :swap :ret
+)
+
+;; Helper for map and reduce. Takes an env, a list, a proc/subroutine on the
+;; stack. Leaves a list with the subroutine ready to be applied to the
+;; quoted first element of the list. The element is quoted because it has
+;; already been evaluated.
+(proc  core/mfr-create-func
+       :!QUOTE :!third :!pair/car :!NIL
+       :push pair/create :call
+       :push pair/create :call
+       :!fourth :swap :!NIL
+       :push pair/create :call
+       :push pair/create :call
+       :ret
+)
 
 )
