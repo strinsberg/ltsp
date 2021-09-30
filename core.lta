@@ -18,6 +18,7 @@
        ;; Functional
        :push core/make-map :call
        :push core/make-filter :call
+       :push core/make-reduce :call
        :ret
 )
 
@@ -491,7 +492,7 @@
 :label core-map-apply-loop
        :second :!NIL :eq
          :push core-map-assemble :branch
-       :push core/mfr-create-func :call
+       :push core/mf-create-func :call
        :swap :push eval/form :call
        :dswap :!pair/cdr :rot
        :push core-map-apply-loop :jump
@@ -539,7 +540,7 @@
        :second :push debug-form :call
        :second :!NIL :eq
          :push core-filter-assemble :branch
-       :push core/mfr-create-func :call
+       :push core/mf-create-func :call
        :swap :push eval/form :call
        :second :push sym/falsy? :call
          :push core-filter-apply-discard :branch
@@ -567,16 +568,77 @@
        :pop :!ERROR :swap :ret
 )
 
-;; Helper for map and reduce. Takes an env, a list, a proc/subroutine on the
+;; Helper for map and filter. Takes an env, a list, a proc/subroutine on the
 ;; stack. Leaves a list with the subroutine ready to be applied to the
 ;; quoted first element of the list. The element is quoted because it has
 ;; already been evaluated.
-(proc  core/mfr-create-func
+(proc  core/mf-create-func
        :!QUOTE :!third :!pair/car :!NIL
        :push pair/create :call
        :push pair/create :call
        :!fourth :swap :!NIL
        :push pair/create :call
+       :push pair/create :call
+       :ret
+)
+
+;; Creates a reduce symbol for a function that uses a sub/proc to reduce a list
+;; of arguments to a single value.
+(proc  core/make-reduce
+       :push 0x6572 :push 0 :bufstore
+       :push 0x7564 :push 1 :bufstore
+       :push 0x6563 :push 2 :bufstore
+       :push 0x0000 :push 3 :bufstore
+       :push core/reduce
+       :push core/create :call
+       :ret
+)
+
+;; Expects an env and an evaluated argument list that starts with a subroutine
+;; or a procedure and then an initial value followed by a list of arguments to
+;; reduce with the sub/proc and the initial value.
+;; Leaves the env and the reduction.
+(proc  core/reduce
+       :swap
+       :first :!NIL :eq
+         :second :!pair/cdr :!NIL :eq
+         :or :second :!pair/cdr :!pair/cdr :!NIL :eq
+         :or :push core-reduce-args-error :branch
+       :first :!pair/car ;; proc
+       :second :!pair/cdr :!pair/car ;; initial
+       :rot :!pair/cdr :!pair/cdr :!pair/car ;; list
+       :dswap :rot :rot
+:label core-reduce-apply-loop
+       :second :!NIL :eq
+         :push core-reduce-end :branch
+       :push core/reduce-create-func :call
+       :swap :push eval/form :call
+       :rpush :rpush :!pair/cdr
+       :rot :pop :rpop :rot :rot :rpop
+       :push core-reduce-apply-loop :jump
+
+:label core-reduce-end
+       :swap :pop :swap :pop :ret
+:label core-reduce-args-error
+       :push reduce-args-error :prnmem-lb
+       :pop :!ERROR :swap :ret
+)
+
+;; Helper for reduce. Takes an env, a list, a proc/subroutine, and accumulator
+;; value. Leaves a list with the subroutine ready to be applied to the
+;; quoted elements of the list. The elements are quoted because they has
+;; already been evaluated.
+(proc  core/reduce-create-func
+       :!QUOTE :!third :!pair/car :!NIL
+       :push pair/create :call
+       :push pair/create :call
+       :!QUOTE :!sixth :!NIL
+       :push pair/create :call
+       :push pair/create :call
+       :!NIL
+       :push pair/create :call
+       :push pair/create :call
+       :!fourth :swap
        :push pair/create :call
        :ret
 )

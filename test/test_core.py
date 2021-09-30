@@ -378,4 +378,16 @@ functional_tests = [
          pair("(filter is2 (quote (1 2 3 4 2 6)))",
               "(2 2)")]
     ),
+
+    # reduce
+    PexTest(
+        "Reduce a list with a builtin subroutine",
+        [pair("(reduce add 0 (quote (1 2 3 4 5)))",
+              "15")]
+    ),
+    PexTest(
+        "Reduce a list with a builtin subroutine, list operation",
+        [pair("(reduce cons NIL (quote (1 2 3 4 5)))",
+              "(5 4 3 2 1)")]
+    ),
 ]

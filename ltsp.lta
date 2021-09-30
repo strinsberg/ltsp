@@ -53,6 +53,7 @@
     (:str cons-args-error "*** Cons requires 2 arguments\n")
     (:str map-args-error "*** Map requires 2 arguments\n")
     (:str filter-args-error "*** Filter requires 2 arguments\n")
+    (:str reduce-args-error "*** Reduce requires 3 arguments\n")
   )
     
   (main
@@ -124,6 +125,8 @@
   ;; helpers
   (macro :!third :push 2 :nth)
   (macro :!fourth :push 3 :nth)
+  (macro :!fifth :push 4 :nth)
+  (macro :!sixth :push 5 :nth)
 
   ;; Debugging
   (macro :!debug-char :first :prnch :push 10 :prnch)
