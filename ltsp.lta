@@ -51,6 +51,7 @@
     (:str not-a-number-error "*** Cannot do arithmetic: Not a number: ")
     (:str not-special-error "*** Panic: Tried evaluating as a special form: ")
     (:str cons-args-error "*** Cons requires 2 arguments\n")
+    (:str map-args-error "*** Map requires 2 arguments\n")
   )
     
   (main

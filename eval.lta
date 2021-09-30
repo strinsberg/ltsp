@@ -13,14 +13,15 @@
 ;; Leaves a (possibly new) env and the result of evaluating the form
 (proc  eval/form
        :second :push number/number? :call
-         :push eval-form-number :branch
+         :!third :!proc/procedure?
+         :or :!third :!sub/subroutine?
+         :or :push eval-form-identity :branch
        :second :push eval/atom? :call
          :push eval-form-symbol :branch
        ;; else is list/function application
        :push eval/apply :call
        :ret
-:label eval-form-number
-       ;; just leave it all alone
+:label eval-form-identity
        :ret
 :label eval-form-symbol
        :second :second
@@ -46,6 +47,8 @@
          :push eval-apply-special-form :branch
        ;; else it should eval to a proc or subroutine to be applied
        :swap :push eval/form :call
+       :second :!ERROR :eq
+         :push eval-apply-error-end :branch
        :second :!proc/procedure?
          :push eval-apply-procedure :branch
        :second :!sub/subroutine?
@@ -202,7 +205,7 @@
 
 
 ;; Takes an env and a define form. Add the binding to the front of the
-;; builtin bindings. Leaves T if succesful, otherwise :!error.
+;; builtin bindings. Leaves T if succesful, otherwise :!ERROR.
 (proc  eval/apply-define
        :second :!pair/cdr :!pair/car
        :first :!sym/symbol? :!not

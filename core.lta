@@ -14,6 +14,9 @@
        :push core/make-sub :call
        :push core/make-mult :call
        :push core/make-div :call
+
+       ;; Functional
+       :push core/make-map :call
        :ret
 )
 
@@ -460,5 +463,57 @@
        :rot :push number/get-value-as-fixed :call :fdiv
        :ret
 )
+
+;; Map, filter, reduce ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates a map symbol for a function that maps a function to a list of
+;; arguments.
+(proc  core/make-map
+       :push 0x616d :push 0 :bufstore
+       :push 0x0070 :push 1 :bufstore
+       :push core/map
+       :push core/create :call
+       :ret
+)
+
+;; Expects an env and an evaluated argument list that starts with a subroutine
+;; or a procedure and then a list of arguments to apply that procedure to.
+;; Leaves the env and the new list.
+(proc  core/map
+       :push 0 :swap :rot
+       :first :!NIL :eq
+         :second :!pair/cdr :!NIL :eq
+         :or :push core-map-args-error :branch
+       :first :!pair/car ;; proc
+       :swap :!pair/cdr :!pair/car ;; list
+       :rot
+:label core-map-apply-loop
+       :second :!NIL :eq
+         :push core-map-assemble :branch
+       :!third  ;; get proc
+       :!third :!pair/car  ;; get first item
+       :!NIL ;; so it isn't dotted
+       :push pair/create :call
+       :push pair/create :call
+       :swap :push eval/form :call
+       :dswap :!pair/cdr :rot
+       :push core-map-apply-loop :jump
+
+:label core-map-assemble
+       :rot :pop :swap
+:label core-map-assemble-loop
+       :!third :!zero?
+         :push core-map-end :branch
+       :rot :swap
+       :push pair/create :call
+       :push core-map-assemble-loop :jump
+
+:label core-map-end
+       :rot :pop :swap :ret
+:label core-map-args-error
+       :push map-args-error :prnmem-lb
+       :pop :!ERROR :swap :ret
+)
+
 
 )
