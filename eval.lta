@@ -33,7 +33,7 @@
        :pop
        :push symbol-unfound-error :prnmem-lb
        :swap :push sym/print-name :call :!prn-nl
-       :!error :swap :ret
+       :!ERROR :swap :ret
        ;; This is still unhandled in all of the other evals and possibly print
 )
 
@@ -63,13 +63,19 @@
 :label eval-apply-procedure
        :rot :!pair/cdr :swap  ;; get the function arguments from the pair
        :push eval/list :call
+       :second :!ERROR :eq
+         :push eval-apply-error-end :branch
        :push eval/apply-procedure :call
        :ret
 :label eval-apply-subroutine
        :rot :!pair/cdr :swap
        :push eval/list :call
+       :second :!ERROR :eq
+         :push eval-apply-error-end :branch
        ;; subroutines store the address of their proc label, so call it
        :rot :!sub/label :call
+       :ret
+:label eval-apply-error-end
        :ret
 )
 
@@ -84,6 +90,8 @@
          :push eval-list-eval-end :branch
        :second :!pair/car :swap
        :push eval/form :call
+       :second :!ERROR :eq
+         :push eval-list-arg-error :branch
        :rot :!pair/cdr :swap
        :push eval-list-eval :jump
 
@@ -97,11 +105,17 @@
        :rot :swap
        :push pair/create :call
        :push eval-list-new-list :jump
-
 :label eval-list-end
        :rot :pop  ;; remove 0
-       :swap
-       :ret
+       :swap :ret
+
+:label eval-list-arg-error
+       :!third :!zero?
+         :push eval-list-error-end :branch
+       :rot :pop
+       :push eval-list-arg-error :jump
+:label eval-list-error-end
+       :rot :pop :ret
 )
 
 
@@ -133,9 +147,11 @@
          :push eval-apply-special-let :branch
        :first :!LAMBDA :eq
          :push eval-apply-special-lambda :branch
-       ;; Else it was not a special form TODO ERROR? crash?
-       :rot :pop :pop :!NIL :swap
-       :ret
+       ;; Else it was not a special form. 
+       ;; this is a panic because it should be unreachable
+       :push not-special-error :prnmem-lb
+       :push sym/print-name :call :!prn-nl
+       :halt
 
 :label eval-apply-basic-quote
        :pop :swap :!pair/cdr :!pair/car
@@ -156,7 +172,7 @@
        :ret
 )
 
-;; Takes the list of condition, action pairs from a cond form
+;; Takes an env and the list of condition, action pairs from a cond form
 ;; Leaves the result of the first action that evaluated as not NIL or F.
 ;; If no condition evaluates to a truthy value leaves NIL
 (proc  eval/apply-cond
@@ -165,6 +181,8 @@
          :push eval-apply-cond-none :branch
        :second :!pair/car :!pair/car :swap
        :push eval/form :call
+       :second :!ERROR :eq
+         :push eval-apply-cond-pairs-error :branch
        :swap :push sym/falsy? :call :!not
          :push eval-apply-cond-true :branch
        ;; else the condition was not met
@@ -178,6 +196,8 @@
        :!pair/cdr :!pair/car ;; the action
        :swap :push eval/form :call
        :ret
+:label eval-apply-cond-pairs-error
+       :rot :pop :ret
 )
 
 
@@ -190,7 +210,10 @@
        :first :!third
        :push env/find :call :!false :eq :!not
          :push eval-apply-define-already-here :branch
-       :swap :rot :push eval/second-arg :call
+       :rot :!pair/cdr :!pair/cdr :!pair/car
+       :rot :push eval/form :call
+       :second :!ERROR :eq
+         :push eval-apply-define-error :branch
        :!third :!third
        :push env/add-define :call
        :second :!proc/procedure?
@@ -202,17 +225,19 @@
 :label eval-apply-define-not-symbol
        :push invalid-define-target :prnmem-lb
        :push debug-form :call
-       :swap :pop :!error :swap :ret
+       :swap :pop :!ERROR :swap :ret
 :label eval-apply-define-already-here
        :push symbol-already-defined :prnmem-lb
        :push sym/print-name :call :!prn-nl
-       :swap :pop :!error :swap :ret
+       :swap :pop :!ERROR :swap :ret
 :label eval-apply-define-update-proc-env
        :!third :!third :first :!proc/env
        :push env/add :call
        :rot :!proc/set-env
        :!T :swap
        :ret
+:label eval-apply-define-error
+       :rot :pop :ret
 )
 
 ;; Takes an env and a let form and evaluates the body with all local bindings
@@ -222,14 +247,20 @@
        :second :!pair/cdr :!pair/car
        :swap
        :push eval/add-let-bindings :call
+       :second :!ERROR :eq
+         :push eval-apply-let-binding-error :branch
        :swap :!pair/cdr :!pair/cdr :!pair/car
        :swap
        :push eval/form :call
        :pop :swap  ;; pop local env and put result under parent env
        :ret
+:label eval-apply-let-binding-error
+       :rot :pop :rot :pop
+       :ret
 )
 
-;; Takes an env and a list of bindings and leaves the updated env.
+;; Takes an env and a list of bindings and leaves the updated env. If there
+;; is an evaluation error then also leaves an ERROR under the env.
 (proc  eval/add-let-bindings
 :label eval-add-let-bindings-loop
        :second :!NIL :eq
@@ -239,12 +270,17 @@
        :swap :!pair/cdr :!pair/car
        :rot
        :push eval/form :call
+       :second :!ERROR :eq
+         :push eval-add-let-bindings-error :branch
        :push env/add :call
        :swap :!pair/cdr :swap
        :push eval-add-let-bindings-loop :jump
 
 :label eval-add-let-bindings-end
        :swap :pop :ret
+:label eval-add-let-bindings-error
+       :rot :pop :rot :pop
+       :ret
 )
 
 ;; Takes an env and a lambda form and leaves a procedure with a closure
@@ -311,24 +347,6 @@
          :or :second :!number/fixed?
          :or
        :swap :pop
-       :ret
-)
-
-;; Takes a form address for a function application, i.e. (func arg arg ...),
-;; and the current env underneath it, and leaves the form resulting
-;; from the evaluation of the first argument.
-(proc  eval/first-arg
-       :!pair/cdr :!pair/car :swap
-       :push eval/form :call
-       :ret
-)
-
-;; Takes a form address for a function application, i.e. (func arg arg ...),
-;; and the current env underneath it, and leaves the form resulting
-;; from the evaluation of the second argument.
-(proc  eval/second-arg
-       :!pair/cdr :!pair/cdr :!pair/car :swap
-       :push eval/form :call
        :ret
 )
 

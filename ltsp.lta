@@ -51,6 +51,7 @@
     (:str invalid-define-target "*** Invalid target for define: ")
     (:str cannot-apply "*** Cannot apply: Not a procedure: ")
     (:str not-a-number-error "*** Cannot do arithmetic: Not a number: ")
+    (:str not-special-error "*** Panic: Tried evaluating as a special form: ")
   )
     
   (main
