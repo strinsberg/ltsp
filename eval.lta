@@ -82,12 +82,34 @@
        :ret
 )
 
+;; Takes an env, a list of arguments, and a proc or sub to apply to those
+;; arguments. Does NOT evaluate the argument list before application.
+;; Leaves the env and the result.
+(proc  eval/apply-sub-or-proc
+       :!third :!proc/procedure?
+         :push eval-apply-sub-or-proc-procedure :branch
+       :!third :!sub/subroutine?
+         :push eval-apply-sub-or-proc-subroutine :branch
+       ;; else not a sub or proc
+       :push cannot-apply :prnmem-lb
+       :!third :push debug-form :call
+       :swap :pop :swap :pop
+       :!ERROR :swap
+       :ret
+
+:label eval-apply-sub-or-proc-procedure
+       :push eval/apply-procedure :call
+       :ret
+:label eval-apply-sub-or-proc-subroutine
+       :rot :!sub/label :call
+       :ret
+)
+
 ;; Takes an env and a list of forms and leaves the env and a new list with
 ;; all the evaluated forms. Basically (map eval args).
 (proc  eval/list
        :push 0  ;; sentinal stopping value
        :rot :rot
-       ;; Eval each list element and put result under env and list
 :label eval-list-eval
        :second :!NIL :eq
          :push eval-list-end :branch
@@ -101,8 +123,7 @@
 :label eval-list-end
        :rpush
        :push pair/create-list :call
-       :rpop
-       :ret
+       :rpop :ret
 :label eval-list-arg-error
        :!third :!zero?
          :push eval-list-error-end :branch

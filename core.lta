@@ -492,8 +492,10 @@
 :label core-map-apply-loop
        :second :!NIL :eq
          :push core-map-assemble :branch
-       :push core/mf-create-func :call
-       :swap :push eval/form :call
+       :second :!pair/car :!NIL
+       :push pair/create :call
+       :!fourth :swap :rot
+       :push eval/apply-sub-or-proc :call
        :dswap :!pair/cdr :rot
        :push core-map-apply-loop :jump
 
@@ -540,8 +542,10 @@
        :second :push debug-form :call
        :second :!NIL :eq
          :push core-filter-assemble :branch
-       :push core/mf-create-func :call
-       :swap :push eval/form :call
+       :second :!pair/car :!NIL
+       :push pair/create :call
+       :!fourth :swap :rot
+       :push eval/apply-sub-or-proc :call
        :second :push sym/falsy? :call
          :push core-filter-apply-discard :branch
        :swap :pop ;; remove bool
@@ -566,20 +570,6 @@
 :label core-filter-args-error
        :push filter-args-error :prnmem-lb
        :pop :!ERROR :swap :ret
-)
-
-;; Helper for map and filter. Takes an env, a list, a proc/subroutine on the
-;; stack. Leaves a list with the subroutine ready to be applied to the
-;; quoted first element of the list. The element is quoted because it has
-;; already been evaluated.
-(proc  core/mf-create-func
-       :!QUOTE :!third :!pair/car :!NIL
-       :push pair/create :call
-       :push pair/create :call
-       :!fourth :swap :!NIL
-       :push pair/create :call
-       :push pair/create :call
-       :ret
 )
 
 ;; Creates a reduce symbol for a function that uses a sub/proc to reduce a list
@@ -611,8 +601,10 @@
 :label core-reduce-apply-loop
        :second :!NIL :eq
          :push core-reduce-end :branch
-       :push core/reduce-create-func :call
-       :swap :push eval/form :call
+       :push 0 :!fifth :!fourth :!pair/car :!NIL
+       :push pair/create-list :call
+       :!fourth :swap :rot
+       :push eval/apply-sub-or-proc :call
        :rpush :rpush :!pair/cdr
        :rot :pop :rpop :rot :rot :rpop
        :push core-reduce-apply-loop :jump
@@ -624,23 +616,5 @@
        :pop :!ERROR :swap :ret
 )
 
-;; Helper for reduce. Takes an env, a list, a proc/subroutine, and accumulator
-;; value. Leaves a list with the subroutine ready to be applied to the
-;; quoted elements of the list. The elements are quoted because they has
-;; already been evaluated.
-(proc  core/reduce-create-func
-       :!QUOTE :!third :!pair/car :!NIL
-       :push pair/create :call
-       :push pair/create :call
-       :!QUOTE :!sixth :!NIL
-       :push pair/create :call
-       :push pair/create :call
-       :!NIL
-       :push pair/create :call
-       :push pair/create :call
-       :!fourth :swap
-       :push pair/create :call
-       :ret
-)
 
 )

@@ -386,8 +386,8 @@ functional_tests = [
               "15")]
     ),
     PexTest(
-        "Reduce a list with a builtin subroutine, list operation",
-        [pair("(reduce cons NIL (quote (1 2 3 4 5)))",
+        "Reduce a list with a procedure, list operation",
+        [pair("(reduce (lambda (acc x) (cons x acc)) NIL (quote (1 2 3 4 5)))",
               "(5 4 3 2 1)")]
     ),
 ]
