@@ -90,7 +90,7 @@
        ;; Eval each list element and put result under env and list
 :label eval-list-eval
        :second :!NIL :eq
-         :push eval-list-eval-end :branch
+         :push eval-list-end :branch
        :second :!pair/car :swap
        :push eval/form :call
        :second :!ERROR :eq
@@ -98,20 +98,11 @@
        :rot :!pair/cdr :swap
        :push eval-list-eval :jump
 
-:label eval-list-eval-end
-       :swap  ;; bring the NIL to top
-       ;; Pull up next evalled item and create pair with the item as car
-       ;; and the existing top as cdr
-:label eval-list-new-list
-       :!third :!zero?
-         :push eval-list-end :branch
-       :rot :swap
-       :push pair/create :call
-       :push eval-list-new-list :jump
 :label eval-list-end
-       :rot :pop  ;; remove 0
-       :swap :ret
-
+       :rpush
+       :push pair/create-list :call
+       :rpop
+       :ret
 :label eval-list-arg-error
        :!third :!zero?
          :push eval-list-error-end :branch

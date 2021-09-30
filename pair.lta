@@ -62,5 +62,18 @@
        :push pair-create-set-values :jump
 )
 
+;; Takes a stack with values of a list in reverse order, ended by a 0.
+;; Leave an address to the start of containing those values.
+(proc  pair/create-list
+:label create-list-loop
+       :second :!zero?
+         :push create-list-end :branch
+       :push pair/create :call
+       :push create-list-loop :jump
+:label create-list-end
+       :swap :pop  ;; remove 0
+       :ret
+)
+
 
 )
