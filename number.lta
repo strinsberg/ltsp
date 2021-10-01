@@ -21,6 +21,15 @@
 )
 
 ;; Uses top two form addresses (does not pop them) and returns 1 if they are
+;; both ints and 0 otherwise.
+(proc  number/both-ints?
+       :second :!number/int?
+         :second :!number/int?
+         :and
+       :ret
+)
+
+;; Uses top two form addresses (does not pop them) and returns 1 if they are
 ;; both fixed point numbers and 0 otherwise.
 (proc  number/both-fixed?
        :second :!number/fixed?
@@ -70,6 +79,15 @@
 (proc  number/create-int
        :push alloc/new-pair :call
        :push 0x0300 :second :!number/set-info
+       :rot :rot :!third :!number/set-value
+       :ret
+)
+
+;; Takes a double word on the stack and creates a new fixed point memory
+;; object. Leaves the address of the new memory on the stack.
+(proc  number/create-fixed
+       :push alloc/new-pair :call
+       :push 0x0400 :second :!number/set-info
        :rot :rot :!third :!number/set-value
        :ret
 )

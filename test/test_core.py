@@ -348,7 +348,60 @@ arithmetic_tests = [
         "Modulo with 2 ints, second negative",
         [pair("(mod 6 -4)", "2")],
     ),
+]
 
+rel_bool_tests = [
+    # less
+    PexTest(
+        "Less with 2 ints",
+        [pair("(less -199210 4)", "T")],
+    ),
+    PexTest(
+        "Less with 2 ints, false",
+        [pair("(less 324273 7)", "F")],
+    ),
+    PexTest(
+        "Less with 2 fixed",
+        [pair("(less 34.123 34.124)", "T")],
+    ),
+    PexTest(
+        "Less with 2 fixed, false",
+        [pair("(less 34.123 34.123)", "F")],
+    ),
+    PexTest(
+        "Less with 2 mixed",
+        [pair("(less 34 34.123)", "T")],
+    ),
+    PexTest(
+        "Less with 2 mixed, false",
+        [pair("(less 34.123 34)", "F")],
+    ),
+
+    # greater
+    PexTest(
+        "Greater than with 2 ints, false",
+        [pair("(greater -199210 4)", "F")],
+    ),
+    PexTest(
+        "Greater than with 2 ints",
+        [pair("(greater 324273 7)", "T")],
+    ),
+    PexTest(
+        "Greater than with 2 fixed, false",
+        [pair("(greater 34.123 34.124)", "F")],
+    ),
+    PexTest(
+        "Greater than with 2 fixed",
+        [pair("(greater 34.124 34.123)", "T")],
+    ),
+    PexTest(
+        "Greater than with 2 mixed, false",
+        [pair("(greater 34 34.123)", "F")],
+    ),
+    PexTest(
+        "Greater than with 2 mixed",
+        [pair("(greater 34.123 34)", "T")],
+    ),
 ]
 
 functional_tests = [

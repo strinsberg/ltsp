@@ -33,6 +33,8 @@
     (:str str-apply "apply")
     (:str str-eval "eval")
     (:str str-mod "mod")
+    (:str str-less "less")
+    (:str str-greater "greater")
 
     ;; Number sets
     (:dword build-num-factor 10

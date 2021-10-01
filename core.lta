@@ -16,6 +16,10 @@
        :push core/make-div :call
        :push core/make-mod :call
 
+       ;; Relational
+       :push core/make-less :call
+       :push core/make-greater :call
+
        ;; Functional
        :push core/make-map :call
        :push core/make-filter :call
@@ -503,6 +507,95 @@
 :label core-mod-not-numbers
        :push args-number-error :prnmem-lb
        :push str-mod :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
+       :ret
+)
+
+;; Relational ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates less than function that decides if the first argument is less than
+;; its second.
+(proc  core/make-less
+       :push 0x656c :push 0 :bufstore
+       :push 0x7373 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/less
+       :push core/create :call
+       :ret
+)
+
+(proc  core/less
+       :second :!NIL :eq
+         :!third :!pair/cdr :!NIL :eq
+         :or :push core-less-args-error :branch
+       :second :!pair/car
+       :!third :!pair/cdr :!pair/car
+       :push number/both-numbers? :call :!not 
+         :push core-less-not-numbers :branch
+       :push number/both-ints? :call :!not 
+         :push core-less-fixed-numbers :branch
+       :swap :!number/value :rot :!number/value
+       :push core-less-end :jump
+
+:label core-less-fixed-numbers
+       :swap :push number/get-value-as-fixed :call
+       :rot :push number/get-value-as-fixed :call
+:label core-less-end
+       :dlt :!->word :push core/bool-to-T-F :call
+       :rot :pop :swap :ret
+
+:label core-less-args-error
+       :push num-args-error-2 :prnmem-lb
+       :push str-less :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
+       :ret
+:label core-less-not-numbers
+       :push args-number-error :prnmem-lb
+       :push str-less :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
+       :ret
+)
+
+;; Creates greater than function that decides if the first argument is greater
+;; than its second.
+(proc  core/make-greater
+       :push 0x7267 :push 0 :bufstore
+       :push 0x6165 :push 1 :bufstore
+       :push 0x6574 :push 2 :bufstore
+       :push 0x0072 :push 3 :bufstore
+       :push core/greater
+       :push core/create :call
+       :ret
+)
+
+(proc  core/greater
+       :second :!NIL :eq
+         :!third :!pair/cdr :!NIL :eq
+         :or :push core-greater-args-error :branch
+       :second :!pair/car
+       :!third :!pair/cdr :!pair/car
+       :push number/both-numbers? :call :!not 
+         :push core-greater-not-numbers :branch
+       :push number/both-ints? :call :!not 
+         :push core-greater-fixed-numbers :branch
+       :swap :!number/value :rot :!number/value
+       :push core-greater-end :jump
+
+:label core-greater-fixed-numbers
+       :swap :push number/get-value-as-fixed :call
+       :rot :push number/get-value-as-fixed :call
+:label core-greater-end
+       :dgt :!->word :push core/bool-to-T-F :call
+       :rot :pop :swap :ret
+
+:label core-greater-args-error
+       :push num-args-error-2 :prnmem-lb
+       :push str-greater :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
+       :ret
+:label core-greater-not-numbers
+       :push args-number-error :prnmem-lb
+       :push str-greater :prnmem-lb :!prn-nl
        :swap :pop :!ERROR :swap :ret
        :ret
 )
