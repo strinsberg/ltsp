@@ -532,7 +532,7 @@
        :rot
 :label core-map-apply-loop
        :second :!NIL :eq
-         :push core-map-assemble :branch
+         :push core-map-end :branch
        :second :!pair/car :!NIL
        :push pair/create :call
        :!fourth :swap :rot
@@ -540,17 +540,10 @@
        :dswap :!pair/cdr :rot
        :push core-map-apply-loop :jump
 
-:label core-map-assemble
-       :rot :pop :swap
-:label core-map-assemble-loop
-       :!third :!zero?
-         :push core-map-end :branch
-       :rot :swap
-       :push pair/create :call
-       :push core-map-assemble-loop :jump
-
 :label core-map-end
-       :rot :pop :swap :ret
+       :rot :pop :rpush
+       :push pair/create-list :call
+       :rpop :ret
 :label core-map-args-error
        :push map-args-error :prnmem-lb
        :pop :!ERROR :swap :ret
@@ -582,7 +575,7 @@
 :label core-filter-apply-loop
        :second :push debug-form :call
        :second :!NIL :eq
-         :push core-filter-assemble :branch
+         :push core-filter-end :branch
        :second :!pair/car :!NIL
        :push pair/create :call
        :!fourth :swap :rot
@@ -597,17 +590,10 @@
        :swap :pop :swap :!pair/cdr :swap
        :push core-filter-apply-loop :jump
 
-:label core-filter-assemble
-       :rot :pop :swap
-:label core-filter-assemble-loop
-       :!third :!zero?
-         :push core-filter-end :branch
-       :rot :swap
-       :push pair/create :call
-       :push core-filter-assemble-loop :jump
-
 :label core-filter-end
-       :rot :pop :swap :ret
+       :rot :pop :rpush
+       :push pair/create-list :call
+       :rpop :ret
 :label core-filter-args-error
        :push filter-args-error :prnmem-lb
        :pop :!ERROR :swap :ret

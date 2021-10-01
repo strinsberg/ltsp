@@ -11,8 +11,8 @@ test_suites = [
     #lt.LtspSuite("Eval Symbols", ev.symbol_tests),
     #lt.LtspSuite("Eval Special Forms", ev.special_form_tests),
     #lt.LtspSuite("Elementary Functions", core.elementary_tests),
-    lt.LtspSuite("Core Artithmetic", core.arithmetic_tests),
-    #lt.LtspSuite("Map Filter Reduce", core.functional_tests),
+    #lt.LtspSuite("Core Artithmetic", core.arithmetic_tests),
+    lt.LtspSuite("Map Filter Reduce", core.functional_tests),
     #lt.LtspSuite("Eval Apply List", core.eval_tests),
 ]
 
