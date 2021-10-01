@@ -402,6 +402,56 @@ rel_bool_tests = [
         "Greater than with 2 mixed",
         [pair("(greater 34.123 34)", "T")],
     ),
+
+    # And
+    PexTest(
+        "And with list of truthy values",
+        [pair("(and 1 0 (list 3 4 5) cons T)", "T")],
+    ),
+    PexTest(
+        "And with list with F",
+        [pair("(and 1 F (list 3 4 5) cons T)", "F")],
+    ),
+    PexTest(
+        "And with list with NIL",
+        [pair("(and 1 (list) cons T)", "F")],
+    ),
+
+    # Or
+    PexTest(
+        "Or with list of falsy values",
+        [pair("(or NIL (list) (quote ()) F)", "F")],
+    ),
+    PexTest(
+        "Or with list with T",
+        [pair("(or NIL F (list) T)", "T")],
+    ),
+    PexTest(
+        "Or with list with value",
+        [pair("(or F (list) cons F)", "T")],
+    ),
+
+    # Not
+    PexTest(
+        "Not with T",
+        [pair("(not T)", "F")],
+    ),
+    PexTest(
+        "Not with F",
+        [pair("(not F)", "T")],
+    ),
+    PexTest(
+        "Not with NIL",
+        [pair("(not (quote ()))", "T")],
+    ),
+    PexTest(
+        "Not with value",
+        [pair("(not 0)", "F")],
+    ),
+    PexTest(
+        "Not with value, subroutine",
+        [pair("(not add)", "F")],
+    ),
 ]
 
 functional_tests = [

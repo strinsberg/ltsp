@@ -20,6 +20,11 @@
        :push core/make-less :call
        :push core/make-greater :call
 
+       ;; Boolean
+       :push core/make-and :call
+       :push core/make-or :call
+       :push core/make-not :call
+
        ;; Functional
        :push core/make-map :call
        :push core/make-filter :call
@@ -598,6 +603,78 @@
        :push str-greater :prnmem-lb :!prn-nl
        :swap :pop :!ERROR :swap :ret
        :ret
+)
+
+;; Boolean ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates an and function that will leave F if any list element is falsy,
+;; otherwise T.
+(proc  core/make-and
+       :push 0x6e61 :push 0 :bufstore
+       :push 0x0064 :push 1 :bufstore
+       :push core/and
+       :push core/create :call
+       :ret
+)
+
+(proc  core/and
+:label core-and-loop
+       :second :!NIL :eq
+         :push core-and-loop-true :branch
+       :second :!pair/car :push sym/falsy? :call
+         :push core-and-loop-false :branch
+       :swap :!pair/cdr :swap
+       :push core-and-loop :jump
+
+:label core-and-loop-true
+       :swap :pop :!T :swap :ret
+:label core-and-loop-false
+       :swap :pop :!F :swap :ret
+)
+
+;; Creates an or function that will leave T if any list element is not falsy,
+;; otherwise F.
+(proc  core/make-or
+       :push 0x726f :push 0 :bufstore
+       :push 0x0000 :push 1 :bufstore
+       :push core/or
+       :push core/create :call
+       :ret
+)
+
+(proc  core/or
+:label core-or-loop
+       :second :!NIL :eq
+         :push core-or-loop-false :branch
+       :second :!pair/car :push sym/falsy? :call :!not
+         :push core-or-loop-true :branch
+       :swap :!pair/cdr :swap
+       :push core-or-loop :jump
+
+:label core-or-loop-true
+       :swap :pop :!T :swap :ret
+:label core-or-loop-false
+       :swap :pop :!F :swap :ret
+)
+
+;; Creates an Not function that will leave T if the first list element is
+;; falsy, otherwise F.
+(proc  core/make-not
+       :push 0x6f6e :push 0 :bufstore
+       :push 0x0074 :push 1 :bufstore
+       :push core/not
+       :push core/create :call
+       :ret
+)
+
+(proc  core/not
+       :second :!NIL :eq
+         :push core-not-no-arg :branch
+       :swap :!pair/car :push sym/falsy? :call
+       :push core/bool-to-T-F :call
+       :swap :ret
+:label core-not-no-arg
+       :swap :pop :!T :swap :ret
 )
 
 ;; Map, filter, reduce ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
