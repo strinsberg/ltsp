@@ -14,6 +14,7 @@
        :push core/make-sub :call
        :push core/make-mult :call
        :push core/make-div :call
+       :push core/make-mod :call
 
        ;; Functional
        :push core/make-map :call
@@ -468,6 +469,41 @@
 ;; Leaves the double word result.
 (proc  core/div-fixed-func
        :rot :push number/get-value-as-fixed :call :fdiv
+       :ret
+)
+
+;; Creates mod function that takes the modulo of its first argument by its
+;; second.
+(proc  core/make-mod
+       :push 0x6f6d :push 0 :bufstore
+       :push 0x0064 :push 1 :bufstore
+       :push core/mod
+       :push core/create :call
+       :ret
+)
+
+(proc  core/mod
+       :second :!NIL :eq
+         :!third :!pair/cdr :!NIL :eq
+         :or :push core-mod-args-error :branch
+       :second :!pair/car
+       :!third :!pair/cdr :!pair/car
+       :push number/both-numbers? :call :!not 
+         :push core-mod-not-numbers :branch
+       :swap :push number/get-value-as-int :call
+       :rot :push number/get-value-as-int :call
+       :dmod :push number/create-int :call
+       :rot :pop :swap :ret
+
+:label core-mod-args-error
+       :push num-args-error-2 :prnmem-lb
+       :push str-mod :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
+       :ret
+:label core-mod-not-numbers
+       :push args-number-error :prnmem-lb
+       :push str-mod :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
        :ret
 )
 

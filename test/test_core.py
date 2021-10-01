@@ -330,6 +330,25 @@ arithmetic_tests = [
         "Divide when there is a non number in the list, fixed",
         [pair("(div -123.46 98.765 (quote a))", "ERROR")],
     ),
+
+    # Mod
+    PexTest(
+        "Modulo with 2 ints",
+        [pair("(mod 6 4)", "2")],
+    ),
+    PexTest(
+        "Modulo with 2 floats, converted",
+        [pair("(mod 6.789 4.234)", "2")],
+    ),
+    PexTest(
+        "Modulo with 2 ints, first negative",
+        [pair("(mod -6 4)", "-2")],
+    ),
+    PexTest(
+        "Modulo with 2 ints, second negative",
+        [pair("(mod 6 -4)", "2")],
+    ),
+
 ]
 
 functional_tests = [

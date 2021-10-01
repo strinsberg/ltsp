@@ -32,6 +32,7 @@
     (:str prompt "ltsp> ")
     (:str str-apply "apply")
     (:str str-eval "eval")
+    (:str str-mod "mod")
 
     ;; Number sets
     (:dword build-num-factor 10
@@ -58,6 +59,7 @@
     (:str reduce-args-error "*** Reduce requires 3 arguments\n")
     (:str num-args-error-1 "*** Function requires 1 argument: ")
     (:str num-args-error-2 "*** Function requires 2 arguments: ")
+    (:str args-number-error "*** Function requires numeric arguments: ")
   )
     
   (main

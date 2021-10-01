@@ -65,6 +65,15 @@
        :ret
 )
 
+;; Takes a double word on the stack and creates a new integer memory object.
+;; Leaves the address of the new memory on the stack.
+(proc  number/create-int
+       :push alloc/new-pair :call
+       :push 0x0300 :second :!number/set-info
+       :rot :rot :!third :!number/set-value
+       :ret
+)
+
 ;; Takes the address of a number and returns the value as an int.
 ;; If the number is an int just return the value, and if it is fixed then
 ;; scale it down and return that value.
