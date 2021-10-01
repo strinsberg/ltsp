@@ -637,9 +637,15 @@
 ;; Takes an env and a list of arguments. Leaves the env and the evaluation
 ;; of the first argument.
 (proc  core/eval
+       :second :!NIL :eq
+         :push core-eval-args-error :branch
        :swap :!pair/car :swap
        :push eval/form :call
        :ret
+:label core-eval-args-error
+       :push num-args-error-1 :prnmem-lb
+       :push str-eval :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
 )
 
 ;; Creates a  symbol for a function that creates a list from its arguments.
@@ -676,11 +682,19 @@
 ;; and the second argument is the list of arguments to the procedure. Leaves
 ;; the env and the application of the procedure to its list of arguments.
 (proc  core/apply
+       :second :!NIL :eq
+         :!third :!pair/cdr :!NIL :eq
+         :or :push core-apply-args-error :branch
        :second :!pair/car
        :rot :!pair/cdr :!pair/car
        :rot
        :push eval/apply-sub-or-proc :call
        :ret
+
+:label core-apply-args-error
+       :push num-args-error-2 :prnmem-lb
+       :push str-apply :prnmem-lb :!prn-nl
+       :swap :pop :!ERROR :swap :ret
 )
 
 )

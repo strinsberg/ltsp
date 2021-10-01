@@ -392,7 +392,7 @@ functional_tests = [
     ),
 ]
 
-other_tests = [
+eval_tests = [
     # list
     PexTest(
         "Create a list form a vaiable number of arguments",
