@@ -74,12 +74,22 @@
        ;; If there is a name in the buffer open it as a file
        :push 0 :bufload :!zero?
          :push main-run-repl :branch
-       ;:push core/load-all :call
-       ;:bfp :open-file
-       ;:push read/form :call
-       ;:close-file
-       ;:!alloc/env-start
-       ;:push eval/form :call
+       ;; Save filename because loading all uses buffer
+       :push 30000 :push 256 :buf-to-mem
+       :push core/load-all :call
+       :push 30000 :push 256 :mem-to-buf
+       :open
+       ;; If we ever want more than one form we need a special read
+       ;; However right now the vm and this program do not really deal with
+       ;; EOF, so I do not know how we would decide to end the evaluation of
+       ;; forms yet.
+       :push read/repl :call
+       :close
+       :!alloc/env-start
+       :push eval/form :call
+       :pop
+       :push print/form :call
+       :!prn-nl
        :halt
 
        ;; If there is no name in the buffer run the repl
