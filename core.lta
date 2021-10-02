@@ -2,8 +2,6 @@
 
 ;; Loads all of the data for core functions that use assembled subroutines
 (proc  core/load-all
-       :push core/make-main :call
-
        ;; Elementary
        :push core/make-cons :call
        :push core/make-car :call
@@ -36,30 +34,6 @@
        :push core/make-eval :call
        :push core/make-list :call
        :push core/make-apply :call
-       :ret
-)
-
-(proc  core/make-main
-       :push 0x6d2a :push 0 :bufstore
-       :push 0x6961 :push 1 :bufstore
-       :push 0x2a6e :push 2 :bufstore
-       :push 0x0000 :push 3 :bufstore
-       :push core/*main*
-       :push core/create :call
-       :ret
-)
-
-(proc  core/*main*
-       ;; Start REPL
-:label main-loop
-       :push prompt :prnmem-lb
-       :push read/repl :call
-       :!alloc/env-start  ;; builtin env will be on top
-       :push eval/form :call
-       :pop  ;; remove the env so it will only be defs/builtins for next loop
-       :push print/form :call
-       :!prn-nl :!prn-nl
-       :push main-loop :jump
        :ret
 )
 

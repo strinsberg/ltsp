@@ -70,25 +70,32 @@
 (main
        ;; Setup the free memory and core function library
        :push alloc/setup-fm :call
-       :push core/load-all :call
-       :!MAIN :!sym/name-ptr
-       :push symlist/has-name? :call
-       :first :!false :eq
-         :push main-symbol-not-found :branch
-       :!alloc/env-start
-       :push env/find :call
-       :first :!false :eq
-         :push main-entry-point-not-found :branch
-       :!NIL
-       :!alloc/env-start
-       :push eval/apply-sub-or-proc :call
+
+       ;; If there is a name in the buffer open it as a file
+       :push 0 :bufload :!zero?
+         :push main-run-repl :branch
+       ;:push core/load-all :call
+       ;:bfp :open-file
+       ;:push read/form :call
+       ;:close-file
+       ;:!alloc/env-start
+       ;:push eval/form :call
        :halt
 
-:label main-symbol-not-found
-       :push no-main-symbol :prnmem-lb
-       :halt
-:label main-entry-point-not-found
-       :push no-main-found :prnmem-lb
+       ;; If there is no name in the buffer run the repl
+:label main-run-repl
+       :push core/load-all :call
+:label main-loop
+       :push prompt :prnmem-lb
+       :push read/repl :call
+       :!alloc/env-start  ;; builtin env will be on top
+       :push eval/form :call
+       :pop  ;; remove the env so it will only be defs/builtins for next loop
+       :push print/form :call
+       :!prn-nl :!prn-nl
+       :push main-loop :jump
+
+       ;; Still requires C^c to quit
        :halt
 )
 
