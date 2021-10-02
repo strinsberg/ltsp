@@ -15,18 +15,19 @@
     (:word lambda 6 0x0200  0x616c 0x626d 0x6164 0x0000  0x21)
     (:word let    6 0x0200  0x656c 0x0074 0x0000 0x0000  0x27)
     (:word ERROR  6 0x0200  0x5245 0x4f52 0x0052 0x0000  0x2d)
+    (:word main   6 0x0200  0x6d2a 0x6961 0x2a6e 0x0000  0x33)
     ;; :!builtin-syms-start should point to 6 above the last next val
-    ;; currently 0x33. Add 6 for every addition
+    ;; currently 0x39. Add 6 for every addition
     ;; ***Adding new symbols means updating the env items too***
     ;; The env symbols should start 6 past the above address
 
     ;; Builtin environment elements
     (:word env-NIL    4 0x0f00 0x03 0x03 0x00)
-    (:word env-T      4 0x0f00 0x09 0x09 0x39)
-    (:word env-F      4 0x0f00 0x0F 0x0F 0x3d)
-    (:word env-ERROR  4 0x0f00 0x33 0x33 0x41)
+    (:word env-T      4 0x0f00 0x09 0x09 0x3f)
+    (:word env-F      4 0x0f00 0x0F 0x0F 0x43)
+    (:word env-ERROR  4 0x0f00 0x33 0x33 0x47)
     ;; Each starts 4 past the previous one
-    ;; The last is currently 0x45
+    ;; The last is currently 0x4b
 
     ;; strings
     (:str prompt "ltsp> ")
@@ -62,100 +63,108 @@
     (:str num-args-error-1 "*** Function requires 1 argument: ")
     (:str num-args-error-2 "*** Function requires 2 arguments: ")
     (:str args-number-error "*** Function requires numeric arguments: ")
+    (:str no-main-found "*** No *main* function was found\n")
+    (:str no-main-symbol "*** No *main* symbol was found\n")
   )
     
-  (main
-    ;; Setup the free memory and core function library
-    :push alloc/setup-fm :call
-    :push core/load-all :call
+(main
+       ;; Setup the free memory and core function library
+       :push alloc/setup-fm :call
+       :push core/load-all :call
+       :!MAIN :!sym/name-ptr
+       :push symlist/has-name? :call
+       :first :!false :eq
+         :push main-symbol-not-found :branch
+       :!alloc/env-start
+       :push env/find :call
+       :first :!false :eq
+         :push main-entry-point-not-found :branch
+       :!NIL
+       :!alloc/env-start
+       :push eval/apply-sub-or-proc :call
+       :halt
 
-    ;; Start REPL
-    :label main-loop
-    :push prompt :prnmem-lb
-    :push read/repl :call
-    :!alloc/env-start  ;; builtin env will be on top
-    :push eval/form :call
-    :pop  ;; remove the env so it will only be defs/builtins for next loop
-    :push print/form :call
-    :!prn-nl :!prn-nl
-    :push main-loop :jump
+:label main-symbol-not-found
+       :push no-main-symbol :prnmem-lb
+       :halt
+:label main-entry-point-not-found
+       :push no-main-found :prnmem-lb
+       :halt
+)
 
-    ;; Quit. Needs some check in the repl to jump to here.
-    ;; Right now infinite loop requires control c
-    :halt)
+;; Constants and flags
+;; All should be invalid addresses for in memory objects, not guaranteed yet
+(macro :!false :push 0)
+(macro :!true :push 1)
+(macro :!error :push 2)
+(macro :!end-pair :push -1)
+(macro :!read-int :push -2)
+(macro :!read-fixed :push -3)
 
-  ;; Constants and flags
-  ;; All should be invalid addresses for in memory objects, not guaranteed yet
-  (macro :!false :push 0)
-  (macro :!true :push 1)
-  (macro :!error :push 2)
-  (macro :!end-pair :push -1)
-  (macro :!read-int :push -2)
-  (macro :!read-fixed :push -3)
+;; Builtin Symbol Addresses
+(macro :!nil :push 0x03)
+(macro :!NIL :push 0x03)
+(macro :!T :push 0x09)
+(macro :!F :push 0x0F)
+(macro :!QUOTE :push 0x15)
+(macro :!COND :push 0x1b)
+(macro :!DEFINE :push 0x21)
+(macro :!LAMBDA :push 0x27)
+(macro :!LET :push 0x2d)
+(macro :!ERROR :push 0x33)
+(macro :!MAIN :push 0x39)
+(macro :!builtin-syms-start :push 0x39)
+(macro :!builtin-env-start :push 0x4b)
 
-  ;; Builtin Symbol Addresses
-  (macro :!nil :push 0x03)
-  (macro :!NIL :push 0x03)
-  (macro :!T :push 0x09)
-  (macro :!F :push 0x0F)
-  (macro :!QUOTE :push 0x15)
-  (macro :!COND :push 0x1b)
-  (macro :!DEFINE :push 0x21)
-  (macro :!LAMBDA :push 0x27)
-  (macro :!LET :push 0x2d)
-  (macro :!ERROR :push 0x33)
-  (macro :!builtin-syms-start :push 0x33)
-  (macro :!builtin-env-start :push 0x45)
+;; Characters
+(macro :!ch-nl :push 0x0A)
+(macro :!ch-tab :push 0x09)
+(macro :!ch-newline :push 0x0A)
+(macro :!ch-space :push 0x20)
+(macro :!ch-dquote :push 0x22)
+(macro :!ch-hash :push 0x23)
+(macro :!ch-dollar :push 0x24)
+(macro :!ch-quote :push 0x27)
+(macro :!ch-lp :push 0x28)
+(macro :!ch-rp :push 0x29)
+(macro :!ch-plus :push 0x2B)
+(macro :!ch-comma :push 0x2C)
+(macro :!ch-minus :push 0x2D)
+(macro :!ch-dot :push 0x2E)
+(macro :!ch-zero :push 0x30)
+(macro :!ch-nine :push 0x39)
+(macro :!ch-semi :push 0x3B)
+(macro :!ch-lsq :push 0x5B)
+(macro :!ch-rsq :push 0x5D)
+(macro :!ch-lbr :push 0x7B)
+(macro :!ch-rbr :push 0x7D)
 
-  ;; Characters
-  (macro :!ch-nl :push 0x0A)
-  (macro :!ch-tab :push 0x09)
-  (macro :!ch-newline :push 0x0A)
-  (macro :!ch-space :push 0x20)
-  (macro :!ch-dquote :push 0x22)
-  (macro :!ch-hash :push 0x23)
-  (macro :!ch-dollar :push 0x24)
-  (macro :!ch-quote :push 0x27)
-  (macro :!ch-lp :push 0x28)
-  (macro :!ch-rp :push 0x29)
-  (macro :!ch-plus :push 0x2B)
-  (macro :!ch-comma :push 0x2C)
-  (macro :!ch-minus :push 0x2D)
-  (macro :!ch-dot :push 0x2E)
-  (macro :!ch-zero :push 0x30)
-  (macro :!ch-nine :push 0x39)
-  (macro :!ch-semi :push 0x3B)
-  (macro :!ch-lsq :push 0x5B)
-  (macro :!ch-rsq :push 0x5D)
-  (macro :!ch-lbr :push 0x7B)
-  (macro :!ch-rbr :push 0x7D)
+;; helpers
+(macro :!third :push 2 :nth)
+(macro :!fourth :push 3 :nth)
+(macro :!fifth :push 4 :nth)
+(macro :!sixth :push 5 :nth)
 
-  ;; helpers
-  (macro :!third :push 2 :nth)
-  (macro :!fourth :push 3 :nth)
-  (macro :!fifth :push 4 :nth)
-  (macro :!sixth :push 5 :nth)
+;; Debugging
+(macro :!debug-char :first :prnch :push 10 :prnch)
+(macro :!debug-fst :first :wprn :push 10 :prnch)
+(macro :!debug-sec :second :wprn :push 10 :prnch)
+(macro :!debug-thr :push 2 :nth :wprn :push 10 :prnch)
+(macro :!debug-rs :rgrab :wprn :push 10 :prnch)
+(proc debug-form :push print/form :call :!prn-nl :ret)
+(proc debug-3 :!debug-fst :!debug-sec :!debug-thr :ret)
 
-  ;; Debugging
-  (macro :!debug-char :first :prnch :push 10 :prnch)
-  (macro :!debug-fst :first :wprn :push 10 :prnch)
-  (macro :!debug-sec :second :wprn :push 10 :prnch)
-  (macro :!debug-thr :push 2 :nth :wprn :push 10 :prnch)
-  (macro :!debug-rs :rgrab :wprn :push 10 :prnch)
-  (proc debug-form :push print/form :call :!prn-nl :ret)
-  (proc debug-3 :!debug-fst :!debug-sec :!debug-thr :ret)
-  
-  ;; Includes
-  (include "read.lta")
-  (include "eval.lta")
-  (include "print.lta")
-  (include "allocate.lta")
-  (include "symlist.lta")
-  (include "env.lta")
-  (include "symbol.lta")
-  (include "number.lta")
-  (include "pair.lta")
-  (include "procedure.lta")
-  (include "core.lta")
-  (include "stdlib" odd?)
+;; Includes
+(include "read.lta")
+(include "eval.lta")
+(include "print.lta")
+(include "allocate.lta")
+(include "symlist.lta")
+(include "env.lta")
+(include "symbol.lta")
+(include "number.lta")
+(include "pair.lta")
+(include "procedure.lta")
+(include "core.lta")
+(include "stdlib" odd?)
 )

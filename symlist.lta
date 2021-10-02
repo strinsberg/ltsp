@@ -21,7 +21,7 @@
 )
   
 ;; Takes the address of a symbol name check if it equals any of the
-;; stored symbol names. Put the address of the found symbol or nil (0)
+;; stored symbol names. Put the address of the found symbol or false (0)
 (proc  symlist/has-name?
        :!alloc/symlist-head                    ;; Add address of first symbol
 
