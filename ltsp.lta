@@ -1,99 +1,126 @@
 (lt64-asm-prog
-  (static
-    ;; buitlin symbols
-    ;; Are setup manually assuming memory starts at 3
-    ;; Do not put anything before these.
-    ;; A sym is 6 words long. And each word for the name is ordered low
-    ;; byte high byte so abcd is ba dc
-    ;;              type    print-name                   next
-    (:word NIL    6 0x0200  0x494e 0x004c 0x0000 0x0000  0x00)
-    (:word T      6 0x0200  0x0054 0x0000 0x0000 0x0000  0x03)
-    (:word F      6 0x0200  0x0046 0x0000 0x0000 0x0000  0x09)
-    (:word quote  6 0x0200  0x7571 0x746f 0x0065 0x0000  0x0f)
-    (:word cond   6 0x0200  0x6f63 0x646e 0x0000 0x0000  0x15)
-    (:word define 6 0x0200  0x6564 0x6966 0x656e 0x0000  0x1b)
-    (:word lambda 6 0x0200  0x616c 0x626d 0x6164 0x0000  0x21)
-    (:word let    6 0x0200  0x656c 0x0074 0x0000 0x0000  0x27)
-    (:word ERROR  6 0x0200  0x5245 0x4f52 0x0052 0x0000  0x2d)
-    (:word main   6 0x0200  0x6d2a 0x6961 0x2a6e 0x0000  0x33)
-    ;; :!builtin-syms-start should point to 6 above the last next val
-    ;; currently 0x39. Add 6 for every addition
-    ;; ***Adding new symbols means updating the env items too***
-    ;; The env symbols should start 6 past the above address
 
-    ;; Builtin environment elements
-    (:word env-NIL    4 0x0f00 0x03 0x03 0x00)
-    (:word env-T      4 0x0f00 0x09 0x09 0x3f)
-    (:word env-F      4 0x0f00 0x0F 0x0F 0x43)
-    (:word env-ERROR  4 0x0f00 0x33 0x33 0x47)
-    ;; Each starts 4 past the previous one
-    ;; The last is currently 0x4b
+(static
+       ;; buitlin symbols
+       ;; Are setup manually assuming memory starts at 3
+       ;; Do not put anything before these.
+       ;; A sym is 6 words long. And each word for the name is ordered low
+       ;; byte high byte so abcd is ba dc
+       ;;              type    print-name                   next
+       (:word NIL    6 0x0200  0x494e 0x004c 0x0000 0x0000  0x00)
+       (:word T      6 0x0200  0x0054 0x0000 0x0000 0x0000  0x03)
+       (:word F      6 0x0200  0x0046 0x0000 0x0000 0x0000  0x09)
+       (:word quote  6 0x0200  0x7571 0x746f 0x0065 0x0000  0x0f)
+       (:word cond   6 0x0200  0x6f63 0x646e 0x0000 0x0000  0x15)
+       (:word define 6 0x0200  0x6564 0x6966 0x656e 0x0000  0x1b)
+       (:word lambda 6 0x0200  0x616c 0x626d 0x6164 0x0000  0x21)
+       (:word let    6 0x0200  0x656c 0x0074 0x0000 0x0000  0x27)
+       (:word ERROR  6 0x0200  0x5245 0x4f52 0x0052 0x0000  0x2d)
+       (:word main   6 0x0200  0x6d2a 0x6961 0x2a6e 0x0000  0x33)
+       ;; :!builtin-syms-start should point to 6 above the last next val
+       ;; currently 0x39. Add 6 for every addition
+       ;; ***Adding new symbols means updating the env items too***
+       ;; The env symbols should start 6 past the above address
 
-    ;; strings
-    (:str prompt "ltsp> ")
-    (:str str-apply "apply")
-    (:str str-eval "eval")
-    (:str str-mod "mod")
-    (:str str-less "less")
-    (:str str-greater "greater")
+       ;; Builtin environment elements
+       (:word env-NIL    4 0x0f00 0x03 0x03 0x00)
+       (:word env-T      4 0x0f00 0x09 0x09 0x3f)
+       (:word env-F      4 0x0f00 0x0F 0x0F 0x43)
+       (:word env-ERROR  4 0x0f00 0x33 0x33 0x47)
+       ;; Each starts 4 past the previous one
+       ;; The last is currently 0x4b
 
-    ;; Number sets
-    (:dword build-num-factor 10
-            1 10 100 1000 10000 100000             ;; 10^0 - 10^5
-            1000000 10000000 100000000 1000000000) ;; 10^6 - 10^9
+       ;; strings
+       (:str prompt "ltsp> ")
+       (:str str-apply "apply")
+       (:str str-eval "eval")
+       (:str str-mod "mod")
+       (:str str-less "less")
+       (:str str-greater "greater")
+
+       ;; Number sets
+       (:dword build-num-factor 10
+               1 10 100 1000 10000 100000             ;; 10^0 - 10^5
+               1000000 10000000 100000000 1000000000) ;; 10^6 - 10^9
             
-    ;; error text
-    (:str invalid-start-char "*** Char cannot start a symbol: ")
-    (:str invalid-symbol-char "*** Char cannot be in a symbol: ")
-    (:str invalid-number-char "*** Char cannot be in a number: ")
-    (:str number-too-large
-    "*** Numbers are limited to a max of 10 digits, including decimal digits")
-    (:str number-too-many-decimals
-    "*** Fixed point numbers are limited to a maximum of 3 decimal digits")
-    (:str symbol-unfound-error "*** Symbol has not been defined: ")
-    (:str symbol-already-defined "*** Symbol has already been defined: ")
-    (:str invalid-define-target "*** Invalid target for define: ")
-    (:str cannot-apply "*** Cannot apply: Not a procedure: ")
-    (:str not-a-number-error "*** Cannot do arithmetic: Not a number: ")
-    (:str not-special-error "*** Panic: Tried evaluating as a special form: ")
-    (:str cons-args-error "*** Cons requires 2 arguments\n")
-    (:str map-args-error "*** Map requires 2 arguments\n")
-    (:str filter-args-error "*** Filter requires 2 arguments\n")
-    (:str reduce-args-error "*** Reduce requires 3 arguments\n")
-    (:str num-args-error-1 "*** Function requires 1 argument: ")
-    (:str num-args-error-2 "*** Function requires 2 arguments: ")
-    (:str args-number-error "*** Function requires numeric arguments: ")
-    (:str no-main-found "*** No *main* function was found\n")
-    (:str no-main-symbol "*** No *main* symbol was found\n")
-  )
+       ;; error text
+       (:str invalid-start-char "*** Char cannot start a symbol: ")
+       (:str invalid-symbol-char "*** Char cannot be in a symbol: ")
+       (:str invalid-number-char "*** Char cannot be in a number: ")
+       (:str number-too-large
+        "*** Numbers are limited to a max of 10 digits, including decimal digits")
+       (:str number-too-many-decimals
+        "*** Fixed point numbers are limited to a maximum of 3 decimal digits")
+       (:str symbol-unfound-error "*** Symbol has not been defined: ")
+       (:str symbol-already-defined "*** Symbol has already been defined: ")
+       (:str invalid-define-target "*** Invalid target for define: ")
+       (:str cannot-apply "*** Cannot apply: Not a procedure: ")
+       (:str not-a-number-error "*** Cannot do arithmetic: Not a number: ")
+       (:str not-special-error "*** Panic: Tried evaluating as a special form: ")
+       (:str cons-args-error "*** Cons requires 2 arguments\n")
+       (:str map-args-error "*** Map requires 2 arguments\n")
+       (:str filter-args-error "*** Filter requires 2 arguments\n")
+       (:str reduce-args-error "*** Reduce requires 3 arguments\n")
+       (:str num-args-error-1 "*** Function requires 1 argument: ")
+       (:str num-args-error-2 "*** Function requires 2 arguments: ")
+       (:str args-number-error "*** Function requires numeric arguments: ")
+       (:str no-main-found "*** No *main* function was found\n")
+)
+
+;; Main and Program Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 (main
        ;; Setup the free memory and core function library
        :push alloc/setup-fm :call
 
-       ;; If there is a name in the buffer open it as a file
        :push 0 :bufload :!zero?
          :push main-run-repl :branch
+       ;; If there is a name in the buffer open it as a file
+       :push main/run-program :call
+       :halt
+
+:label main-run-repl
+       ;; If there is no file name then start the repl
+       :push main/run-repl :call
+       :halt
+)
+
+(proc  main/run-program
        ;; Save filename because loading all uses buffer
        :push 30000 :push 256 :buf-to-mem
        :push core/load-all :call
        :push 30000 :push 256 :mem-to-buf
-       :open
-       ;; If we ever want more than one form we need a special read
-       ;; However right now the vm and this program do not really deal with
-       ;; EOF, so I do not know how we would decide to end the evaluation of
-       ;; forms yet.
-       :push read/repl :call
-       :close
-       :!alloc/env-start
-       :push eval/form :call
-       :pop
-       :push print/form :call
-       :!prn-nl
-       :halt
 
-       ;; If there is no name in the buffer run the repl
-:label main-run-repl
+       ;; Setup for load
+       :!NIL
+       :!alloc/env-start
+       :push core/load :call
+       ;; check for errors once load leaves them properly
+       :pop :pop
+
+       ;; Look for *main*
+       :push main
+       :!alloc/env-start
+       :push env/find :call
+       :first :!false :eq
+         :push main-run-program-no-main-function :branch
+
+       ;; Main is found so apply it to an empty list
+       :push 0 :swap
+       :!NIL :!NIL
+       :push pair/create-list :call
+       :!alloc/env-start
+       :push core/apply :call
+       :pop
+       :push debug-form :call ;; only for testing, replace with a pop later
+       :ret
+
+:label main-run-program-no-main-function
+       :push no-main-found :prnmem-lb
+       :ret
+)
+
+(proc  main/run-repl
        :push core/load-all :call
 :label main-loop
        :push prompt :prnmem-lb
@@ -104,10 +131,11 @@
        :push print/form :call
        :!prn-nl :!prn-nl
        :push main-loop :jump
-
-       ;; Still requires C^c to quit
-       :halt
+       ;; No way to exit except control C for now
+       :ret
 )
+
+;; Global Macros ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Constants and flags
 ;; All should be invalid addresses for in memory objects, not guaranteed yet
@@ -171,7 +199,7 @@
 (proc debug-form :push print/form :call :!prn-nl :ret)
 (proc debug-3 :!debug-fst :!debug-sec :!debug-thr :ret)
 
-;; Includes
+;; Includes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (include "read.lta")
 (include "eval.lta")
 (include "print.lta")
@@ -184,4 +212,5 @@
 (include "procedure.lta")
 (include "core.lta")
 (include "stdlib" odd?)
+
 )

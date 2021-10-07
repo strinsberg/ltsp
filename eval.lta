@@ -249,7 +249,7 @@
        :!third :!third :first :!proc/env
        :push env/add :call
        :rot :!proc/set-env
-       :!T :swap
+       :!T :swap :rot :pop
        :ret
 :label eval-apply-define-error
        :rot :pop :ret

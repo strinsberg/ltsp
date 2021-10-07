@@ -34,6 +34,7 @@
        :push core/make-eval :call
        :push core/make-list :call
        :push core/make-apply :call
+       :push core/make-load :call
        :ret
 )
 
@@ -153,9 +154,8 @@
        :ret
 )
 
-;; Currently takes the ENV on top
-;; Takes a list of evaluated arguments and conses the first onto the second.
-;; Leaves the new pair that was created.
+;; Takes an env and list of evaluated arguments and conses the first onto the
+;; second. Leaves the new pair that was created.
 (proc  core/cons
        :swap ;; put env on bottom
        :first :!NIL :eq
@@ -887,6 +887,44 @@
        :push num-args-error-2 :prnmem-lb
        :push str-apply :prnmem-lb :!prn-nl
        :swap :pop :!ERROR :swap :ret
+)
+
+;; Creates a symbol for a function that will load a file and evaluate all of
+;; the forms in it.
+(proc  core/make-load
+       :push 0x6f6c :push 0 :bufstore
+       :push 0x6461 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/load
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env, an empty list of arguments and expects a filename in the
+;; buffer. Opens the file and evaluates the forms one by one, adding any
+;; defines to the env. Leaves the updated env and NIL.
+(proc  core/load
+       :open
+       :readch
+:label core-load-loop
+       :push read/eat-ws :call
+       :eof?
+         :push core-load-end :branch
+       :push read/form :call
+       ;; check for error
+       ;; left the form address and the next char
+       :!alloc/env-start
+       :push eval/form :call
+       ;; check for error
+       :pop :pop
+       :push core-load-loop :jump
+
+:label core-load-end
+       :close :reset-eof
+       :pop :pop :pop
+       :!NIL
+       :!alloc/env-start
+       :ret
 )
 
 )
