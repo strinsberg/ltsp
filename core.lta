@@ -39,6 +39,8 @@
 
        ;; I/0
        :push core/make-read-num :call
+       :push core/make-prn :call
+       :push core/make-prnln :call
 
        :ret
 )
@@ -1001,7 +1003,7 @@
        :first :push read/starts-number? :call :!not
          :push read-num-invalid :branch
        :push read/number :call
-       :swap :pop :swap
+       :swap :pop :swap :rot :pop
        :second :!ERROR :eq
          :push read-num-error-end :branch
        :ret
@@ -1009,10 +1011,47 @@
 :label read-num-invalid
        :push invalid-number-start :prnmem-lb
        :first :prnch :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
-       :!ERROR :swap
+       :!ERROR :swap :rot :pop
 :label read-num-error-end
        :readln :pop
        :ret
 )
+
+;; Creates a symbol for a function that will print a form as is.
+(proc  core/make-prn
+       :push 0x7270 :push 0 :bufstore
+       :push 0x006e :push 1 :bufstore
+       :push core/prn
+       :push core/create :call
+       :ret
+)
+
+(proc  core/prn
+       :swap
+       :first :!NIL :eq
+         :push core-prn-form :branch
+       :!pair/car
+:label core-prn-form
+       :push print/form :call
+       :!NIL :swap :ret
+)
+
+;; Creates a symbol for a function that will print a form followed
+;; by a newline.
+(proc  core/make-prnln
+       :push 0x7270 :push 0 :bufstore
+       :push 0x6c6e :push 1 :bufstore
+       :push 0x006e :push 2 :bufstore
+       :push core/prnln
+       :push core/create :call
+       :ret
+)
+
+(proc  core/prnln
+       :push core/prn :call
+       :!prn-nl
+       :ret
+)
+
 
 )
