@@ -35,6 +35,7 @@
        :push core/make-list :call
        :push core/make-apply :call
        :push core/make-load :call
+       :push core/make-dump :call
        :ret
 )
 
@@ -926,5 +927,52 @@
        :!alloc/env-start
        :ret
 )
+
+;; NEED a compile function that dumps memory to a file in a way that it can
+;; be loaded with the standalone vm. This will likely mean checking the program
+;; length and then just dumping all memory, even if it is not used, as we do not
+;; really know without running some kind of loop. Since the memory is only
+;; 128k words it will not be to large of a file. For now it is fine.
+;; For now the idea would be to put this after the *main* form in a file. Then
+;; it will load all the defines when run and produce the output file, without
+;; having the compile as part of the runnable program.
+
+;; Creates a symbol for a function that will load a file and evaluate all of
+;; the forms in it.
+(proc  core/make-dump
+       :push 0x7564 :push 0 :bufstore
+       :push 0x706d :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/dump
+       :push core/create :call
+       :ret
+)
+
+(proc  core/dump
+       :push dump-start :prnmem-lb
+       :bfp :wprn :!prn-nl
+       :push dump-mid :prnmem-lb
+       :!init-rcount
+:label core-dump-loop
+       :!rcount :push 20 :mod :!zero? :!not
+         :!rcount :!zero?
+         :or :push core-dump-no-newline :branch
+       :push dump-newline :prnmem-lb
+:label core-dump-no-newline
+       :!rcount :load-lb :wprn
+       :!ch-space :prnch
+       :!rcount :push 0xffff :eq
+         :push core-dump-loop-end :branch
+       :!inc-rcount
+       :push core-dump-loop :jump
+
+
+:label core-dump-loop-end
+       :!end-rcount
+       :push dump-end :prnmem-lb
+       :ret
+)
+
+
 
 )

@@ -37,6 +37,10 @@
        (:str str-mod "mod")
        (:str str-less "less")
        (:str str-greater "greater")
+       (:str dump-start "{\n  :length ")
+       (:str dump-mid "  :memory [")
+       (:str dump-newline "\n           ")
+       (:str dump-end "]\n}\n")
 
        ;; Number sets
        (:dword build-num-factor 10
@@ -70,6 +74,14 @@
 ;; Main and Program Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 (main
+       ;; If this is a compiled program just run *main*
+       :push main
+       :!alloc/env-start
+       :push env/find :call
+         :first
+         :push main-run-compiled :branch
+       :pop
+
        ;; Setup the free memory and core function library
        :push alloc/setup-fm :call
 
@@ -83,13 +95,18 @@
        ;; If there is no file name then start the repl
        :push main/run-repl :call
        :halt
+:label main-run-compiled
+       ;; If memory is already setup from a memory dump
+       ;; then we are just running the *main* function
+       :push main/run-compiled :call
+       :halt
 )
 
 (proc  main/run-program
        ;; Save filename because loading all uses buffer
-       :push 30000 :push 256 :buf-to-mem
+       :push 0xeeee :fmp :sub :push 256 :buf-to-mem
        :push core/load-all :call
-       :push 30000 :push 256 :mem-to-buf
+       :push 0xeeee :fmp :sub :push 256 :mem-to-buf
 
        ;; Setup for load
        :!NIL
@@ -112,7 +129,8 @@
        :!alloc/env-start
        :push core/apply :call
        :pop
-       :push debug-form :call ;; only for testing, replace with a pop later
+       ;:push debug-form :call ;; only for testing, replace with a pop later
+       :pop
        :ret
 
 :label main-run-program-no-main-function
@@ -132,6 +150,18 @@
        :!prn-nl :!prn-nl
        :push main-loop :jump
        ;; No way to exit except control C for now
+       :ret
+)
+
+(proc  main/run-compiled
+       ;; Apply main to an empty list
+       :push 0 :swap
+       :!NIL :!NIL
+       :push pair/create-list :call
+       :!alloc/env-start
+       :push core/apply :call
+       :pop
+       :push debug-form :call ;; only for testing, replace with a pop later
        :ret
 )
 

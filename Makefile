@@ -6,7 +6,7 @@ PROGRAM=ltsp
 DEBUG=ltsp-debug
 TEST=ltsp-test
 
-LTASM= lt64-asm-0.0.3-4.jar
+LTASM= lt64-asm-0.0.3-4-standalone.jar
 ASM_FLAGS= -c $(CFILE)
 ASM_TEST_FLAGS= -c $(TEST_CFILE)
 
@@ -38,4 +38,4 @@ lta-tests: clean
 
 .PHONY: clean
 clean:
-	rm -rf $(PROGRAM) $(DEBUG) $(TEST) $(CFILE) $(TEST_CFILE) *.c
+	rm -rf $(PROGRAM) $(DEBUG) $(TEST) $(CFILE) $(TEST_CFILE) *.c *.out *.dump

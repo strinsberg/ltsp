@@ -5,3 +5,6 @@ ltsp-debug
 ltsp-test
 __pycache__/*
 test/__pycache__/*
+
+*.dump
+*.out

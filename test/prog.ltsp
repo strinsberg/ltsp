@@ -5,3 +5,4 @@
     (let ((a 2))
       (add 1 a 3 4 b))))
 
+(dump)
