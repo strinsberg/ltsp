@@ -29,6 +29,7 @@
        :push core/make-map :call
        :push core/make-filter :call
        :push core/make-reduce :call
+       :push core/make-do :call  ;; opposite of functional
 
        ;; Eval, apply, list, memory
        :push core/make-eval :call
@@ -820,6 +821,30 @@
        :pop :!ERROR :swap :ret
 )
 
+;; Creates a symbol for a function that will eval each form in a list of forms.
+(proc  core/make-do
+       :push 0x6f64 :push 0 :bufstore
+       :push 0x0000 :push 1 :bufstore
+       :push core/do
+       :push core/create :call
+       :ret
+)
+
+(proc  core/do
+:label core-do-loop
+       :second :!NIL :eq
+         :push core-do-nil :branch
+       :second :!pair/cdr :!NIL :eq
+         :push core-do-end :branch
+       :swap :!pair/cdr :swap
+       :push core-do-loop :jump
+
+:label core-do-nil
+       :ret
+:label core-do-end
+       :swap :!pair/car :swap
+       :ret
+)
 
 ;; Eval, Apply, List ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
