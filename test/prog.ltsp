@@ -1,8 +1,11 @@
-(define b 5)
+(define c 99)
 
 (define *main*
-  (lambda (c)
-    (let ((a 2))
-      (add 1 a 3 4 b))))
+  (lambda (_)
+    (let ((a (read-num))
+          (b (read-num)))
+      (add a b))))
+
 
 (dump)
+

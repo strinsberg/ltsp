@@ -992,7 +992,8 @@
 :label core-dump-no-newline
        :!rcount :load-lb :wprn
        :!ch-space :prnch
-       :!rcount :push 0xffff :eq
+       ;; using next open only works if program has not done garbage collection
+       :!rcount :!alloc/next-open :eq
          :push core-dump-loop-end :branch
        :!inc-rcount
        :push core-dump-loop :jump
