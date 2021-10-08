@@ -30,12 +30,16 @@
        :push core/make-filter :call
        :push core/make-reduce :call
 
-       ;; Eval, apply, list
+       ;; Eval, apply, list, memory
        :push core/make-eval :call
        :push core/make-list :call
        :push core/make-apply :call
        :push core/make-load :call
        :push core/make-dump :call
+
+       ;; I/0
+       :push core/make-read-num :call
+
        :ret
 )
 
@@ -974,5 +978,41 @@
 )
 
 
+;; I/O ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates a symbol for a function that will read a number from the current
+;; input stream.
+(proc  core/make-read-num
+       :push 0x6572 :push 0 :bufstore
+       :push 0x6461 :push 1 :bufstore
+       :push 0x6e2d :push 2 :bufstore
+       :push 0x6d75 :push 3 :bufstore
+       :push core/read-num
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list of arguments and reads a number from the current
+;; input stream. Leaves the env and the address of the new number.
+(proc  core/read-num
+       :readch
+       :push read/eat-ws :call
+       ;; error/eof checking
+       :first :push read/starts-number? :call :!not
+         :push read-num-invalid :branch
+       :push read/number :call
+       :swap :pop :swap
+       :second :!ERROR :eq
+         :push read-num-error-end :branch
+       :ret
+
+:label read-num-invalid
+       :push invalid-number-start :prnmem-lb
+       :first :prnch :!ch-lp :prnch :wprn :!ch-rp :prnch :!prn-nl
+       :!ERROR :swap
+:label read-num-error-end
+       :readln :pop
+       :ret
+)
 
 )

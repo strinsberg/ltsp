@@ -51,6 +51,7 @@
        (:str invalid-start-char "*** Char cannot start a symbol: ")
        (:str invalid-symbol-char "*** Char cannot be in a symbol: ")
        (:str invalid-number-char "*** Char cannot be in a number: ")
+       (:str invalid-number-start "*** Char cannot start a number: ")
        (:str number-too-large
         "*** Numbers are limited to a max of 10 digits, including decimal digits")
        (:str number-too-many-decimals

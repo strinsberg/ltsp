@@ -21,7 +21,7 @@
        :readch
        :push read/eat-ws :call
        :push read/form :call
-       :swap :second :!error :eq
+       :swap :second :!ERROR :eq
          :swap :!ch-nl :eq
          :or
          :push read-repl-end :branch
@@ -49,7 +49,7 @@
          :push form-is-symbol :branch
        ;; else not a valid character to start a form
        :first :push read/symbol-start-error :call
-       :!error :ret
+       :!ERROR :ret
 
 :label form-is-number
        :push read/number :call
@@ -136,7 +136,7 @@
 :label symbol-already-there
        :ret
 :label symbol-error-while-reading
-       :!error
+       :!ERROR
        :ret
 )
 
@@ -168,7 +168,7 @@
 :label symbol-chars-invalid
        :push read/symbol-char-error :call
        :!end-rcount
-       :!error :ret
+       :!ERROR :ret
 :label symbol-chars-stop
        :rgrab :push std/odd? :call
          :push symbol-chars-store-last :branch
@@ -190,7 +190,7 @@
        :push read/form :call
        :first :!end-pair :eq
          :push read-pair-start-nil :branch
-       :first :!error :eq
+       :first :!ERROR :eq
          :push read-pair-read-error :branch
        :push alloc/new-pair :call
        :push pair/make :call
@@ -203,7 +203,7 @@
        :push read/form :call
        :first :!end-pair :eq
          :push read-pair-finish-up :branch
-       :first :!error :eq
+       :first :!ERROR :eq
          :push read-pair-read-error :branch
        :rot :swap
        :push alloc/new-pair :call
@@ -251,7 +251,7 @@
 ;; for the given number if it is valid, otherwise NIL.
 (proc  read/number
        :push read/number-chars :call
-       :first :!error :eq
+       :first :!ERROR :eq
          :push number-error-while-reading :branch
        :!read-int :eq
          :push read-number-int :branch
@@ -337,15 +337,15 @@
 :label read-number-size-error
        :push number-too-large :prnmem-lb :!prn-nl
        :!end-rcount
-       :!error :ret
+       :!ERROR :ret
 :label read-number-char-error
        :push read/number-char-error :call
        :!end-rcount
-       :!error :ret
+       :!ERROR :ret
 :label read-number-fixed-error
        :push number-too-many-decimals :prnmem-lb :!prn-nl
        :!end-rcount :!end-rcount
-       :!error :ret
+       :!ERROR :ret
 ) ;; end read/number-chars
 
 ;; Uses the char on top of the stack, if it is a digit then it pushes a
