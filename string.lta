@@ -1,0 +1,79 @@
+(lt64-asm-mod
+
+;; Take an address and loads the 'field'
+(macro :!string/info :load-lb)
+(macro :!string/char :push 1 :add :load-lb)
+(macro :!string/next :push 2 :add :load-lb)
+
+(macro :!string/char-info :load-lb :push 8 :sr)
+(macro :!string/char-value :load-lb :push 0xff :and)
+
+;; Take an address and a value and stores the 'field'
+(macro :!string/set-info :store-lb)
+(macro :!string/set-char :push 1 :add :store-lb)
+(macro :!string/set-next :push 2 :add :store-lb)
+
+;; Take an address and a byte for info and set the field. Does not
+;; alter the value byte.
+(proc  string/set-char-info
+       :swap :push 8 :sl
+       :second :load-lb :push 0xff :and :or
+       :swap :store-lb
+       :ret
+)
+
+;; Take an address and a byte for char and set the field. Does not
+;; alter the info byte.
+(proc  string/set-char-value
+       :swap
+       :second :load-lb :push 0xff00 :and :or
+       :swap :store-lb
+       :ret
+)
+
+;; Take an address and check its type
+(macro :!string/char? :load-lb :push 8 :sr :push 0x08 :eq)
+(macro :!string/escaped? :load-lb :push 8 :sr :push 0x0A :eq)
+(macro :!string/string? :load-lb :push 8 :sr :push 0x09 :eq)
+
+;; Take an address and check if it is a char or escaped char
+(proc  string/character?
+       :first :!string/char?
+         :swap :!string/escaped?
+         :or
+       :ret
+)
+
+;; Take a char in the lower byte and create a new char.
+;; Leaves the address of the new char.
+(proc  string/create-char
+       :push alloc/new-char :call
+       :push 0x08
+       :second :push string/set-char-info :call
+       :swap :second :push string/set-char-value :call
+       :ret
+)
+
+;; Take a char in the lower byte and create a new escaped char.
+;; Leaves the address of the new char.
+(proc  string/create-escaped
+       :push alloc/new-char :call
+       :push 0x0A
+       :second :push string/set-char-info :call
+       :swap :second :push string/set-char-value :call
+       :ret
+)
+
+;; Takes nothig and leaves the address of an empty string on the stack.
+(proc  string/create
+       :push alloc/new-pair :call
+       :push 0x0900
+       :second :!string/set-info
+       :!NIL :second :!string/set-char
+       :!NIL :second :!string/set-next
+       :ret
+)
+
+
+
+)

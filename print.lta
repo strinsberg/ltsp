@@ -2,10 +2,14 @@
 
 ;; Take the address of a form on top of the stack and print it
 (proc  print/form
+       :first :push string/character? :call
+         :push print-form-char :branch
        :first :!number/int?
          :push print-form-int :branch
        :first :!number/fixed?
          :push print-form-fixed :branch
+       :first :!string/string?
+         :push print-form-string :branch
        :first :!pair/pair?
          :push print-form-pair :branch
        :first :!pair/dotted?
@@ -18,12 +22,18 @@
        :push sym/print-name :call
        :ret
 
+:label print-form-char
+       :push print/char :call
+       :ret
 :label print-form-int
        :!number/value
        :dprn :ret
 :label print-form-fixed
        :!number/value
        :fprn :ret
+:label print-form-string
+       :push print/string :call
+       :ret
 :label print-form-pair
        :push print/pair :call
        :ret
@@ -107,6 +117,73 @@
        :!sub/label :wprn
        :!ch-rbr :prnch
        :ret
+)
+
+;; takes the address of a string and prints it without double quotes.
+(proc  print/string
+       :!ch-dquote :prnch
+       :push print/string-chars :call
+       :!ch-dquote :prnch
+       :ret
+)
+
+
+;; takes the address of a string and prints it without double quotes.
+(proc  print/string-chars
+:label print-string-loop
+       :first :!NIL :eq
+         :second :!string/char :!NIL :eq
+         :or :push print-string-end :branch
+       :first :!string/char
+       :push print/char-readable :call
+       :!string/next
+       :push print-string-loop :jump
+
+:label print-string-end
+       :pop :ret
+)
+
+(proc  print/char-readable
+       :first :!string/escaped?
+         :push print-char-readable-escaped :branch
+       :!string/char-value :prnch
+       :ret
+
+:label print-char-readable-escaped
+       :!ch-bslash :prnch
+       :!string/char-value
+       :first :!ch-newline :eq
+         :push print-char-readable-newline :branch
+       :first :!ch-tab :eq
+         :push print-char-readable-tab :branch
+       ;; is a printable char
+       :prnch
+       :ret
+
+:label print-char-readable-newline
+       :pop :!ch-n :prnch :ret
+:label print-char-readable-tab
+       :pop :!ch-t :prnch :ret
+)
+
+(proc  print/char
+       :!ch-bslash :prnch
+       :!string/char-value
+       :first :!ch-newline :eq
+         :push print-char-newline :branch
+       :first :!ch-tab :eq
+         :push print-char-tab :branch
+       :first :!ch-space :eq
+         :push print-char-space :branch
+       :prnch
+       :ret
+
+:label print-char-newline
+       :push ch-newline :prnmem-lb :ret
+:label print-char-tab
+       :push ch-tab :prnmem-lb :ret
+:label print-char-space
+       :push ch-space :prnmem-lb :ret
 )
 
 )

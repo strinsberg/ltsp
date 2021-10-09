@@ -47,6 +47,11 @@
     :ret)
 
   ;; Allocate enough memory for subroutines.
+  (proc alloc/new-char
+    :push 1 :push alloc/alloc-size :call
+    :ret)
+
+  ;; Allocate enough memory for subroutines.
   (proc alloc/new-subroutine
     :push 3 :push alloc/alloc-size :call
     :ret)

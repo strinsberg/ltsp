@@ -37,6 +37,8 @@
 ;; Expects the first character of the form is on the stack
 ;; Leaves the address of the new form on the stack
 (proc  read/form
+       :first :!ch-dquote :eq
+         :push form-is-string :branch
        :first :!ch-lp :eq
          :push form-is-pair :branch
        :first :push read/starts-number? :call
@@ -51,6 +53,9 @@
        :first :push read/symbol-start-error :call
        :!ERROR :ret
 
+:label form-is-string
+       :push read/string :call
+       :ret
 :label form-is-number
        :push read/number :call
        :ret
@@ -395,7 +400,55 @@
        :ret
 )
 
-;; Errors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; String Reading ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Takes an opening double quote char and reads a string from stdin. Leaves the
+;; head of the read in string object and the next character after the closing
+;; double quote.
+(proc  read/string
+       :pop  ;; discard quote
+       :push string/create :call
+       :rpush :rgrab
+:label read-string-loop
+       :readch
+       :first :!ch-dquote :eq
+         :push read-string-end :branch
+       :first :!ch-bslash :eq
+         :push read-string-escaped-char :branch
+       :push string/create-char :call
+:label read-string-add-char
+       :second :!string/set-char
+       :push string/create :call
+       :first :rot :!string/set-next
+       :push read-string-loop :jump
+
+:label read-string-escaped-char
+       :pop :readch
+       :push read/get-escaped-char-code :call
+       :push string/create-escaped :call
+       :push read-string-add-char :jump
+
+:label read-string-end
+       :pop :pop
+       :readch :rpop
+       :ret
+)
+
+(proc  read/get-escaped-char-code
+       :first :!ch-n :eq
+         :push read-escaped-newline :branch
+       :first :!ch-t :eq
+         :push read-escaped-tab :branch
+       ;; else just return the character
+       :ret
+
+:label read-escaped-newline
+       :pop :!ch-newline :ret
+:label read-escaped-tab
+       :pop :!ch-tab :ret
+)
+
+;; Errors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (proc  read/symbol-char-error
        :push invalid-symbol-char :prnmem-lb
        :!ch-quote :prnch :first :prnch :!ch-quote :prnch
