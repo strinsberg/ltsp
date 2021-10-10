@@ -1041,10 +1041,12 @@
        :push read/form :call
        :first :!ERROR :eq
          :push core-read-error :branch
-       :rot :pop :swap :ret
+       :swap :pop :rot :pop :swap
+       :ret
 :label core-read-error
        :readln :pop
-       :rot :pop :swap :ret
+       :swap :pop :rot :pop :swap
+       :ret
 )
 
 ;; Read up to the next newline char and store everything as a string.
@@ -1060,7 +1062,7 @@
 
 (proc  core/readln
        :push read/line :call
-       :rot :pop :swap :ret
+       :swap :pop :rot :pop :swap :ret
 )
 
 ;; Creates a symbol for a function that will read a number from the current

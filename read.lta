@@ -469,9 +469,12 @@
        :ret
 )
 
+;; Reads everything up to a newline. Leaves a string address with the read
+;; line contents and a newline char.
 (proc  read/line
        :!ch-newline
        :push read/characters :call
+       :!ch-newline :swap
        :ret
 )
 
