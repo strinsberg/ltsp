@@ -40,6 +40,8 @@
 
        ;; I/0
        :push core/make-read-num :call
+       :push core/make-read :call
+       :push core/make-readln :call
        :push core/make-prn :call
        :push core/make-prnln :call
        :push core/make-print :call
@@ -1020,6 +1022,46 @@
 
 
 ;; I/O ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Creates a symbol for a function that will read the next form from the
+;; input stream.
+(proc  core/make-read
+       :push 0x6572 :push 0 :bufstore
+       :push 0x6461 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/read
+       :push core/create :call
+       :ret
+)
+
+(proc  core/read
+       :readch
+       :push read/eat-ws :call
+       ;; error/eof checking
+       :push read/form :call
+       :first :!ERROR :eq
+         :push core-read-error :branch
+       :rot :pop :swap :ret
+:label core-read-error
+       :readln :pop
+       :rot :pop :swap :ret
+)
+
+;; Read up to the next newline char and store everything as a string.
+(proc  core/make-readln
+       :push 0x6572 :push 0 :bufstore
+       :push 0x6461 :push 1 :bufstore
+       :push 0x6e6c :push 2 :bufstore
+       :push 0x0000 :push 3 :bufstore
+       :push core/readln
+       :push core/create :call
+       :ret
+)
+
+(proc  core/readln
+       :push read/line :call
+       :rot :pop :swap :ret
+)
 
 ;; Creates a symbol for a function that will read a number from the current
 ;; input stream.

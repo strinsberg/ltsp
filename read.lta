@@ -406,30 +406,9 @@
 ;; head of the read in string object and the next character after the closing
 ;; double quote.
 (proc  read/string
-       :pop  ;; discard quote
-       :readch
-       :first :!ch-dquote :eq
-         :push read-string-empty :branch
-       :push read/create-string :call
-       :rpush :rgrab
-       ;:first :push debug-form :call
-       ;:push debug-3 :call
-       ;:halt
-:label read-string-loop
-       :readch
-       :first :!ch-dquote :eq
-         :push read-string-end :branch
-       :push read/create-string :call
-       :first :rot :!string/set-next
-       :push read-string-loop :jump
-
-:label read-string-empty
-       :pop :readch
-       :push string/create :call
-       :ret
-:label read-string-end
-       :pop :pop
-       :readch :rpop
+       ;; leave " because it is also the stopping char
+       :push read/characters :call
+       :readch :swap
        :ret
 )
 
@@ -461,6 +440,39 @@
        :pop :!ch-newline :ret
 :label read-escaped-tab
        :pop :!ch-tab :ret
+)
+
+;; Takes the first character read and the stopping character. Leaves the
+;; head of the read in string object and the next character after the stopping
+;; char is read.
+(proc  read/characters
+       :readch
+       :second :second :eq
+         :push read-string-empty :branch
+       :push read/create-string :call
+       :rpush :rgrab
+:label read-string-loop
+       :readch
+       :!third :second :eq
+         :push read-string-end :branch
+       :push read/create-string :call
+       :first :rot :!string/set-next
+       :push read-string-loop :jump
+
+:label read-string-empty
+       :pop :pop
+       :push string/create :call
+       :ret
+:label read-string-end
+       :pop :pop :pop
+       :rpop
+       :ret
+)
+
+(proc  read/line
+       :!ch-newline
+       :push read/characters :call
+       :ret
 )
 
 ;; Errors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
