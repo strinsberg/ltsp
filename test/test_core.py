@@ -585,11 +585,10 @@ string_tests = [
     ),
     PexTest(
         "Cdr of a string is the string without its first character",
-        [pair('(car "hello")', '"ello"')]
+        [pair('(cdr "hello")', '"ello"')]
     ),
     PexTest(
-        "Cons does not work with strings",
-        [pair('(cons  "2" "hello")',
-              '*** Cannot cons strings\nERROR')]
+        "Cons with strings",
+        [pair('(cons  "2" "hello")', '("2" . "hello")')]
     ),
 ]

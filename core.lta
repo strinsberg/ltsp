@@ -199,6 +199,8 @@
        :first :!NIL :eq
          :push core-car-nil :branch
        :!pair/car
+       :first :push string/string? :call
+         :push core-car-string :branch
        :first :!pair/pair?
          :second :!pair/dotted?
          :or :!not
@@ -210,6 +212,10 @@
        :pop :!NIL
        :swap ;; put env back on top
        :ret
+:label core-car-string
+       :!string/char
+       :push string/create-from-char :call
+       :swap :ret
 )
 
 ;; Define the cdr subroutine. Takes nothing, Leaves Nothing.
@@ -228,6 +234,8 @@
        :first :!NIL :eq
          :push core-car-nil :branch
        :!pair/car
+       :first :push string/string? :call
+         :push core-cdr-string :branch
        :first :!pair/pair?
          :second :!pair/dotted?
          :or :!not
@@ -239,6 +247,9 @@
        :pop :!NIL
        :swap ;; put env back on top
        :ret
+:label core-cdr-string
+       :!string/next
+       :swap :ret
 )
 
 ;; Define the eq subroutine. Takes nothing, Leaves Nothing.

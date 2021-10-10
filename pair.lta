@@ -51,7 +51,8 @@
 (proc  pair/create
        :push alloc/new-pair :call
        :second :push eval/atom? :call
-         :push pair-create-dotted :branch
+         :!third :push string/string? :call
+         :or :push pair-create-dotted :branch
        :push 0x0000 :second :!pair/set-info
 :label pair-create-set-values
        :swap :second :!pair/set-cdr

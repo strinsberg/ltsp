@@ -31,7 +31,7 @@
        ;; The last is currently 0x4b
 
        ;; globals
-       (:word print-readable 1)
+       (:word print-readable 1 1)
 
        ;; strings
        (:str prompt "ltsp> ")
