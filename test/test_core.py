@@ -541,6 +541,26 @@ eval_tests = [
     ),
 ]
 
+printing_tests = [
+    PexTest(
+        "Print a string in a readable form",
+        [pair('(prn "hello")', '"hello"NIL')]
+    ),
+    PexTest(
+        "Print a string in a readable form",
+        [pair('(prn "hello\\n")', '"hello\\n"NIL')]
+    ),
+    PexTest(
+        "Print a string followed by a newline",
+        [pair('(prnln "hello")', '"hello"\nNIL')]
+    ),
+    PexTest(
+        "Print a list",
+        [pair('(prnln (list "hello" 1234 (quote abc)))',
+              '("hello" 1234 abc)\nNIL')]
+    ),
+]
+
 string_tests = [
     PexTest(
         "Car of a string is a single character string",
