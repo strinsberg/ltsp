@@ -407,30 +407,45 @@
 ;; double quote.
 (proc  read/string
        :pop  ;; discard quote
-       :push string/create :call
+       :readch
+       :first :!ch-dquote :eq
+         :push read-string-empty :branch
+       :push read/create-string :call
        :rpush :rgrab
+       ;:first :push debug-form :call
+       ;:push debug-3 :call
+       ;:halt
 :label read-string-loop
        :readch
        :first :!ch-dquote :eq
          :push read-string-end :branch
-       :first :!ch-bslash :eq
-         :push read-string-escaped-char :branch
-       :push string/create-char :call
-:label read-string-add-char
-       :second :!string/set-char
-       :push string/create :call
+       :push read/create-string :call
        :first :rot :!string/set-next
        :push read-string-loop :jump
 
-:label read-string-escaped-char
+:label read-string-empty
        :pop :readch
-       :push read/get-escaped-char-code :call
-       :push string/create-escaped :call
-       :push read-string-add-char :jump
-
+       :push string/create :call
+       :ret
 :label read-string-end
        :pop :pop
        :readch :rpop
+       :ret
+)
+
+;; Takes a character on the stack and leaves a new string object. If
+;; the character is an escape char it will read the next character and
+;; leave the escaped character string object.
+(proc  read/create-string
+       :first :!ch-bslash :eq
+         :push read-create-string-escaped :branch
+       :push string/create-from-char :call
+       :ret
+
+:label read-create-string-escaped
+       :pop :readch
+       :push read/get-escaped-char-code :call
+       :push string/create-escaped :call
        :ret
 )
 

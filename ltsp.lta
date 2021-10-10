@@ -196,6 +196,7 @@
 (macro :!builtin-env-start :push 0x4b)
 
 ;; Characters
+(macro :!ch-null :push 0x00)
 (macro :!ch-nl :push 0x0A)
 (macro :!ch-tab :push 0x09)
 (macro :!ch-newline :push 0x0A)

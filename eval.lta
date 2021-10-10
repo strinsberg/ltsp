@@ -15,8 +15,7 @@
        :second :push number/number? :call
          :!third :!proc/procedure?
          :or :!third :!sub/subroutine?
-         :or :!third :!string/char?
-         :or :!third :!string/string?
+         :or :!third :push string/string? :call
          :or :push eval-form-identity :branch
        :second :push eval/atom? :call
          :push eval-form-symbol :branch

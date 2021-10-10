@@ -539,5 +539,20 @@ eval_tests = [
         [pair("(apply add (list 1 2 3 4 5))",
               "15")]
     ),
+]
 
+string_tests = [
+    PexTest(
+        "Car of a string is a single character string",
+        [pair('(car "hello")', '"h"')]
+    ),
+    PexTest(
+        "Cdr of a string is the string without its first character",
+        [pair('(car "hello")', '"ello"')]
+    ),
+    PexTest(
+        "Cons does not work with strings",
+        [pair('(cons  "2" "hello")',
+              '*** Cannot cons strings\nERROR')]
+    ),
 ]

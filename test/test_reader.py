@@ -65,19 +65,6 @@ symbol_tests = [
         [pair("(quote hello!,)", "hello!")],
     ),
 
-    # string
-    PexTest(
-        "Test reading a string",
-        [pair('"Hello, World!"')],
-    ),
-    PexTest(
-        "Test reading an empty string",
-        [pair('""')],
-    ),
-    PexTest(
-        "Test reading a string with escaped chars",
-        [pair('"\\t\\"hello\\"\\nworld"')],
-    ),
 ]
 
 list_tests = [
@@ -100,15 +87,6 @@ list_tests = [
     PexTest(
         "Tree nested list",
         [quoted("(a (b (c) (d)) (e (f (g (h)))))")],
-    ),
-    PexTest(
-        "Test reading a quoted list with strings",
-        [quoted('("Hello, World!" 234 "I am Steven")')],
-    ),
-    PexTest(
-        "Test reading list with strings",
-        [pair('(list "Hello, World!" 234 "I am Steven")',
-              '("Hello, World!" 234 "I am Steven")')],
     ),
 ]
 
@@ -144,5 +122,30 @@ number_tests = [
     PexTest(
         "Negative fixed point",
         [pair("-123.432")],
+    ),
+]
+
+
+string_tests = [
+    PexTest(
+        "Test reading a string",
+        [pair('"Hello, World!"')],
+    ),
+    PexTest(
+        "Test reading an empty string",
+        [pair('""')],
+    ),
+    PexTest(
+        "Test reading a string with escaped chars",
+        [pair('"\\t\\"hello\\"\\nworld"')],
+    ),
+    PexTest(
+        "Test reading a quoted list with strings",
+        [quoted('("Hello, World!" 234 "I am Steven")')],
+    ),
+    PexTest(
+        "Test reading list with strings",
+        [pair('(list "Hello, World!" 234 "I am Steven")',
+              '("Hello, World!" 234 "I am Steven")')],
     ),
 ]

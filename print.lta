@@ -2,13 +2,11 @@
 
 ;; Take the address of a form on top of the stack and print it
 (proc  print/form
-       :first :push string/character? :call
-         :push print-form-char :branch
        :first :!number/int?
          :push print-form-int :branch
        :first :!number/fixed?
          :push print-form-fixed :branch
-       :first :!string/string?
+       :first :push string/string? :call
          :push print-form-string :branch
        :first :!pair/pair?
          :push print-form-pair :branch
@@ -22,9 +20,6 @@
        :push sym/print-name :call
        :ret
 
-:label print-form-char
-       :push print/char :call
-       :ret
 :label print-form-int
        :!number/value
        :dprn :ret
@@ -122,41 +117,46 @@
 ;; takes the address of a string and prints it without double quotes.
 (proc  print/string
        :!ch-dquote :prnch
-       :push print/string-chars :call
+       :push print/string-readable :call
        :!ch-dquote :prnch
        :ret
 )
 
-
-;; takes the address of a string and prints it without double quotes.
-(proc  print/string-chars
-:label print-string-loop
+;; takes the address of a string and print the contents in a way that they
+;; could be read back in.
+(proc  print/string-readable
+:label print-string-readable-loop
        :first :!NIL :eq
-         :second :!string/char :!NIL :eq
-         :or :push print-string-end :branch
-       :first :!string/char
-       :push print/char-readable :call
+         :push print-string-readable-end :branch
+       :first :push print/char-readable :call
        :!string/next
-       :push print-string-loop :jump
+       :push print-string-readable-loop :jump
 
-:label print-string-end
+:label print-string-readable-end
        :pop :ret
 )
 
+;; takes a string object and prints the char in a way that it could be read
+;; back in. I.e. \n prints as \n and not an actual newline.
 (proc  print/char-readable
        :first :!string/escaped?
          :push print-char-readable-escaped :branch
-       :!string/char-value :prnch
+       :!string/char
+       :first :!zero?
+         :push print-char-readable-null :branch
+       :prnch
        :ret
 
 :label print-char-readable-escaped
+       :!string/char
+       :first :!zero?
+         :push print-char-readable-null :branch
        :!ch-bslash :prnch
-       :!string/char-value
        :first :!ch-newline :eq
          :push print-char-readable-newline :branch
        :first :!ch-tab :eq
          :push print-char-readable-tab :branch
-       ;; is a printable char
+       ;; is a printable char so just print it
        :prnch
        :ret
 
@@ -164,26 +164,21 @@
        :pop :!ch-n :prnch :ret
 :label print-char-readable-tab
        :pop :!ch-t :prnch :ret
+:label print-char-readable-null
+       :pop :ret
 )
 
-(proc  print/char
-       :!ch-bslash :prnch
-       :!string/char-value
-       :first :!ch-newline :eq
-         :push print-char-newline :branch
-       :first :!ch-tab :eq
-         :push print-char-tab :branch
-       :first :!ch-space :eq
-         :push print-char-space :branch
-       :prnch
-       :ret
+;; takes the address of a string and print the contents.
+(proc  print/string-printable
+:label print-string-printable-loop
+       :first :!NIL :eq
+         :push print-string-printable-end :branch
+       :first :!string/char :prnch
+       :!string/next
+       :push print-string-printable-loop :jump
 
-:label print-char-newline
-       :push ch-newline :prnmem-lb :ret
-:label print-char-tab
-       :push ch-tab :prnmem-lb :ret
-:label print-char-space
-       :push ch-space :prnmem-lb :ret
+:label print-string-printable-end
+       :pop :ret
 )
 
 )
