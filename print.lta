@@ -116,6 +116,12 @@
 
 ;; takes the address of a string and prints it without double quotes.
 (proc  print/string
+       :push print-readable :load-lb :!true :eq
+         :push print-string-for-reader :branch
+       :push print/string-printable :call
+       :ret
+
+:label print-string-for-reader
        :!ch-dquote :prnch
        :push print/string-readable :call
        :!ch-dquote :prnch
@@ -126,6 +132,7 @@
 ;; could be read back in.
 (proc  print/string-readable
 :label print-string-readable-loop
+       ;:push debug-3 :call
        :first :!NIL :eq
          :push print-string-readable-end :branch
        :first :push print/char-readable :call

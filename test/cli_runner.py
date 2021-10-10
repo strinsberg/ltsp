@@ -17,7 +17,7 @@ test_suites = [
     #lt.LtspSuite("Eval Apply List", core.eval_tests),
     #lt.LtspSuite("Core Relational and Boolean", core.rel_bool_tests),
     lt.LtspSuite("Printing", core.printing_tests),
-    lt.LtspSuite("String Operations", core.string_tests),
+    #lt.LtspSuite("String Operations", core.string_tests),
 ]
 
 

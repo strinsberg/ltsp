@@ -30,6 +30,9 @@
        ;; Each starts 4 past the previous one
        ;; The last is currently 0x4b
 
+       ;; globals
+       (:word print-readable 1)
+
        ;; strings
        (:str prompt "ltsp> ")
        (:str str-apply "apply")

@@ -547,17 +547,30 @@ printing_tests = [
         [pair('(prn "hello")', '"hello"NIL')]
     ),
     PexTest(
-        "Print a string in a readable form",
+        "Print a string with newline in a readable form",
         [pair('(prn "hello\\n")', '"hello\\n"NIL')]
     ),
     PexTest(
-        "Print a string followed by a newline",
+        "Print a string in readable form followed by a newline",
         [pair('(prnln "hello")', '"hello"\nNIL')]
     ),
     PexTest(
+        "Print a list with string in readable form",
+        [pair('(prnln (list "hello\\n" 1234 (quote abc)))',
+              '("hello\\n" 1234 abc)\nNIL')]
+    ),
+    PexTest(
+        "Print a string",
+        [pair('(print "hello")', 'helloNIL')]
+    ),
+    PexTest(
+        "Print a string in a readable form",
+        [pair('(print "hello\\n")', 'hello\nNIL')]
+    ),
+    PexTest(
         "Print a list",
-        [pair('(prnln (list "hello" 1234 (quote abc)))',
-              '("hello" 1234 abc)\nNIL')]
+        [pair('(print (list "hello\\n" 1234 (quote abc)))',
+              '(hello\n 1234 abc)NIL')]
     ),
 ]
 
