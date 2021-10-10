@@ -1,11 +1,11 @@
-(define c 99)
-
 (define *main*
   (lambda (_)
     (let ((a (read-num))
           (b (read-num)))
-      (add a b))))
-
+      (cond ((less a b)
+             (do (print a) (print " ") (println b)))
+            (T
+             (do (print b) (print " ") (println a)))))))
 
 (dump)
 

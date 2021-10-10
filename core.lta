@@ -47,6 +47,13 @@
        :push core/make-print :call
        :push core/make-println :call
 
+       ;; List
+       :push core/make-count :call
+       :push core/make-nth :call
+       :push core/make-take :call
+       :push core/make-drop :call
+       :push core/make-sort :call
+
        :ret
 )
 
@@ -974,17 +981,10 @@
        :ret
 )
 
-;; NEED a compile function that dumps memory to a file in a way that it can
-;; be loaded with the standalone vm. This will likely mean checking the program
-;; length and then just dumping all memory, even if it is not used, as we do not
-;; really know without running some kind of loop. Since the memory is only
-;; 128k words it will not be to large of a file. For now it is fine.
-;; For now the idea would be to put this after the *main* form in a file. Then
-;; it will load all the defines when run and produce the output file, without
-;; having the compile as part of the runnable program.
-
-;; Creates a symbol for a function that will load a file and evaluate all of
-;; the forms in it.
+;; Creates a symbol for a function that will dump the contents of memory
+;; up to the beginning of unallocated memory.
+;; HALTS the program and exits when done. Is intended to help to allow the
+;; standalone compilation of ltsp programs and NOT for REPL use.
 (proc  core/make-dump
        :push 0x7564 :push 0 :bufstore
        :push 0x706d :push 1 :bufstore
@@ -1013,11 +1013,10 @@
        :!inc-rcount
        :push core-dump-loop :jump
 
-
 :label core-dump-loop-end
        :!end-rcount
        :push dump-end :prnmem-lb
-       :ret
+       :halt  ;;; HALTS ;;;
 )
 
 
@@ -1176,6 +1175,138 @@
 (proc  core/println
        :push core/print :call
        :!prn-nl
+       :ret
+)
+
+;; Lists ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(proc  core/make-count
+       :push 0x6f63 :push 0 :bufstore
+       :push 0x6e75 :push 1 :bufstore
+       :push 0x0074 :push 2 :bufstore
+       :push core/count
+       :push core/create :call
+       :ret
+)
+
+(proc  core/count
+       :swap
+       :dpush 0 :drpush
+       :first :!NIL :eq
+         :push core-count-end :branch
+       :!pair/car
+:label core-count-loop
+       :first :!NIL :eq
+         :push core-count-end :branch
+       :drpop :dpush 1 :dadd :drpush
+       :!pair/cdr
+       :push core-count-loop :jump
+
+:label core-count-end
+       :pop :drpop
+       :push number/create-int :call
+       :swap :ret
+)
+
+
+(proc  core/make-take
+       :push 0x6174 :push 0 :bufstore
+       :push 0x656b :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/take
+       :push core/create :call
+       :ret
+)
+
+;; Takes an env and a list with a number of elements to take and a list to
+;; take them from. Leaves a new list with the number of elements in it.
+(proc  core/take
+       :swap :first :!pair/car :!number/value :drpush
+       :!pair/cdr :!pair/car
+       :push 0
+       :swap
+:label core-take-loop
+       :first :!NIL :eq
+         :push core-take-end-nil :branch
+       :drgrab :dpush 0 :deq :!->word
+         :push core-take-end :branch
+       :drpop :dpush 1 :dsub :drpush
+       :first :!pair/car :swap
+       :!pair/cdr
+       :push core-take-loop :jump
+
+:label core-take-end-nil
+       :drpop :dpop
+       :push pair/create-list :call
+       :swap :ret
+:label core-take-end
+       :drpop :dpop
+       :pop :!NIL
+       :push pair/create-list :call
+       :swap :ret
+)
+
+(proc  core/make-drop
+       :push 0x7264 :push 0 :bufstore
+       :push 0x706f :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/drop
+       :push core/create :call
+       :ret
+)
+
+(proc  core/drop
+       :swap
+       :first :!NIL :eq
+         :second :!pair/cdr :!NIL :eq
+         :or :push core-drop-error :branch
+       :first :!pair/car :!number/value :drpush
+       :!pair/cdr :!pair/car
+:label core-drop-loop
+       :first :!NIL :eq
+         :drgrab :dpush 0 :deq :!->word
+         :or :push core-drop-end :branch
+       :drpop :dpush 1 :dsub :drpush
+       :!pair/cdr
+       :push core-drop-loop :jump
+
+:label core-drop-end
+       :drpop :dpop
+       :swap :ret
+:label core-drop-error
+       :push args-number-error :prnmem-lb
+       :push 2 :wprn :!prn-nl
+       :pop
+       :!ERROR :swap :ret
+       :ret
+)
+
+(proc  core/make-nth
+       :push 0x746e :push 0 :bufstore
+       :push 0x0068 :push 1 :bufstore
+       :push core/nth
+       :push core/create :call
+       :ret
+)
+
+(proc  core/nth
+       :push core/drop :call
+       :swap :push 0 :swap :!NIL
+       :push pair/create-list :call
+       :swap :push core/car :call
+       :ret
+)
+
+(proc  core/make-sort
+       :push 0x6f73 :push 0 :bufstore
+       :push 0x7472 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/sort
+       :push core/create :call
+       :ret
+)
+
+(proc  core/sort
        :ret
 )
 

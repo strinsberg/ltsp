@@ -592,3 +592,48 @@ string_tests = [
         [pair('(cons  "2" "hello")', '("2" . "hello")')]
     ),
 ]
+
+list_tests = [
+    PexTest(
+        "Count the size of the list",
+        [pair('(count (list 1 8 9 3 7 6 4 2 5))', '9')]
+    ),
+    PexTest(
+        "Count the size of a list, empty",
+        [pair('(count (list))', '0')]
+    ),
+    PexTest(
+        "Get the nth elment of a list, zero based",
+        [pair('(nth 4 (list 1 2 3 4 5 6 7 8 9))', '5')]
+    ),
+    PexTest(
+        "Get the nth elment of a list, too far",
+        [pair('(nth 22 (list 1 2 3 4 5 6 7 8 9))', 'NIL')]
+    ),
+    PexTest(
+        "Take n elements of the list",
+        [pair('(take 5 (list 1 8 9 3 7 6 4 2 5))', '(1 8 9 3 7)')]
+    ),
+    PexTest(
+        "Take n elements of the list, too many",
+        [pair('(take 123 (list 1 8 9 3 7 6 4 2 5))', '(1 8 9 3 7 6 4 2 5)')]
+    ),
+    PexTest(
+        "Drop n elements of the list",
+        [pair('(drop 5 (list 1 8 9 3 7 6 4 2 5))', '(6 4 2 5)')]
+    ),
+    PexTest(
+        "Drop n elements of the list, too many",
+        [pair('(drop 123 (list 1 8 9 3 7 6 4 2 5))', 'NIL')]
+    ),
+    PexTest(
+        "Sort a list of numbers",
+        [pair('(sort (list 1 8 9 3 7 6 4 2 5))', '(1 2 3 4 5 6 7 8 9)')]
+    ),
+    PexTest(
+        "Sort a list of numbers, with a comparisson function",
+        [pair('(sort (list 1 8 9 3 7 6 4 2 5) greater)',
+              '(9 8 7 6 5 4 3 2 1)')]
+    ),
+
+]

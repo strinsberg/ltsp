@@ -168,7 +168,8 @@
        :!alloc/env-start
        :push core/apply :call
        :pop
-       :push debug-form :call ;; only for testing, replace with a pop later
+       ;:push debug-form :call ;; only for testing, replace with a pop later
+       :pop
        :ret
 )
 
