@@ -43,6 +43,7 @@
        :push core/make-prn :call
        :push core/make-prnln :call
        :push core/make-print :call
+       :push core/make-println :call
 
        :ret
 )
@@ -1103,6 +1104,24 @@
        :push print/form :call
        :!true :push print-readable :store-lb
        :!NIL :swap :ret
+)
+
+;; Creates a symbol for a function that will print a form with string chars
+;; being printed for effect and not for the reader.
+(proc  core/make-println
+       :push 0x7270 :push 0 :bufstore
+       :push 0x6e69 :push 1 :bufstore
+       :push 0x6c74 :push 2 :bufstore
+       :push 0x006e :push 3 :bufstore
+       :push core/println
+       :push core/create :call
+       :ret
+)
+
+(proc  core/println
+       :push core/print :call
+       :!prn-nl
+       :ret
 )
 
 )

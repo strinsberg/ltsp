@@ -572,6 +572,10 @@ printing_tests = [
         [pair('(print (list "hello\\n" 1234 (quote abc)))',
               '(hello\n 1234 abc)NIL')]
     ),
+    PexTest(
+        "Print a string followed by a newline",
+        [pair('(println "hello")', 'hello\nNIL')]
+    ),
 ]
 
 string_tests = [
