@@ -53,6 +53,7 @@
        :push core/make-take :call
        :push core/make-drop :call
        :push core/make-sort :call
+       :push core/make-merge :call
 
        :ret
 )
@@ -1220,6 +1221,7 @@
 
 ;; Takes an env and a list with a number of elements to take and a list to
 ;; take them from. Leaves a new list with the number of elements in it.
+;; TODO make this keep the head and not put every element on the stack
 (proc  core/take
        :swap :first :!pair/car :!number/value :drpush
        :!pair/cdr :!pair/car
@@ -1307,6 +1309,82 @@
 )
 
 (proc  core/sort
+       ;:first :push debug-form :call
+       ;:second :push debug-form :call
+       ;:!third :push debug-form :call
+       ;:!fourth :push debug-form :call
+       ;:halt
+       :ret
+)
+
+;; Makes a symbol for a function that takes a predicate and two list and
+;; merges them in order based on the results of calling the predicate on the
+;; cars of the two lists. Mainly meant for merge sort but may have other
+;; uses.
+(proc  core/make-merge
+       :push 0x656d :push 0 :bufstore
+       :push 0x6772 :push 1 :bufstore
+       :push 0x0065 :push 2 :bufstore
+       :push core/merge
+       :push core/create :call
+       :ret
+)
+
+(proc  core/merge
+       :second :!pair/car
+       :!third :!pair/cdr :!pair/car
+       :!fourth :!pair/cdr :!pair/cdr :!pair/car
+       :first :!NIL :eq
+         :push core-merge-start-b-nil :branch
+       :second :!NIL :eq
+         :push core-merge-start-a-nil :branch
+       :push core/merge-helper :call
+       :rpush :rgrab
+:label core-merge-loop
+       :second :!NIL :eq
+         :push core-merge-b-end :branch
+       :!third :!NIL :eq
+         :push core-merge-a-end :branch
+       :rpush
+       :push core/merge-helper :call
+       :rpop :second :second :!pair/set-cdr :pop
+       :push core-merge-loop :jump
+         
+:label core-merge-b-end
+       :swap :pop :!pair/set-cdr
+       :pop :swap :pop :rpop
+       :swap :ret
+:label core-merge-a-end
+       :rot :pop :!pair/set-cdr
+       :pop :swap :pop :rpop
+       :swap :ret
+
+:label core-merge-start-b-nil
+       :pop :swap :pop :rot :pop
+       :swap :ret
+:label core-merge-start-a-nil
+       :swap :pop :swap :pop :rot :pop
+       :swap :ret
+)
+
+;; Takes the second list, first list, proc/sub, env, and merge args. Leaves
+;; the winner of the cars from both lists that made the proc/sub return T on
+;; top of all the arguments. However leaves the cdr of the list that the
+;; winning car came from.
+(proc  core/merge-helper
+       :push 0 :!fourth
+       :!fourth :!pair/car :!fourth :!pair/car :!NIL
+       :push pair/create-list :call
+       :!fifth :push eval/form :call
+       :pop :!T :eq
+         :push core-merge-helper-a-first :branch
+       ;; else b is first
+       :first :!pair/cdr :swap
+       :!NIL :second :!pair/set-cdr
+       :ret
+:label core-merge-helper-a-first
+       :second :!pair/cdr :swap :rot
+       :!NIL :second :!pair/set-cdr
        :ret
 )
 

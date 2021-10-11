@@ -30,36 +30,22 @@
        :ret
 )
 
-;; Take an address of a pair and set it as a pair.
-(proc  pair/set-pair
-       :first :!pair/info
-       :unpack :swap :pop :push 0x00 :swap :pack
-       :swap :!pair/set-info
-       :ret
-)
-
-;; Take an address of a pair and set it as a dotted-pair.
-(proc  pair/set-dotted
-       :first :!pair/info
-       :unpack :swap :pop :push 0x01 :swap :pack
-       :swap :!pair/set-info
-       :ret
-)
-
 ;; Takes an address for the cdr, and an address for the
 ;; car and creates a new pair. Leaves the address of the new pair.
 (proc  pair/create
        :push alloc/new-pair :call
+       :push 0x0000 :second :!pair/set-info
+       :second :!NIL :eq
+         :push pair-create-set-values :branch
        :second :push eval/atom? :call
          :!third :push string/string? :call
-         :or :push pair-create-dotted :branch
-       :push 0x0000 :second :!pair/set-info
+         :or :push pair-cdr-with-nil :branch
 :label pair-create-set-values
        :swap :second :!pair/set-cdr
        :swap :second :!pair/set-car
        :ret
-:label pair-create-dotted
-       :push 0x0100 :second :!pair/set-info
+:label pair-cdr-with-nil
+       :swap :!NIL :push pair/create :call :swap
        :push pair-create-set-values :jump
 )
 

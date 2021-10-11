@@ -635,5 +635,20 @@ list_tests = [
         [pair('(sort (list 1 8 9 3 7 6 4 2 5) greater)',
               '(9 8 7 6 5 4 3 2 1)')]
     ),
+    PexTest(
+        "Merge 2 lists of numbers ordered by a function",
+        [pair('(merge less (list 1 3 6 8) (list 2 4 7 9))',
+              '(1 2 3 4 6 7 8 9)')]
+    ),
+    PexTest(
+        "Merge 2 lists of numbers ordered by a function, first is nil",
+        [pair('(merge less NIL (list 1 4 7 9))',
+              '(1 4 7 9)')]
+    ),
+    PexTest(
+        "Merge 2 lists of numbers ordered by a function, second is nil",
+        [pair('(merge less (list 2 3 6 8) NIL)',
+              '(2 3 6 8)')]
+    ),
 
 ]
