@@ -1309,12 +1309,95 @@
 )
 
 (proc  core/sort
-       ;:first :push debug-form :call
-       ;:second :push debug-form :call
-       ;:!third :push debug-form :call
-       ;:!fourth :push debug-form :call
-       ;:halt
+       :second :!NIL :eq
+         :!third :!pair/car :!pair/pair? :!not
+         :or :push core-sort-requires-list :branch
+       :second :!pair/cdr :!NIL :eq
+         :push core-sort-default-proc :branch
+       :second :!pair/car
+       :push 0 :swap :!NIL
+       :push pair/create-list :call
+       :swap :push core/count :call
+       :swap
+       :rot :first :!pair/car
+       :swap :!pair/cdr :!pair/car
+       :swap :rot
+       :push core/merge-sort :call
+       :swap :pop :swap
        :ret
+:label core-sort-requires-list
+       :push sort-no-list :prnmem-lb
+       :swap :pop :!ERROR :swap :ret
+:label core-sort-default-proc
+       :second :swap
+       :push core/count :call
+       :!third :!pair/car :rot
+       :push core/get-sort-pred :call
+       :rot :rot
+       :push core/merge-sort :call
+       :swap :pop :swap
+       :ret
+)
+
+(proc  core/get-sort-pred
+       :push 0x656c :push 0 :bufstore
+       :push 0x7373 :push 1 :bufstore
+       :push 0x0000 :push 2 :bufstore
+       :push core/less
+       :push core/create-symbol :call
+       :swap :second
+       :push core/create-subroutine :call
+       :swap :pop
+       :ret
+)
+
+(proc  core/merge-sort
+       ;; Check if the list is small enough to return
+       :first :!number/value :dpush 0 :deq :!->word
+         :push core-merge-sort-return-nil :branch
+       :first :!number/value :dpush 1 :deq :!->word
+         :push core-merge-sort-return-copy :branch
+
+       ;; Save the function
+       :rot :rpush
+
+       ;; Get the counts for the two list halves
+       :first :!number/value :dpush 2 :ddiv
+       :push number/create-int :call
+       :swap :second :swap :push 0 :swap :rot :!NIL
+       :push pair/create-list :call
+       :swap :push core/sub :call
+
+       ;; Get the list halves
+       :rot :first :!fourth :swap
+       :push 0 :rot :rot :!NIL
+       :push pair/create-list :call
+       :swap :push core/take :call
+       :!fourth :push 0 :swap :rot :!NIL
+       :push pair/create-list :call
+       :swap :push core/drop :call
+
+       ;; Organize the stack for sorting
+       :dswap :rot :rot :rpop :rot :rot
+
+       ;; Sort the halves
+       :push core/merge-sort :call
+       :rpush :rot :rot
+       :push core/merge-sort :call
+
+       ;; Merge the sorted lists
+       :push 0 :!third :rot :rpop :!NIL
+       :push pair/create-list :call
+       :swap :push core/merge :call :swap
+       :ret
+
+:label core-merge-sort-return-nil
+       :pop :ret
+:label core-merge-sort-return-copy
+       :pop :first :!pair/car
+       :push 0 :swap :!NIL
+       :push pair/create-list :call
+       :swap :pop :ret
 )
 
 ;; Makes a symbol for a function that takes a predicate and two list and
@@ -1331,9 +1414,13 @@
 )
 
 (proc  core/merge
+       ;:second :push debug-form :call
        :second :!pair/car
        :!third :!pair/cdr :!pair/car
        :!fourth :!pair/cdr :!pair/cdr :!pair/car
+       ;:second :push debug-form :call
+       ;:!third :push debug-form :call
+       ;:!fourth :push debug-form :call
        :first :!NIL :eq
          :push core-merge-start-b-nil :branch
        :second :!NIL :eq

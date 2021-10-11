@@ -76,6 +76,7 @@
        (:str num-args-error-2 "*** Function requires 2 arguments: ")
        (:str args-number-error "*** Function requires numeric arguments: ")
        (:str no-main-found "*** No *main* function was found\n")
+       (:str sort-no-list "*** Sort must have a list for its first argument\n")
 )
 
 ;; Main and Program Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
