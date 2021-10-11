@@ -56,7 +56,7 @@ elementary_tests = [
     ),
     PexTest(
         "eval cons on two symbols",
-        [pair("(cons (quote a) (quote b))", "(a . b)")],
+        [pair("(cons (quote a) (quote b))", "(a b)")],
     ),
     PexTest(
         "eval cons symbol onto cons list",
@@ -525,7 +525,7 @@ eval_tests = [
     # eval
     PexTest(
         "Evaluate a quoted form",
-        [pair("(eval (quote (cons 1 3)))", "(1 . 3)")]
+        [pair("(eval (quote (cons 1 3)))", "(1 3)")]
     ),
     PexTest(
         "Create a list with for a function application and evaluate it",
@@ -589,7 +589,7 @@ string_tests = [
     ),
     PexTest(
         "Cons with strings",
-        [pair('(cons  "2" "hello")', '("2" . "hello")')]
+        [pair('(cons  "2" "hello")', '("2" "hello")')]
     ),
 ]
 

@@ -36,7 +36,7 @@ special_form_tests = [
     ),
     PexTest(
         "Simple let with two assignments",
-        [pair("(let ((a 1) (b 3)) (cons a b))", "(1 . 3)"),
+        [pair("(let ((a 1) (b 3)) (cons a b))", "(1 3)"),
          pair("a", "ERROR"), pair("b", "ERROR")],
     ),
     PexTest(
@@ -45,7 +45,7 @@ special_form_tests = [
     ),
     PexTest(
         "Nested let that shadows a binding from the first",
-        [pair("(let ((a 1) (b 3)) (let ((a 7)) (cons a b)))", "(7 . 3)")]
+        [pair("(let ((a 1) (b 3)) (let ((a 7)) (cons a b)))", "(7 3)")]
     ),
     PexTest(
         "Let where bindings use previous bindings",
@@ -60,14 +60,14 @@ special_form_tests = [
     PexTest(
         "Simple lambda creation and application",
         [pair("(define f (lambda (a b) (cons a b)))", "T"),
-         pair("(f 1 2)", "(1 . 2)"),
+         pair("(f 1 2)", "(1 2)"),
          ],
     ),
     PexTest(
         "Simple lambda creation and application, with result saved",
         [pair("(define f (lambda (a b) (cons a b)))", "T"),
          pair("(define a (f 1 2))","T"),
-         pair("a","(1 . 2)"),
+         pair("a","(1 2)"),
          ],
     ),
     PexTest(
@@ -79,13 +79,13 @@ special_form_tests = [
     ),
     PexTest(
         "Apply a lambda directly",
-        [pair("((lambda (a b) (cons a b)) 1 2)", "(1 . 2)")],
+        [pair("((lambda (a b) (cons a b)) 1 2)", "(1 2)")],
     ),
     PexTest(
         "Apply a lambda directly, with args that need evaluation",
         [pair("(define x 1)", "T"),
          pair("(define y 2)", "T"),
-         pair("((lambda (a b) (cons a b)) x y)", "(1 . 2)")],
+         pair("((lambda (a b) (cons a b)) x y)", "(1 2)")],
     ),
     PexTest(
         "Recursive lambda",
@@ -147,13 +147,13 @@ symbol_tests = [
     PexTest(
         "Define a symbol with an function result, and check the result",
         [pair("(define a (cons (quote x) (quote y)))", "T"),
-         pair("a", "(x . y)")]
+         pair("a", "(x y)")]
     ),
     PexTest(
         "Define two symbols and then use them",
         [pair("(define a 123)", "T"),
          pair("(define b 456)", "T"),
-         pair("(cons a b)", "(123 . 456)")]
+         pair("(cons a b)", "(123 456)")]
     ),
 
 ]
