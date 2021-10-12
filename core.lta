@@ -1335,7 +1335,7 @@
        :push core/get-sort-pred :call
        :rot :rot
        :push core/merge-sort :call
-       :swap :pop :swap
+       :swap :pop :swap :rot :pop
        :ret
 )
 

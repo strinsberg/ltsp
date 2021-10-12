@@ -627,13 +627,23 @@ list_tests = [
         [pair('(drop 123 (list 1 8 9 3 7 6 4 2 5))', 'NIL')]
     ),
     PexTest(
-        "Sort a list of numbers",
+        "Sort a list of numbers, default comparisson",
         [pair('(sort (list 1 8 9 3 7 6 4 2 5))', '(1 2 3 4 5 6 7 8 9)')]
     ),
     PexTest(
         "Sort a list of numbers, with a comparisson function",
         [pair('(sort (list 1 8 9 3 7 6 4 2 5) greater)',
               '(9 8 7 6 5 4 3 2 1)')]
+    ),
+    PexTest(
+        "Sort a list of numbers, and use the sorted list",
+        [pair('(define a (sort (list 1 8 9 3 7 6 4 2 5)))', 'T'),
+         pair('a', '(1 2 3 4 5 6 7 8 9)')]
+    ),
+    PexTest(
+        "Sort a list of numbers, with comparator, and use the sorted list",
+        [pair('(define a (sort (list 1 8 9 3 7 6 4 2 5) greater))', 'T'),
+         pair('a', '(9 8 7 6 5 4 3 2 1)')]
     ),
     PexTest(
         "Merge 2 lists of numbers ordered by a function",
@@ -650,5 +660,22 @@ list_tests = [
         [pair('(merge less (list 2 3 6 8) NIL)',
               '(2 3 6 8)')]
     ),
-
 ]
+
+"""
+    PexTest(
+        "Reverse a list of numbers",
+        [pair('(reverse (list 1 2 3 4 5 6 7 8 9))',
+              '(9 8 7 6 5 4 3 2 1)')]
+    ),
+    PexTest(
+        "Generate a range of numbers",
+        [pair('(range 9)', '(0 1 2 3 4 5 6 7 8 9)')]
+    ),
+    PexTest(
+        "Join a list of strings",
+        [pair('(join ", " ("Hello" "World!" "I am" "Steve.")',
+              '"Hello World! I am Steve."']
+    ),
+
+"""
