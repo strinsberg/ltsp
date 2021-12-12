@@ -774,7 +774,6 @@
        :swap :!pair/cdr :!pair/car ;; list
        :rot
 :label core-filter-apply-loop
-       :second :push debug-form :call
        :second :!NIL :eq
          :push core-filter-end :branch
        :second :!pair/car :!NIL
@@ -1358,8 +1357,8 @@
        :first :!number/value :dpush 1 :deq :!->word
          :push core-merge-sort-return-copy :branch
 
-       ;; Save the function
-       :rot :rpush
+       ;; Save the function and env
+       :rot :rpush :rot :rpush
 
        ;; Get the counts for the two list halves
        :first :!number/value :dpush 2 :ddiv
@@ -1378,17 +1377,29 @@
        :swap :push core/drop :call
 
        ;; Organize the stack for sorting
-       :dswap :rot :rot :rpop :rot :rot
+       :dswap :rot :rot :rpop :rpop :dswap
 
        ;; Sort the halves
        :push core/merge-sort :call
-       :rpush :rot :rot
+       ;:first :push debug-form :call
+       :rpush :dswap
        :push core/merge-sort :call
+       ;:first :push debug-form :call
+
 
        ;; Merge the sorted lists
        :push 0 :!third :rot :rpop :!NIL
        :push pair/create-list :call
-       :swap :push core/merge :call :swap
+       ;:first :push debug-form :call
+       :rot :push core/merge :call
+       :rot :rot
+       ;:first :push debug-form :call
+       ;:second :push debug-form :call
+       ;:!third :push debug-form :call
+       ;:!fourth :push debug-form :call
+       ;:!fifth :push debug-form :call
+       ;:!sixth :push debug-form :call
+       ;:halt
        :ret
 
 :label core-merge-sort-return-nil
@@ -1414,13 +1425,9 @@
 )
 
 (proc  core/merge
-       ;:second :push debug-form :call
        :second :!pair/car
        :!third :!pair/cdr :!pair/car
        :!fourth :!pair/cdr :!pair/cdr :!pair/car
-       ;:second :push debug-form :call
-       ;:!third :push debug-form :call
-       ;:!fourth :push debug-form :call
        :first :!NIL :eq
          :push core-merge-start-b-nil :branch
        :second :!NIL :eq
@@ -1433,7 +1440,11 @@
        :!third :!NIL :eq
          :push core-merge-a-end :branch
        :rpush
+       ;:first :push debug-form :call
        :push core/merge-helper :call
+       ;:first :push debug-form :call
+       ;:second :push debug-form :call
+       ;:!third :push debug-form :call
        :rpop :second :second :!pair/set-cdr :pop
        :push core-merge-loop :jump
          
@@ -1459,19 +1470,27 @@
 ;; top of all the arguments. However leaves the cdr of the list that the
 ;; winning car came from.
 (proc  core/merge-helper
-       :push 0 :!fourth
-       :!fourth :!pair/car :!fourth :!pair/car :!NIL
+       ;:first :push debug-form :call
+       ;:second :push debug-form :call
+       :push 0
+       :!third :!pair/car :!third :!pair/car :!NIL
        :push pair/create-list :call
-       :!fifth :push eval/form :call
+       :!fourth :swap :!sixth
+       ;:first :push debug-form :call
+       :push eval/apply-sub-or-proc :call
+       ;:second :push debug-form :call
        :pop :!T :eq
          :push core-merge-helper-a-first :branch
        ;; else b is first
        :first :!pair/cdr :swap
        :!NIL :second :!pair/set-cdr
+       ;:first :push debug-form :call
        :ret
 :label core-merge-helper-a-first
        :second :!pair/cdr :swap :rot
-       :!NIL :second :!pair/set-cdr
+       :!NIL :second
+       ;:first :push debug-form :call
+       :!pair/set-cdr
        :ret
 )
 

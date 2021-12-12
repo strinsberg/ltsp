@@ -67,6 +67,7 @@
 :label eval-apply-procedure
        :rot :!pair/cdr :swap  ;; get the function arguments from the pair
        :push eval/list :call
+       ;:second :push debug-form :call
        :second :!ERROR :eq
          :push eval-apply-error-end :branch
        :push eval/apply-procedure :call

@@ -43,7 +43,7 @@ class LtspSuite(cli.TestSuite):
         prompt = "ltsp> "
         prompt_idx = repl.expect_exact([prompt.replace("\n", "\r\n"),
                                         pex.EOF, pex.TIMEOUT],
-                                       timeout=0.2)
+                                       timeout=test.prompt_timeout)
         test.expected = act + f'"{prompt}"'
         if prompt_idx == 1:
             test.actual = eof + f'"{repl.before.decode("ascii")}"'
@@ -56,7 +56,7 @@ class LtspSuite(cli.TestSuite):
     def expect_action(self, action, repl, test, act, timed, eof):
         exp_idx = repl.expect_exact([action.replace("\n", "\r\n"),
                                      pex.EOF, pex.TIMEOUT],
-                                    timeout=0.2)
+                                    timeout=test.timeout)
         test.expected = act + f'"{action}"'
         if exp_idx == 1:
             test.actual = eof + f'"{repl.before.decode("ascii")}"'
@@ -67,8 +67,10 @@ class LtspSuite(cli.TestSuite):
         return True
 
 class PexTest(cli.Test):
-    def __init__(self, name, actions):
+    def __init__(self, name, actions, timeout=0.2, prompt_timeout=0.2):
         super().__init__(name, actions, expected="")
+        self.timeout = timeout
+        self.prompt_timeout = prompt_timeout
 
 
 # Helpers ####################################################################

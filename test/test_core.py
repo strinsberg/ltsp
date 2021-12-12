@@ -593,7 +593,21 @@ string_tests = [
     ),
 ]
 
+import random
+big_list = [random.randint(0,1000) for _ in range(500)]
+str_list = [str(x) for x in big_list]
+sorted_str_list = [str(x) for x in sorted(big_list)]
+
 list_tests = [
+    PexTest(
+        "Sort a large list of numbers, default comparisson",
+        [pair(f'(sort (list {" ".join(str_list)}))',
+              f'({" ".join(sorted_str_list)})')],
+        timeout = 10
+    ),
+]
+
+"""
     PexTest(
         "Count the size of the list",
         [pair('(count (list 1 8 9 3 7 6 4 2 5))', '9')]
@@ -630,6 +644,8 @@ list_tests = [
         "Sort a list of numbers, default comparisson",
         [pair('(sort (list 1 8 9 3 7 6 4 2 5))', '(1 2 3 4 5 6 7 8 9)')]
     ),
+
+
     PexTest(
         "Sort a list of numbers, with a comparisson function",
         [pair('(sort (list 1 8 9 3 7 6 4 2 5) greater)',
@@ -660,17 +676,17 @@ list_tests = [
         [pair('(merge less (list 2 3 6 8) NIL)',
               '(2 3 6 8)')]
     ),
-]
 
-"""
+
+
+    PexTest(
+        "Generate a range of numbers",
+        [pair('(range 9)', '(0 1 2 3 4 5 6 7 8 9)')]
+    ),
     PexTest(
         "Reverse a list of numbers",
         [pair('(reverse (list 1 2 3 4 5 6 7 8 9))',
               '(9 8 7 6 5 4 3 2 1)')]
-    ),
-    PexTest(
-        "Generate a range of numbers",
-        [pair('(range 9)', '(0 1 2 3 4 5 6 7 8 9)')]
     ),
     PexTest(
         "Join a list of strings",
