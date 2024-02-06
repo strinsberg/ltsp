@@ -2,6 +2,8 @@
 
 A lisp interpreter for the lieutenant-64 virtual machine written in lt64-ams.
 
+**NOTE** As this runs on a "toy" VM it should be obvious that it is not for real world use. Also, if you find it interesting be warned that there are some bugs, and I never did implement any garbage collection for the fixed memory of the VM, so a program can easily run out of memory.
+
 # Purpose
 
 I wanted to make a list interpreter that has to deal with a more low level
